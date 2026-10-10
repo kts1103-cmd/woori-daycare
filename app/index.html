@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리동네 어린이집</title>
+<style>
+  :root { --bg:#f6f5f1; --surface:#fff; --text:#1f2421; --muted:#5d665f; --line:#e2dfd6; --accent:#2f7d4f; --accent-soft:#e6f2ea; --warn:#8a5a00; --warn-soft:#fff6e0; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121513; --surface:#1b1f1c; --text:#e8ebe8; --muted:#a3aca5; --line:#2e3430; --accent:#6cc58f; --accent-soft:#1f3327; --warn:#e6c36a; --warn-soft:#2e2817; } }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--text); font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif; display:flex; flex-direction:column; word-break:keep-all; }
+  header { padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--line); }
+  header h1 { margin:0; font-size:18px; }
+  header p { margin:2px 0 0; font-size:12px; color:var(--muted); }
+  main { flex:1; overflow:auto; }
+  .view { display:none; } .view.active { display:block; }
+  nav.tabs { display:grid; grid-template-columns:repeat(2,1fr); background:var(--surface); border-top:1px solid var(--line); }
+  nav.tabs button { border:0; background:none; color:var(--muted); font:inherit; font-size:14px; padding:12px 4px; cursor:pointer; }
+  nav.tabs button[aria-selected="true"] { color:var(--accent); font-weight:700; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px; }
+  .toolbar > * { flex:1 1 120px; min-width:0; }
+  html, body { max-width:100%; overflow-x:hidden; }
+  .name { overflow-wrap:anywhere; }
+  select, .btn { font:inherit; font-size:14px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--text); text-decoration:none; display:inline-block; }
+  .btn { cursor:pointer; } .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  #map { height:42vh; min-height:240px; margin:0 16px; border-radius:12px; border:1px solid var(--line); background:var(--surface); overflow:hidden; }
+  .map-fallback { display:flex; align-items:center; justify-content:center; text-align:center; color:var(--muted); font-size:14px; padding:16px; height:100%; }
+  .notice { margin:12px 16px; padding:10px 12px; border-radius:10px; font-size:13px; background:var(--warn-soft); color:var(--warn); }
+  ul.list { list-style:none; margin:0; padding:0 16px 16px; }
+  ul.list li { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px; margin-top:10px; }
+  .row { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .name { font-weight:700; } .meta { font-size:13px; color:var(--muted); margin-top:4px; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:999px; background:var(--accent-soft); color:var(--accent); white-space:nowrap; }
+  .actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; } .actions .btn { font-size:13px; padding:6px 10px; }
+  .seat { font-weight:700; padding:1px 6px; border-radius:6px; margin-right:4px; }
+  .seat.ok { background:var(--accent-soft); color:var(--accent); }
+  .seat.few { background:var(--warn-soft); color:var(--warn); }
+  .seat.full { background:#fdecea; color:#b3261e; }
+  .filters { padding:0 16px; }
+  .chips { display:flex; gap:6px; overflow-x:auto; padding:4px 0; scrollbar-width:none; }
+  .chip { flex:0 0 auto; font:inherit; font-size:13px; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--text); cursor:pointer; white-space:nowrap; }
+  .chip.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700; }
+  .chip.toggle input { accent-color:var(--accent); margin:0 4px 0 0; vertical-align:-2px; }
+  .toolbar.tight { padding:6px 0 10px; }
+  ol.rank { list-style:none; margin:0; padding:0 16px 16px; counter-reset:none; }
+  ol.rank li { border-bottom:1px solid var(--line); }
+  ol.rank .head { display:grid; grid-template-columns:32px 1fr auto; gap:10px; align-items:center; padding:12px 0; cursor:pointer; background:none; border:0; width:100%; text-align:left; font:inherit; color:inherit; }
+  ol.rank .no { width:28px; height:28px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:13px; }
+  ol.rank .t { min-width:0; } ol.rank .t b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  ol.rank .t small { color:var(--muted); font-size:12px; }
+  ol.rank .detail { display:none; padding:0 0 12px 42px; }
+  ol.rank li.open .detail { display:block; }
+  .tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+  .tag { font-size:12px; padding:2px 8px; border-radius:6px; background:var(--accent-soft); color:var(--accent); }
+  .tag.gray { background:var(--line); color:var(--muted); }
+  .more { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
+  .more .btn { font-size:13px; padding:8px; text-align:center; }
+  .panel { margin-top:10px; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
+  .panel h4 { margin:0 0 8px; font-size:14px; }
+  .stars { display:flex; justify-content:space-between; align-items:center; margin:4px 0; font-size:13px; }
+  .stars span button { border:0; background:none; font-size:20px; padding:0 1px; cursor:pointer; color:var(--line); }
+  .stars span button.on { color:#e8a317; }
+  .check { display:flex; gap:8px; align-items:flex-start; font-size:13px; margin:6px 0; }
+  .check input { accent-color:var(--accent); margin-top:3px; }
+  textarea { width:100%; font:inherit; font-size:13px; border:1px solid var(--line); border-radius:8px; padding:8px; background:var(--surface); color:var(--text); }
+  .note { font-size:12px; color:var(--muted); margin-top:6px; }
+  .steps { list-style:none; padding:0; margin:0 0 12px; counter-reset:s; }
+  .steps li { counter-increment:s; position:relative; padding:0 0 14px 40px; }
+  .steps li::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .steps b { display:block; } .steps p { margin:2px 0 0; font-size:13px; color:var(--muted); }
+  .src { font-size:12px; color:var(--muted); padding:0 16px 16px; }
+  .section { padding:16px; } .section h2 { font-size:17px; margin:0 0 8px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:12px; }
+  .card h3 { margin:0 0 4px; font-size:16px; } .card p { margin:0 0 12px; font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>우리동네 어린이집 <span class="badge">시제품</span></h1>
+  <p>민간 개발 앱이며 정부기관과 관련이 없습니다.</p>
+</header>
+<main>
+  <section class="view active" id="view-map">
+    <div class="toolbar">
+      <select id="sido" aria-label="시도"></select>
+      <select id="sigungu" aria-label="시군구"></select>
+      <select id="radius" aria-label="반경">
+        <option value="0">반경 제한 없음</option><option value="500">500m</option>
+        <option value="1000">1km</option><option value="3000" selected>3km</option>
+      </select>
+      <button class="btn primary" id="locate">현재 위치로 찾기</button>
+    </div>
+    <div class="filters" id="filters">
+      <div class="chips" role="group" aria-label="유형">
+        <button class="chip on" data-type="">전체</button>
+        <button class="chip" data-type="국공립">국공립</button>
+        <button class="chip" data-type="민간">민간</button>
+        <button class="chip" data-type="가정">가정</button>
+        <button class="chip" data-type="직장">직장</button>
+        <button class="chip" data-type="사회복지법인">사회복지법인</button>
+        <button class="chip" data-type="법인·단체등">법인·단체</button>
+        <button class="chip" data-type="협동">협동</button>
+      </div>
+      <div class="chips">
+        <label class="chip toggle"><input type="checkbox" id="fExt"> 🌙 연장보육(맞벌이)</label>
+        <label class="chip toggle"><input type="checkbox" id="fBus"> 🚌 통학차량 운영</label>
+        <label class="chip toggle"><input type="checkbox" id="fPlay"> 🛝 놀이터 있음</label>
+        <select id="fAge" class="chip" aria-label="운영 기간">
+          <option value="">운영 기간 전체</option><option value="new">새로 생긴 곳 (3년 이내)</option><option value="old">10년 이상 운영</option>
+        </select>
+      </div>
+      <div class="toolbar tight">
+        <select id="fSeat" aria-label="자리 여유">
+          <option value="">정원 여유 전체</option><option value="1">정원보다 1명 이상 적음</option>
+          <option value="5">5명 이상 적음</option><option value="10">10명 이상 적음</option><option value="full">정원 꽉 찬 곳</option>
+        </select>
+        <select id="fCap" aria-label="정원">
+          <option value="">정원 전체</option><option value="0-20">정원 20명 이하 (소규모)</option>
+          <option value="21-49">정원 21~49명</option><option value="50-99">정원 50~99명</option><option value="100-9999">정원 100명 이상</option>
+        </select>
+        <select id="fCur" aria-label="현원">
+          <option value="">현원 전체</option><option value="0-19">현원 20명 미만</option>
+          <option value="20-49">현원 20~49명</option><option value="50-9999">현원 50명 이상</option>
+        </select>
+        <select id="sort" aria-label="정렬">
+          <option value="dist">가까운 순</option><option value="seat">빈자리 많은 순</option>
+          <option value="ratio">교직원당 아이 적은 순</option><option value="space">아이 1명당 공간 넓은 순</option><option value="name">이름 순</option>
+        </select>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="notice" id="locNotice" hidden></div>
+    <p class="src" id="count" style="padding-top:12px"></p>
+    <div class="notice">ℹ️ "정원보다 N명 적음"은 <b><span class="basisDate"></span> 기준</b> 정원과 현원의 차이예요 (매일 갱신). 실시간 빈자리가 아니며, 연령반별 자리와 대기자는 반영되지 않아요. 실제 입소 가능 여부는 어린이집에 직접 문의하거나 아이사랑 입소대기에서 확인하세요.</div>
+    <ol class="rank" id="list"></ol>
+    <p class="src">출처: <span id="basis"></span> · 정확한 정보는 해당 어린이집과 공식 포털에서 확인하세요.</p>
+  </section>
+
+  <section class="view" id="view-guide">
+    <div class="section">
+      <h2>입소 준비 가이드</h2>
+      <div class="card">
+        <ol class="steps">
+          <li><b>입소대기 신청 (임신 중부터 가능)</b><p>아이사랑에서 원하는 어린이집에 대기 신청을 해요. 맞벌이·다자녀 등은 입소 우선순위가 있어요.</p></li>
+          <li><b>후보 어린이집 고르기</b><p>지도·필터로 거리, 자리 여유, 연장보육, 통학차량을 비교해 보세요.</p></li>
+          <li><b>맞벌이라면 연장보육 확인</b><p>연장보육은 보통 오후 4시 이후 운영돼요. 신청 조건과 운영 시간은 어린이집마다 달라요.</p></li>
+          <li><b>상담·방문 예약</b><p>어린이집 카드의 "상담 체크리스트"를 열고 질문을 챙겨 가세요.</p></li>
+          <li><b>공시 정보 확인</b><p>필요경비(특별활동비·현장학습비), 식단, 하루 일과는 정보공개포털 공시에서 볼 수 있어요.</p></li>
+          <li><b>입소 확정 후 준비</b><p>건강검진·예방접종 기록, 보육료 지원(아이행복카드) 신청을 미리 해 두세요.</p></li>
+        </ol>
+        <a class="btn primary" href="https://www.childcare.go.kr/" target="_blank" rel="noopener">아이사랑에서 입소대기 신청</a>
+        <a class="btn" href="https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp" target="_blank" rel="noopener">정보공개포털 공시 검색</a>
+      </div>
+      <p class="note">입소 우선순위, 연장보육 기준, 필요 서류는 지자체·시기에 따라 다를 수 있으니 아이사랑 안내를 꼭 확인하세요.</p>
+    </div>
+  </section>
+
+  <section class="view" id="view-violation">
+    <div class="section">
+      <h2>위반사실의 공표</h2>
+      <div class="card">
+        <h3>위반시설 조회</h3>
+        <p>운영정지·폐쇄·과징금 처분을 받은 어린이집</p>
+        <a class="btn primary" href="https://info.childcare.go.kr/info_html5/cfvp/VioltfcltySlL.jsp" target="_blank" rel="noopener">위반시설 조회</a>
+      </div>
+      <div class="card">
+        <h3>위반행위자 조회</h3>
+        <p>자격정지·취소 처분을 받은 원장·보육교사</p>
+        <a class="btn primary" href="https://info.childcare.go.kr/info_html5/cfvp/VioltactorSlL.jsp" target="_blank" rel="noopener">위반행위자 조회</a>
+      </div>
+      <div class="notice">어린이집정보공개포털의 공식 공표 화면으로 연결됩니다. 공표 기간이 지나면 공식 화면에서 내려가며, 이 앱은 내용을 저장하지 않습니다.</div>
+    </div>
+  </section>
+</main>
+<nav class="tabs" role="tablist" style="grid-template-columns:repeat(3,1fr)">
+  <button role="tab" aria-selected="true" data-view="view-map">🗺️ 지도</button>
+  <button role="tab" aria-selected="false" data-view="view-guide">📋 입소가이드</button>
+  <button role="tab" aria-selected="false" data-view="view-violation">🚨 위반정보</button>
+</nav>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

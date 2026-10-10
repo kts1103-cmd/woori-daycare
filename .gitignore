@@ -1,0 +1,5 @@
+data/raw/master_*/
+data/daycare_master_*.csv
+app/data_new/
+.env
+__pycache__/

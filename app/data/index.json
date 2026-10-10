@@ -1,0 +1,82 @@
+{
+ "basis": "2026-10-10",
+ "extendedBasis": "2024",
+ "source": "어린이집정보공개포털 어린이집 기본정보 (data.go.kr 15083298, 이용허락범위 제한 없음)",
+ "sidos": [
+  {
+   "sido": "강원특별자치도",
+   "file": "sido_00.json",
+   "count": 755
+  },
+  {
+   "sido": "경기도",
+   "file": "sido_01.json",
+   "count": 7919
+  },
+  {
+   "sido": "경상남도",
+   "file": "sido_02.json",
+   "count": 1511
+  },
+  {
+   "sido": "경상북도",
+   "file": "sido_03.json",
+   "count": 1106
+  },
+  {
+   "sido": "대구광역시",
+   "file": "sido_04.json",
+   "count": 967
+  },
+  {
+   "sido": "대전광역시",
+   "file": "sido_05.json",
+   "count": 794
+  },
+  {
+   "sido": "부산광역시",
+   "file": "sido_06.json",
+   "count": 1234
+  },
+  {
+   "sido": "서울특별시",
+   "file": "sido_07.json",
+   "count": 4039
+  },
+  {
+   "sido": "세종특별자치시",
+   "file": "sido_08.json",
+   "count": 269
+  },
+  {
+   "sido": "울산광역시",
+   "file": "sido_09.json",
+   "count": 518
+  },
+  {
+   "sido": "인천광역시",
+   "file": "sido_10.json",
+   "count": 1553
+  },
+  {
+   "sido": "전북특별자치도",
+   "file": "sido_11.json",
+   "count": 842
+  },
+  {
+   "sido": "제주특별자치도",
+   "file": "sido_12.json",
+   "count": 366
+  },
+  {
+   "sido": "충청남도",
+   "file": "sido_13.json",
+   "count": 1213
+  },
+  {
+   "sido": "충청북도",
+   "file": "sido_14.json",
+   "count": 815
+  }
+ ]
+}
