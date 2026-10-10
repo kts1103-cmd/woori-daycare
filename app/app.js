@@ -6,6 +6,12 @@
   let data = [];             // 현재 보여줄 대상
   let userPos = null;        // 기기 안에서만 사용, 서버로 보내지 않음
   let map = null;
+  // 지도 영역 모드: 사용자가 지도를 움직이거나 확대하면 화면 안의 어린이집을 보여준다
+  let area = null;           // { s, w, n, e, center }
+  let allRows = null;        // 전국 데이터 (영역 모드에서 시·도 경계를 넘어도 보이게)
+  let programmaticMove = false;
+  const AREA_MIN_ZOOM = 12;  // 이보다 멀리서는 너무 많아 자동 표시하지 않는다
+  const AREA_MAX_MARKERS = 150;
   let markers = [];
 
   // 탭 전환
@@ -146,7 +152,11 @@
     const radius = Number($("radius").value);
     const fSeat = $("fSeat").value, fBus = $("fBus").checked, fExt = $("fExt").checked, fPlay = $("fPlay").checked, fAge = $("fAge").value, fCap = $("fCap").value, fCur = $("fCur").value;
     let list = data;
-    if (userPos) {
+    if (area) {
+      const src = allRows || data;
+      list = src.filter((d) => d.lat && d.lat >= area.s && d.lat <= area.n && d.lng >= area.w && d.lng <= area.e)
+        .map((d) => ({ ...d, dist: distance(area.center, d) }));
+    } else if (userPos) {
       list = data.filter((d) => d.lat).map((d) => ({ ...d, dist: distance(userPos, d) })).filter((d) => !radius || d.dist <= radius);
     } else if ($("sigungu").value) {
       list = data.filter((d) => d.sigungu === $("sigungu").value);
@@ -175,7 +185,7 @@
       space: (a, b) => (spaceOf(b) ?? -1) - (spaceOf(a) ?? -1),
       name: (a, b) => a.name.localeCompare(b.name, "ko"),
     };
-    return [...list].sort(by[sort === "dist" && !userPos ? "name" : sort]);
+    return [...list].sort(by[sort === "dist" && !userPos && !area ? "name" : sort]);
   }
 
 
@@ -317,7 +327,7 @@
     page = Math.min(page, pages);
     const offset = (page - 1) * PAGE;
     const list = all.slice(offset, offset + PAGE);
-    $("count").textContent = `조건에 맞는 어린이집 ${all.length.toLocaleString()}곳`;
+    $("count").textContent = area ? `지도 화면 안 어린이집 ${all.length.toLocaleString()}곳 (지도 가운데에서 가까운 순)` : `조건에 맞는 어린이집 ${all.length.toLocaleString()}곳`;
     renderPager(pages);
     $("list").innerHTML = list.length ? list.map((d, i) => {
       const s = seat(d);
@@ -335,7 +345,7 @@
       const d = list.find((x) => x.id === li.dataset.id);
       li.querySelector(".head").addEventListener("click", () => openDetail(d));
     });
-    drawMarkers(list);
+    drawMarkers(area ? all.slice(0, AREA_MAX_MARKERS) : list, offset);
   }
 
   // 페이지 번호: 현재 페이지 주변 3개 + 처음/끝 + 이전/다음 (모바일 한 줄)
@@ -362,14 +372,15 @@
   });
 
   // 네이버 지도 (Client ID가 없으면 목록만 표시)
-  function drawMarkers(list) {
+  function drawMarkers(list, offset = (page - 1) * PAGE) {
     if (!map) return;
     markers.forEach((m) => m.setMap(null));
     const pts = list.filter((d) => d.lat);
-    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"}" title="${d.geocoded ? "주소 기준 위치" : ""}">${(page - 1) * PAGE + list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(14, 14) } }));
+    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"}" title="${d.geocoded ? "주소 기준 위치" : ""}">${area ? list.indexOf(d) + 1 : offset + list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(14, 14) } }));
     const ll = pts.map((d) => new naver.maps.LatLng(d.lat, d.lng));
     if (userPos) ll.push(new naver.maps.LatLng(userPos.lat, userPos.lng));
-    if (ll.length) {
+    if (ll.length && !area) {
+      programmaticMove = true;
       const bounds = new naver.maps.LatLngBounds(ll[0], ll[0]);
       ll.forEach((p) => bounds.extend(p));
       map.fitBounds(bounds, { top: 30, right: 30, bottom: 30, left: 30 });
@@ -384,12 +395,40 @@
     }
     const s = document.createElement("script");
     s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(cfg.NAVER_MAPS_KEY_ID)}`;
-    s.onload = () => { map = new naver.maps.Map("map", { center: new naver.maps.LatLng(36.5, 127.8), zoom: 7 }); render(); };
+    s.onload = () => {
+      map = new naver.maps.Map("map", { center: new naver.maps.LatLng(36.5, 127.8), zoom: 7 });
+      let t;
+      naver.maps.Event.addListener(map, "idle", () => {
+        if (programmaticMove) { programmaticMove = false; return; }  // 앱이 움직인 경우는 무시
+        clearTimeout(t); t = setTimeout(onMapMoved, 250);
+      });
+      render();
+    };
     s.onerror = () => { $("map").innerHTML = `<div class="map-fallback">지도를 불러오지 못했습니다. Client ID와 등록 도메인을 확인하세요.</div>`; };
     document.head.appendChild(s);
   }
 
+  async function onMapMoved() {
+    const z = map.getZoom();
+    if (z < AREA_MIN_ZOOM) {
+      if (area) return;  // 이미 영역 모드면 축소해도 마지막 영역 유지
+      toast("지도를 조금 더 확대하면 그 지역 어린이집을 자동으로 보여드려요.");
+      return;
+    }
+    const b = map.getBounds();
+    const sw = b.getSW(), ne = b.getNE(), c = map.getCenter();
+    area = { s: sw.lat(), w: sw.lng(), n: ne.lat(), e: ne.lng(), center: { lat: c.lat(), lng: c.lng() } };
+    if (!allRows) {
+      $("count").textContent = "이 지역 어린이집을 불러오는 중…";
+      try { allRows = (await loadAll()).rows; } catch (e) { allRows = null; }
+    }
+    updateRegionLabel();
+    render();
+  }
+  function exitArea() { area = null; }
+
   async function selectSido(sido) {
+    exitArea();
     $("count").textContent = "불러오는 중…";
     userPos = null;
     try {
@@ -412,6 +451,7 @@
     navigator.geolocation.getCurrentPosition(
       async (p) => {
         userPos = { lat: p.coords.latitude, lng: p.coords.longitude };
+        exitArea();
         n.textContent = "전국 데이터를 불러와 가까운 순으로 정렬하는 중…";
         try {
           const r = await loadAll();
@@ -431,11 +471,11 @@
   });
 
   $("sido").addEventListener("change", () => selectSido($("sido").value).then(updateRegionLabel));
-  $("sigungu").addEventListener("change", () => { userPos = null; updateRegionLabel(); render(); });
+  $("sigungu").addEventListener("change", () => { userPos = null; exitArea(); updateRegionLabel(); render(); });
 
   // 지역 선택 시트: 시도 → 시군구 두 단계
   function updateRegionLabel() {
-    $("regionLabel").textContent = userPos ? "현재 위치 주변" : [$("sido").value, $("sigungu").value].filter(Boolean).join(" ");
+    $("regionLabel").textContent = area ? "지도 화면 안" : userPos ? "현재 위치 주변" : [$("sido").value, $("sigungu").value].filter(Boolean).join(" ");
     $("regionBtn").setAttribute("aria-label", `지역 변경: ${$("regionLabel").textContent}`);
   }
   const DOWN_BACK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
@@ -479,6 +519,7 @@
       if ($("sido").value !== sido || userPos) { $("sido").value = sido; await selectSido(sido); }
       $("sigungu").value = b.dataset.sgg;
       userPos = null;
+      exitArea();
       $("locNotice").hidden = true;
       updateRegionLabel();
       render();
