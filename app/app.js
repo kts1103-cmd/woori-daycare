@@ -132,7 +132,9 @@
     } else if ($("sigungu").value) {
       list = data.filter((d) => d.sigungu === $("sigungu").value);
     }
+    const q = $("q").value.trim().replace(/\s+/g, "");
     list = list.filter((d) => {
+      if (q && !`${d.name}${d.addr || ""}`.replace(/\s+/g, "").includes(q)) return false;
       if (typeFilter && d.type !== typeFilter) return false;
       if (fBus && !d.bus) return false;
       if (fExt && d.extended !== true) return false;
@@ -157,73 +159,193 @@
     return [...list].sort(by[sort === "dist" && !userPos ? "name" : sort]);
   }
 
-  const PAGE = 50;
-  function render() {
-    const all = currentList();
-    const list = all.slice(0, PAGE);
-    $("count").textContent = `조건에 맞는 어린이집 ${all.length.toLocaleString()}곳${all.length > PAGE ? ` · 상위 ${PAGE}곳 표시` : ""}`;
-    $("list").innerHTML = list.length ? list.map((d, i) => {
-      const s = seat(d);
-      const r = ratioOf(d);
-      return `
-      <li data-id="${d.id}">
-        <button class="head" aria-expanded="false">
-          <span class="no">${i + 1}</span>
-          <span class="t"><b>${esc(d.name)}</b><small>${esc(d.type)} · ${esc(d.sigungu)}${d.dist != null ? ` · ${fmt(d.dist)}` : ""}</small>
-            <span class="tags">${d.extended ? '<span class="tag">🌙 연장보육</span>' : ""}${d.bus ? '<span class="tag">🚌 차량</span>' : ""}${d.playground > 0 ? '<span class="tag">🛝 놀이터</span>' : ""}${yearsOf(d) != null && yearsOf(d) <= 3 ? '<span class="tag">✨ 신규</span>' : ""}${yearsOf(d) >= 10 ? `<span class="tag gray">${Math.floor(yearsOf(d))}년 운영</span>` : ""}</span></span>
-          <span class="seat ${s.cls}">${s.text}</span>
-        </button>
-        <div class="detail">
-          <div class="meta">${esc(d.addr)}</div>
-          <div class="meta">정원 ${d.capacity ?? "-"}명 · 현원 ${d.current ?? "-"}명 <small>(${index.basis} 기준)</small>${r ? ` · 교직원 1명당 아이 ${r.toFixed(1)}명` : ""}</div>
-          <div class="meta">보육실 ${d.rooms ?? "-"}개 · 면적 ${d.area ?? "-"}㎡${spaceOf(d) ? ` (아이 1명당 ${spaceOf(d).toFixed(1)}㎡)` : ""} · 놀이터 ${d.playground ? d.playground + "곳" : "없음"}</div>
-          <div class="meta">CCTV ${d.cctv ?? "-"}대 · 통학차량 ${d.bus ? "운영" : "미운영"} · 연장보육 ${d.extended === true ? "운영" : d.extended === false ? "미운영" : "정보 없음"}</div>
-          <div class="meta">${d.since ? `${d.since.slice(0, 4)}년 인가 · 운영 ${Math.floor(yearsOf(d))}년째` : "인가일 정보 없음"}</div>
-          <div class="actions">
-            <button class="btn primary" data-route="walk">도보 길찾기</button>
-            <button class="btn" data-route="public">대중교통</button>
-            <button class="btn" data-route="car">자동차</button>
-            ${d.tel ? `<a class="btn" href="tel:${esc(d.tel)}">전화</a>` : ""}
+
+  const tagsOf = (d) => `${d.extended ? '<span class="tag">🌙 연장보육</span>' : ""}${d.bus ? '<span class="tag">🚌 차량</span>' : ""}${d.playground > 0 ? '<span class="tag">🛝 놀이터</span>' : ""}${yearsOf(d) != null && yearsOf(d) <= 3 ? '<span class="tag">✨ 신규</span>' : ""}${yearsOf(d) >= 10 ? `<span class="tag gray">${Math.floor(yearsOf(d))}년 운영</span>` : ""}`;
+  const ICON = {
+    back: '<path d="m15 5-7 7 7 7"/>', chevron: '<path d="m9 5 7 7-7 7"/>', close: '<path d="m6 6 12 12M6 18 18 6"/>',
+    shield: '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="M12 8v5M12 17h.01"/>',
+    phone: '<path d="m7 3 3 5-3 2c2 4 3 5 7 7l2-3 5 3-2 4C9 21 3 15 3 5Z"/>',
+    route: '<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h8"/>',
+    external: '<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',
+  };
+  const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+  const houseArt = `<div class="house-art"><svg viewBox="0 0 390 158" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle cx="307" cy="46" r="22" fill="#F5DEA0"/><ellipse cx="250" cy="174" rx="170" ry="59" fill="#F0F9F6"/><rect x="133" y="74" width="124" height="83" rx="12" fill="#fff"/><path d="m117 78 78-55 78 55Z" fill="#2B7668"/><rect x="182" y="107" width="27" height="51" rx="8" fill="#245C52"/><g fill="#F5DEA0"><rect x="152" y="93" width="18" height="22" rx="4"/><rect x="222" y="93" width="18" height="22" rx="4"/></g><rect x="93" y="118" width="8" height="43" rx="4" fill="#245C52"/><ellipse cx="97" cy="105" rx="31" ry="37" fill="#2B7668"/></svg><span>사진 준비 중 · 일러스트</span></div>`;
+
+  // 상세 화면 (뒤로가기 버튼·기기 뒤로가기 모두 목록으로 복귀)
+  let detailOpen = false, listScroll = 0;
+  function openDetail(d) {
+    listScroll = document.querySelector("main").scrollTop;
+    const s = seat(d), r = ratioOf(d), sp = spaceOf(d), left = seatsLeft(d);
+    const row = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
+    const root = $("view-detail");
+    root.innerHTML = `
+      <header class="detail-header">
+        <button class="icon-button" id="detailBack" aria-label="목록으로 돌아가기">${ic("back")}</button>
+        <h2>어린이집 정보</h2>
+      </header>
+      <div class="detail-body">
+        ${houseArt}
+        <div class="detail-content">
+          <div>
+            <span class="badge">${esc(d.type)}</span> <span class="seat ${s.cls}">${s.text}</span>
+            <h2 class="detail-name">${esc(d.name)}</h2>
+            <p class="detail-address">${esc(d.addr || d.sigungu)}</p>
+            <div class="tags">${tagsOf(d)}</div>
           </div>
+          <div class="metrics">
+            <div><span>${d.dist != null ? "현재 위치에서" : "남은 정원"}</span><strong>${d.dist != null ? fmt(d.dist) : left != null ? Math.max(0, left) + "명" : "-"}</strong></div>
+            <div><span>정원</span><strong>${d.capacity ?? "-"}명</strong></div>
+            <div><span>현원</span><strong>${d.current ?? "-"}명</strong></div>
+          </div>
+          <section class="facts">
+            <h3>시설 정보</h3>
+            <dl>
+              ${row("교직원 1명당 아이", r ? `${r.toFixed(1)}명` : "정보 없음")}
+              ${row("보육실 · 면적", `${d.rooms ?? "-"}개 · ${d.area ?? "-"}㎡${sp ? ` <small>(1명당 ${sp.toFixed(1)}㎡)</small>` : ""}`)}
+              ${row("놀이터", d.playground ? `${d.playground}곳` : "없음")}
+              ${row("CCTV", d.cctv != null ? `${d.cctv}대` : "정보 없음")}
+              ${row("통학차량", d.bus ? "운영" : "미운영")}
+              ${row("연장보육", d.extended === true ? "운영" : d.extended === false ? "미운영" : "정보 없음")}
+              ${row("인가", d.since ? `${d.since.slice(0, 4)}년 · 운영 ${Math.floor(yearsOf(d))}년째` : "정보 없음")}
+            </dl>
+          </section>
+          <section class="visit-note">
+            <h3>방문 전 확인해 주세요</h3>
+            <p>남은 정원은 ${esc(index.basis)} 기준 정원과 현원의 차이예요. 실시간 빈자리가 아니며 연령반별 자리와 대기자는 반영되지 않아요. 모집 여부와 운영 시간은 어린이집에 직접 확인하세요.</p>
+          </section>
           <div class="more">
             <button class="btn" data-open="check">📝 상담 체크리스트</button>
             <button class="btn" data-open="rate">⭐ 평가하기</button>
-            <a class="btn" href="https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp" target="_blank" rel="noopener" data-copy="${esc(d.name)}">💰 비용·식단·일과 (공시)</a>
+            <a class="btn" href="https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp" target="_blank" rel="noopener" data-copy="${esc(d.name)}">💰 비용·식단·일과</a>
             <a class="btn" href="https://www.childcare.go.kr/" target="_blank" rel="noopener">📮 입소대기 신청</a>
           </div>
           <div class="slot"></div>
+          <button class="info-shortcut" id="toViolation">${ic("shield")}<span>위반시설·행위자 공표 확인하기</span>${ic("chevron")}</button>
+          <p class="source-note">출처: ${esc(index.source)} · 기준일 ${esc(index.basis)}<br>정확한 정보는 해당 어린이집과 공식 포털에서 확인하세요.</p>
         </div>
+      </div>
+      <div class="detail-actions">
+        <div class="action-row">
+          ${d.tel ? `<a class="btn secondary" href="tel:${esc(d.tel)}">${ic("phone")}전화 문의</a>` : `<button class="btn secondary" disabled>전화번호 없음</button>`}
+          <button class="btn primary" id="routeBtn">${ic("route")}길찾기</button>
+        </div>
+      </div>`;
+    root.querySelector("#detailBack").addEventListener("click", () => history.back());
+    root.querySelector("#routeBtn").addEventListener("click", () => openRouteSheet(d));
+    root.querySelector("#toViolation").addEventListener("click", () => {
+      history.back();
+      setTimeout(() => document.querySelector('nav.tabs [data-view="view-violation"]').click(), 0);
+    });
+    root.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => {
+      const slot = root.querySelector(".slot");
+      const same = slot.dataset.open === b.dataset.open;
+      slot.dataset.open = same ? "" : b.dataset.open;
+      slot.innerHTML = same ? "" : b.dataset.open === "rate" ? ratePanel(d) : checkPanel(d);
+      if (!same) { bindPanels(root, d); slot.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+    }));
+    root.querySelectorAll("[data-copy]").forEach((a) => a.addEventListener("click", () => {
+      try { navigator.clipboard.writeText(a.dataset.copy); } catch {}
+      toast(`"${a.dataset.copy}" 이름을 복사했어요. 공시 검색창에 붙여넣어 찾아보세요.`);
+    }));
+    showDetail(true);
+    history.pushState({ detail: true }, "", "#detail");
+  }
+  function showDetail(on) {
+    detailOpen = on;
+    document.body.classList.toggle("detail-mode", on);
+    $("view-detail").classList.toggle("active", on);
+    $("view-map").classList.toggle("active", !on);
+    const main = document.querySelector("main");
+    if (on) main.scrollTop = 0;
+    else main.scrollTop = listScroll;
+  }
+  window.addEventListener("popstate", () => {
+    if (!detailOpen) return;
+    if ($("sheet").open) $("sheet").close();
+    showDetail(false);
+  });
+
+  // 길찾기 방법 선택 시트
+  function openRouteSheet(d) {
+    const pref = window.APP_SETTINGS ? APP_SETTINGS.get().route : "ask";
+    if (pref && pref !== "ask") { directions(d, pref); return; }
+    const opts = [["walk", "도보"], ["public", "대중교통"], ["car", "자동차"]];
+    $("sheet").innerHTML = `<div class="sheet-top"><h2>어떻게 찾아갈까요?</h2><button class="icon-button" data-close aria-label="닫기">${ic("close")}</button></div>
+      <p class="sheet-copy">네이버 지도로 ${esc(d.name)}까지 길을 안내해요.</p>
+      <div class="sheet-options">${opts.map(([m, l]) => `<button data-route="${m}">${l}${ic("external")}</button>`).join("")}</div>`;
+    $("sheet").querySelector("[data-close]").addEventListener("click", () => $("sheet").close());
+    $("sheet").querySelectorAll("[data-route]").forEach((b) => b.addEventListener("click", () => { $("sheet").close(); directions(d, b.dataset.route); }));
+    $("sheet").showModal();
+  }
+  $("sheet").addEventListener("click", (e) => { if (e.target === $("sheet")) $("sheet").close(); });
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("visible");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("visible"), 3500);
+  }
+
+  const PAGE = 10;
+  let page = 1;
+  // 필터·검색이 바뀌면 1페이지로, 페이지 번호를 누를 때만 keepPage
+  function render(opts) {
+    if (!opts || !opts.keepPage) page = 1;
+    const all = currentList();
+    const pages = Math.max(1, Math.ceil(all.length / PAGE));
+    page = Math.min(page, pages);
+    const offset = (page - 1) * PAGE;
+    const list = all.slice(offset, offset + PAGE);
+    $("count").textContent = `조건에 맞는 어린이집 ${all.length.toLocaleString()}곳`;
+    renderPager(pages);
+    $("list").innerHTML = list.length ? list.map((d, i) => {
+      const s = seat(d);
+      return `
+      <li data-id="${d.id}">
+        <button class="head" aria-label="${esc(d.name)} 상세 보기">
+          <span class="no">${offset + i + 1}</span>
+          <span class="t"><b>${esc(d.name)}</b><small>${esc(d.type)} · ${esc(d.sigungu)}${d.dist != null ? ` · ${fmt(d.dist)}` : ""}</small>
+            <span class="tags">${tagsOf(d)}</span></span>
+          <span class="seat ${s.cls}">${s.text}</span>
+        </button>
       </li>`;
-    }).join("") : `<li style="padding:16px 0;color:var(--muted)">조건에 맞는 어린이집이 없습니다. 필터를 줄여 보세요.</li>`;
+    }).join("") : `<li class="empty-row">조건에 맞는 어린이집이 없습니다. 필터를 줄여 보세요.</li>`;
     $("list").querySelectorAll("li[data-id]").forEach((li) => {
       const d = list.find((x) => x.id === li.dataset.id);
-      li.querySelector(".head").addEventListener("click", (e) => {
-        const open = li.classList.toggle("open");
-        e.currentTarget.setAttribute("aria-expanded", open);
-      });
-      li.querySelectorAll("[data-route]").forEach((b) => b.addEventListener("click", () => directions(d, b.dataset.route)));
-      li.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => {
-        const slot = li.querySelector(".slot");
-        const same = slot.dataset.open === b.dataset.open;
-        slot.dataset.open = same ? "" : b.dataset.open;
-        slot.innerHTML = same ? "" : b.dataset.open === "rate" ? ratePanel(d) : checkPanel(d);
-        if (!same) bindPanels(li, d);
-      }));
-      li.querySelectorAll("[data-copy]").forEach((a) => a.addEventListener("click", () => {
-        try { navigator.clipboard.writeText(a.dataset.copy); } catch {}
-        const n = $("locNotice"); n.hidden = false;
-        n.textContent = `"${a.dataset.copy}" 이름을 복사했어요. 공시 검색창에 붙여넣어 찾아보세요.`;
-      }));
+      li.querySelector(".head").addEventListener("click", () => openDetail(d));
     });
     drawMarkers(list);
   }
+
+  // 페이지 번호: 현재 페이지 주변 3개 + 처음/끝 + 이전/다음 (모바일 한 줄)
+  function renderPager(pages) {
+    const el = $("pager");
+    if (pages <= 1) { el.innerHTML = ""; return; }
+    let start = Math.max(1, page - 1);
+    const end = Math.min(pages, start + 2);
+    start = Math.max(1, end - 2);
+    const btn = (n, label, aria, extra = "") => `<button type="button" data-page="${n}" aria-label="${aria}" ${extra}>${label}</button>`;
+    let html = btn(page - 1, "‹", "이전 페이지", page === 1 ? "disabled" : "");
+    if (start > 1) html += btn(1, "1", "1페이지") + (start > 2 ? `<span class="gap" aria-hidden="true">…</span>` : "");
+    for (let n = start; n <= end; n++) html += btn(n, n, `${n}페이지`, n === page ? 'aria-current="page"' : "");
+    if (end < pages) html += (end < pages - 1 ? `<span class="gap" aria-hidden="true">…</span>` : "") + btn(pages, pages, `${pages}페이지`);
+    html += btn(page + 1, "›", "다음 페이지", page === pages ? "disabled" : "");
+    el.innerHTML = html;
+  }
+  $("pager").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-page]");
+    if (!b || b.disabled) return;
+    page = Number(b.dataset.page);
+    render({ keepPage: true });
+    $("count").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   // 네이버 지도 (Client ID가 없으면 목록만 표시)
   function drawMarkers(list) {
     if (!map) return;
     markers.forEach((m) => m.setMap(null));
     const pts = list.filter((d) => d.lat);
-    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#2f7d4f;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px solid #fff">${list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(12, 12) } }));
+    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px solid #fff">${(page - 1) * PAGE + list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(14, 14) } }));
     const ll = pts.map((d) => new naver.maps.LatLng(d.lat, d.lng));
     if (userPos) ll.push(new naver.maps.LatLng(userPos.lat, userPos.lng));
     if (ll.length) {
@@ -283,13 +405,40 @@
     render();
   }));
 
+  // 검색
+  let qTimer;
+  $("q").addEventListener("input", () => {
+    $("qClear").hidden = !$("q").value;
+    clearTimeout(qTimer); qTimer = setTimeout(render, 150);
+  });
+  $("qClear").addEventListener("click", () => { $("q").value = ""; $("qClear").hidden = true; $("q").focus(); render(); });
+
+  // 지도/목록 전환
+  function setMode(mode) {
+    $("view-map").dataset.mode = mode;
+    document.querySelectorAll(".segments [data-mode]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+    if (mode === "map" && map) { if (map.refresh) map.refresh(); render(); }
+  }
+  document.querySelectorAll(".segments [data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+  if (cfg.NAVER_MAPS_KEY_ID) setMode("map");
+
+  if (location.hash === "#detail") history.replaceState(null, "", location.pathname + location.search);
+
   (async function init() {
     initMap();
     index = await (await fetch("data/index.json")).json();
     $("basis").textContent = `${index.source} · 기준일 ${index.basis}`;
     document.querySelectorAll(".basisDate").forEach((e) => { e.textContent = index.basis; });
     $("sido").innerHTML = index.sidos.map((s) => `<option>${esc(s.sido)}</option>`).join("");
-    const start = index.sidos.find((s) => s.sido === "경상북도") ? "경상북도" : index.sidos[0].sido;
+    const pref = window.APP_SETTINGS ? APP_SETTINGS.get() : {};
+    $("radius").value = pref.defaultRadius || $("radius").value;
+    $("locate").hidden = pref.showLocate === false;
+    if (window.APP_SETTINGS) APP_SETTINGS.onChange((k, v) => {
+      if (k === "showLocate") $("locate").hidden = !v;
+      if (k === "defaultRadius") { $("radius").value = v; render(); }
+    });
+    const start = index.sidos.find((s) => s.sido === pref.defaultSido) ? pref.defaultSido
+      : index.sidos.find((s) => s.sido === "경상북도") ? "경상북도" : index.sidos[0].sido;
     $("sido").value = start;
     await selectSido(start);
   })();
