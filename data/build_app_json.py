@@ -9,6 +9,7 @@ if ext_src:  # 연장보육반 운영 여부 (2024년, data.go.kr 15140061)
             if r['연도'] == '2024':
                 ext[(norm(r['시군구']), norm(r['어린이집명']))] = r['연장보육반운영여부'] == 'Y'
 matched = 0
+seen = set()
 os.makedirs(outdir, exist_ok=True)
 by = collections.defaultdict(list); st = collections.Counter(); nocoord = 0; total = 0
 def num(x):
@@ -18,6 +19,11 @@ with open(src, encoding='utf-8-sig') as f:
     for r in csv.DictReader(f):
         total += 1; st[r['운영현황']] += 1
         if r['운영현황'] not in ('정상', '재개'): continue
+        # 육아종합지원센터·장난감도서관 등 정원이 없는 지원시설은 어린이집 목록에서 제외
+        if not num(r['정원수']): continue
+        k = (r['시군구'], norm(r['어린이집명']), norm(r['주소']))
+        if k in seen: continue  # 새·옛 시도코드 양쪽에 같은 시설이 있으면 한 번만
+        seen.add(k)
         try: lat, lng = float(r['위도']), float(r['경도'])
         except: lat = lng = None
         if not lat: nocoord += 1

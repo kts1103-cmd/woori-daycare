@@ -6,42 +6,42 @@
   {
    "sido": "강원특별자치도",
    "file": "sido_00.json",
-   "count": 755
+   "count": 748
   },
   {
    "sido": "경기도",
    "file": "sido_01.json",
-   "count": 7919
+   "count": 7774
   },
   {
    "sido": "경상남도",
    "file": "sido_02.json",
-   "count": 1511
+   "count": 1499
   },
   {
    "sido": "경상북도",
    "file": "sido_03.json",
-   "count": 1106
+   "count": 1094
   },
   {
    "sido": "대구광역시",
    "file": "sido_04.json",
-   "count": 967
+   "count": 964
   },
   {
    "sido": "대전광역시",
    "file": "sido_05.json",
-   "count": 794
+   "count": 791
   },
   {
    "sido": "부산광역시",
    "file": "sido_06.json",
-   "count": 1234
+   "count": 1216
   },
   {
    "sido": "서울특별시",
    "file": "sido_07.json",
-   "count": 4039
+   "count": 3875
   },
   {
    "sido": "세종특별자치시",
@@ -51,32 +51,37 @@
   {
    "sido": "울산광역시",
    "file": "sido_09.json",
-   "count": 518
+   "count": 512
   },
   {
    "sido": "인천광역시",
    "file": "sido_10.json",
-   "count": 1553
+   "count": 1529
+  },
+  {
+   "sido": "전남광주통합특별시",
+   "file": "sido_11.json",
+   "count": 1568
   },
   {
    "sido": "전북특별자치도",
-   "file": "sido_11.json",
-   "count": 842
+   "file": "sido_12.json",
+   "count": 832
   },
   {
    "sido": "제주특별자치도",
-   "file": "sido_12.json",
-   "count": 366
+   "file": "sido_13.json",
+   "count": 365
   },
   {
    "sido": "충청남도",
-   "file": "sido_13.json",
-   "count": 1213
+   "file": "sido_14.json",
+   "count": 1206
   },
   {
    "sido": "충청북도",
-   "file": "sido_14.json",
-   "count": 815
+   "file": "sido_15.json",
+   "count": 800
   }
  ]
 }

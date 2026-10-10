@@ -9,8 +9,8 @@ import csv, datetime, glob, json, os, subprocess, sys, time, urllib.parse, urlli
 ROOT = os.path.dirname(os.path.abspath(__file__))
 URL = "https://info.childcare.go.kr/info_html5/stat/sheet/StatCrInfoExcel.jsp"
 REFERER = "https://info.childcare.go.kr/info_html5/oais/openapi/OpenApiInfoSl.jsp"
-# 전남광주통합특별시(12)는 아직 비어 있어 옛 코드 광주(29)·전남(46)으로 받는다
-SIDO_CODES = ["11", "26", "27", "28", "29", "30", "31", "36", "41", "43", "44", "46", "47", "48", "49", "51", "52"]
+# 전남광주통합특별시는 시점에 따라 새 코드(12) 또는 옛 코드 광주(29)·전남(46)에 들어 있어 셋 다 받는다
+SIDO_CODES = ["11", "12", "26", "27", "28", "29", "30", "31", "36", "41", "43", "44", "46", "47", "48", "49", "51", "52"]
 MIN_TOTAL = 20000  # 이보다 적으면 다운로드 이상으로 보고 앱 데이터를 바꾸지 않는다
 
 
