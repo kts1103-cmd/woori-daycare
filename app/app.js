@@ -201,6 +201,17 @@
   const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
   const houseArt = `<div class="house-art"><svg viewBox="0 0 390 158" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle cx="307" cy="46" r="22" fill="#F5DEA0"/><ellipse cx="250" cy="174" rx="170" ry="59" fill="#F0F9F6"/><rect x="133" y="74" width="124" height="83" rx="12" fill="#fff"/><path d="m117 78 78-55 78 55Z" fill="#2B7668"/><rect x="182" y="107" width="27" height="51" rx="8" fill="#245C52"/><g fill="#F5DEA0"><rect x="152" y="93" width="18" height="22" rx="4"/><rect x="222" y="93" width="18" height="22" rx="4"/></g><rect x="93" y="118" width="8" height="43" rx="4" fill="#245C52"/><ellipse cx="97" cy="105" rx="31" ry="37" fill="#2B7668"/></svg><span>사진 준비 중 · 일러스트</span></div>`;
 
+  // 상세 상단: 네이버 Static Map (등록한 웹 주소에서만 동작하는 Client ID만 사용, Secret 불필요)
+  function staticMap(d) {
+    if (!cfg.NAVER_MAPS_KEY_ID || !d.lat) return "";
+    const dark = document.documentElement.dataset.theme === "dark";
+    const pos = `${d.lng} ${d.lat}`;
+    const src = `https://maps.apigw.ntruss.com/map-static/v2/raster-cors?w=480&h=160&scale=2&level=16&center=${d.lng},${d.lat}`
+      + `&markers=${encodeURIComponent(`type:d|size:mid|color:0x245C52|pos:${pos}`)}&X-NCP-APIGW-API-KEY-ID=${encodeURIComponent(cfg.NAVER_MAPS_KEY_ID)}`;
+    return `<div class="house-art static-map${dark ? " dim" : ""}"><img src="${src}" alt="${esc(d.name)} 위치 지도" loading="lazy" onerror="this.parentNode.classList.add('failed')">`
+      + `<span>${d.geocoded ? "주소 기준 위치 · " : ""}© NAVER Corp.</span></div>`;
+  }
+
   // 상세 화면 (뒤로가기 버튼·기기 뒤로가기 모두 목록으로 복귀)
   let detailOpen = false, listScroll = 0;
   function openDetail(d) {
@@ -214,7 +225,7 @@
         <h2>어린이집 정보</h2>
       </header>
       <div class="detail-body">
-        ${houseArt}
+        ${staticMap(d) || houseArt}
         <div class="detail-content">
           <div>
             <span class="badge">${esc(d.type)}</span> <span class="seat ${s.cls}">${s.text}</span>
@@ -434,9 +445,18 @@
       return;
     }
     const s = document.createElement("script");
-    s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(cfg.NAVER_MAPS_KEY_ID)}`;
+    // Style Editor에서 만든 스타일 ID가 있으면 GL 지도로 앱 디자인에 맞춘 색을 쓴다 (라이트/다크 따로)
+    const styleOf = () => (document.documentElement.dataset.theme === "dark" ? cfg.NAVER_MAP_STYLE_ID_DARK : cfg.NAVER_MAP_STYLE_ID) || "";
+    const useGL = !!(cfg.NAVER_MAP_STYLE_ID || cfg.NAVER_MAP_STYLE_ID_DARK);
+    s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(cfg.NAVER_MAPS_KEY_ID)}${useGL ? "&submodules=gl" : ""}`;
     s.onload = () => {
-      map = new naver.maps.Map("map", { center: new naver.maps.LatLng(36.5, 127.8), zoom: 7 });
+      const opts = { center: new naver.maps.LatLng(36.5, 127.8), zoom: 7 };
+      if (useGL && styleOf()) Object.assign(opts, { gl: true, customStyleId: styleOf() });
+      map = new naver.maps.Map("map", opts);
+      if (opts.gl) $("map").classList.add("styled");
+      if (useGL && window.APP_SETTINGS) APP_SETTINGS.onChange((k) => {
+        if (k === "theme" && map.setOptions && styleOf()) map.setOptions({ customStyleId: styleOf() });
+      });
       let t;
       naver.maps.Event.addListener(map, "idle", () => {
         if (programmaticMove) { programmaticMove = false; return; }  // 앱이 움직인 경우는 무시
