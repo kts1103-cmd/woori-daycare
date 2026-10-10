@@ -18,16 +18,35 @@
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+  async function fetchJson(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+    return r.json();
+  }
   async function loadSido(sido) {
     if (cache[sido]) return cache[sido];
-    const meta = index.sidos.find((s) => s.sido === sido);
-    const rows = await (await fetch(`data/${meta.file}`)).json();
+    const meta = index && index.sidos.find((s) => s.sido === sido);
+    if (!meta) throw new Error(`알 수 없는 지역: ${sido}`);
+    const rows = await fetchJson(`data/${meta.file}`);
+    if (!Array.isArray(rows)) throw new Error(`${meta.file}: 형식 오류`);
     rows.forEach((d, i) => { d.id = `${meta.file}-${i}`; });
     return (cache[sido] = rows);
   }
+  // 일부 시도가 실패해도 받은 곳까지는 보여준다
   async function loadAll() {
-    const all = await Promise.all(index.sidos.map((s) => loadSido(s.sido)));
-    return all.flat();
+    const all = await Promise.allSettled(index.sidos.map((s) => loadSido(s.sido)));
+    const ok = all.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    if (!ok.length) throw new Error("전국 데이터를 불러오지 못했습니다.");
+    return { rows: ok.flat(), failed: all.length - ok.length };
+  }
+
+  // 데이터를 못 불러왔을 때: 목록 자리에 안내와 다시 시도 버튼
+  function showLoadError(msg, retry) {
+    console.error(msg);
+    $("count").textContent = "데이터를 불러오지 못했습니다";
+    $("pager").innerHTML = "";
+    $("list").innerHTML = `<li class="empty-row" role="alert">데이터를 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.<br><button type="button" class="chip" data-retry>다시 시도</button></li>`;
+    $("list").querySelector("[data-retry]").addEventListener("click", retry);
   }
 
   function fillSigungu() {
@@ -273,6 +292,7 @@
     $("sheet").innerHTML = `<div class="sheet-top"><h2>어떻게 찾아갈까요?</h2><button class="icon-button" data-close aria-label="닫기">${ic("close")}</button></div>
       <p class="sheet-copy">네이버 지도로 ${esc(d.name)}까지 길을 안내해요.</p>
       <div class="sheet-options">${opts.map(([m, l]) => `<button data-route="${m}">${l}${ic("external")}</button>`).join("")}</div>`;
+    $("sheet").setAttribute("aria-label", "길찾기 방법 선택");
     $("sheet").querySelector("[data-close]").addEventListener("click", () => $("sheet").close());
     $("sheet").querySelectorAll("[data-route]").forEach((b) => b.addEventListener("click", () => { $("sheet").close(); directions(d, b.dataset.route); }));
     $("sheet").showModal();
@@ -371,7 +391,13 @@
   async function selectSido(sido) {
     $("count").textContent = "불러오는 중…";
     userPos = null;
-    data = await loadSido(sido);
+    try {
+      data = await loadSido(sido);
+    } catch (e) {
+      data = [];
+      showLoadError(e.message, () => selectSido(sido).then(updateRegionLabel));
+      return;
+    }
     fillSigungu();
     render();
   }
@@ -386,8 +412,16 @@
       async (p) => {
         userPos = { lat: p.coords.latitude, lng: p.coords.longitude };
         n.textContent = "전국 데이터를 불러와 가까운 순으로 정렬하는 중…";
-        data = await loadAll();
-        n.textContent = "현재 위치 기준 가까운 순으로 정렬했습니다.";
+        try {
+          const r = await loadAll();
+          data = r.rows;
+          n.textContent = r.failed ? `현재 위치 기준으로 정렬했습니다. (${r.failed}개 시·도는 불러오지 못해 빠졌어요)` : "현재 위치 기준 가까운 순으로 정렬했습니다.";
+        } catch (e) {
+          userPos = null;
+          n.textContent = "데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+          return;
+        }
+        updateRegionLabel();
         render();
       },
       () => { n.textContent = "위치 권한이 없어 지역 선택으로 보여드립니다."; },
@@ -395,8 +429,62 @@
     );
   });
 
-  $("sido").addEventListener("change", () => selectSido($("sido").value));
-  $("sigungu").addEventListener("change", () => { userPos = null; render(); });
+  $("sido").addEventListener("change", () => selectSido($("sido").value).then(updateRegionLabel));
+  $("sigungu").addEventListener("change", () => { userPos = null; updateRegionLabel(); render(); });
+
+  // 지역 선택 시트: 시도 → 시군구 두 단계
+  function updateRegionLabel() {
+    $("regionLabel").textContent = userPos ? "현재 위치 주변" : [$("sido").value, $("sigungu").value].filter(Boolean).join(" ");
+    $("regionBtn").setAttribute("aria-label", `지역 변경: ${$("regionLabel").textContent}`);
+  }
+  const DOWN_BACK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
+  const CHECK = "<b>✓</b>";
+  function regionSheet(html, label) {
+    const sh = $("sheet");
+    sh.setAttribute("aria-label", label);
+    sh.innerHTML = `<div class="sheet-top"><h2>어느 동네를 살펴볼까요?</h2><button class="icon-button" data-close aria-label="닫기">${ic("close")}</button></div>${html}`;
+    sh.querySelector("[data-close]").addEventListener("click", () => sh.close());
+    if (!sh.open) sh.showModal();
+  }
+  function openSidoSheet() {
+    const cur = userPos ? "" : $("sido").value;
+    regionSheet(`<p class="sheet-copy">먼저 시·도를 골라 주세요.</p>
+      <div class="sheet-options scroll">${index.sidos.map((s) => `<button data-sido="${esc(s.sido)}" class="${s.sido === cur ? "selected" : ""}">${esc(s.sido)}${s.sido === cur ? CHECK : ""}</button>`).join("")}</div>`, "시도 선택");
+    $("sheet").querySelectorAll("[data-sido]").forEach((b) => b.addEventListener("click", async () => {
+      const sido = b.dataset.sido;
+      b.innerHTML = `${esc(sido)}<small>불러오는 중…</small>`;
+      let rows;
+      try { rows = await loadSido(sido); } catch (e) {
+        console.error(e);
+        b.innerHTML = `${esc(sido)}<small>불러오지 못했어요 · 다시 눌러 주세요</small>`;
+        return;
+      }
+      openSigunguSheet(sido, rows);
+    }));
+    $("sheet").querySelector(".selected")?.scrollIntoView({ block: "center" });
+  }
+  function openSigunguSheet(sido, rows) {
+    const counts = {};
+    rows.forEach((d) => { counts[d.sigungu] = (counts[d.sigungu] || 0) + 1; });
+    const list = Object.keys(counts).sort((a, b) => a.localeCompare(b, "ko"));
+    const cur = !userPos && $("sido").value === sido ? $("sigungu").value : null;
+    const opt = (v, label, n) => `<button data-sgg="${esc(v)}" class="${cur === v ? "selected" : ""}">${label} <small>${n.toLocaleString()}곳</small>${cur === v ? CHECK : ""}</button>`;
+    regionSheet(`<button class="sheet-back" data-back>${DOWN_BACK}시·도 다시 고르기</button>
+      <p class="sheet-copy"><b>${esc(sido)}</b>에서 시·군·구를 골라 주세요.</p>
+      <div class="sheet-options scroll">${opt("", `${esc(sido)} 전체`, rows.length)}${list.map((s) => opt(s, esc(s), counts[s])).join("")}</div>`, "시군구 선택");
+    $("sheet").querySelector("[data-back]").addEventListener("click", openSidoSheet);
+    $("sheet").querySelectorAll("[data-sgg]").forEach((b) => b.addEventListener("click", async () => {
+      $("sheet").close();
+      if ($("sido").value !== sido || userPos) { $("sido").value = sido; await selectSido(sido); }
+      $("sigungu").value = b.dataset.sgg;
+      userPos = null;
+      $("locNotice").hidden = true;
+      updateRegionLabel();
+      render();
+    }));
+    $("sheet").querySelector(".selected")?.scrollIntoView({ block: "center" });
+  }
+  $("regionBtn").addEventListener("click", () => { if (index) openSidoSheet(); });
   $("radius").addEventListener("change", render);
   ["fSeat", "fBus", "fExt", "fPlay", "fAge", "fCap", "fCur", "sort"].forEach((id) => $(id).addEventListener("change", render));
   document.querySelectorAll(".chip[data-type]").forEach((c) => c.addEventListener("click", () => {
@@ -426,7 +514,14 @@
 
   (async function init() {
     initMap();
-    index = await (await fetch("data/index.json")).json();
+    try {
+      index = await fetchJson("data/index.json");
+      if (!index || !Array.isArray(index.sidos) || !index.sidos.length) throw new Error("index.json: 시도 목록이 비어 있음");
+    } catch (e) {
+      index = null;
+      showLoadError(e.message, () => location.reload());
+      return;
+    }
     $("basis").textContent = `${index.source} · 기준일 ${index.basis}`;
     document.querySelectorAll(".basisDate").forEach((e) => { e.textContent = index.basis; });
     $("sido").innerHTML = index.sidos.map((s) => `<option>${esc(s.sido)}</option>`).join("");
@@ -441,5 +536,6 @@
       : index.sidos.find((s) => s.sido === "경상북도") ? "경상북도" : index.sidos[0].sido;
     $("sido").value = start;
     await selectSido(start);
+    updateRegionLabel();
   })();
 })();
