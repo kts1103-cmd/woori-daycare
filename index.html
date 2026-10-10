@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리동네 어린이집</title>
+<meta name="description" content="전국 어린이집 위치와 기본정보를 지도로 쉽게 찾는 민간 개발 앱 (개발 중)">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --surface: #ffffff;
+    --text: #1f2421;
+    --muted: #5d665f;
+    --line: #e4e1d8;
+    --accent: #2f7d4f;
+    --accent-soft: #e6f2ea;
+    --warn-soft: #fff6e0;
+    --warn-line: #ecd59b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141715;
+      --surface: #1c201d;
+      --text: #e8ebe8;
+      --muted: #a3aca5;
+      --line: #2e3430;
+      --accent: #6cc58f;
+      --accent-soft: #1f3327;
+      --warn-soft: #2e2817;
+      --warn-line: #5c4d22;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141715; --surface: #1c201d; --text: #e8ebe8; --muted: #a3aca5;
+    --line: #2e3430; --accent: #6cc58f; --accent-soft: #1f3327;
+    --warn-soft: #2e2817; --warn-line: #5c4d22;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    line-height: 1.7;
+    word-break: keep-all;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 64px; }
+  header { margin-bottom: 40px; }
+  .badge {
+    display: inline-block; font-size: 13px; font-weight: 600;
+    color: var(--accent); background: var(--accent-soft);
+    padding: 4px 10px; border-radius: 999px;
+  }
+  h1 { font-size: clamp(28px, 6vw, 40px); margin: 14px 0 8px; letter-spacing: -0.02em; }
+  .lead { font-size: 18px; color: var(--muted); margin: 0; }
+  section { margin-top: 40px; }
+  h2 { font-size: 20px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  ul { padding-left: 20px; margin: 0; }
+  li { margin: 6px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .card strong { display: block; margin-bottom: 4px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .notice {
+    background: var(--warn-soft); border: 1px solid var(--warn-line);
+    border-radius: 12px; padding: 16px; font-size: 15px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+  a { color: var(--accent); }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="badge">개발 중 · 2026년 출시 예정</span>
+    <h1>우리동네 어린이집</h1>
+    <p class="lead">우리 동네 어린이집의 위치와 기본정보를 지도에서 쉽게 찾고 비교할 수 있는 모바일 앱입니다.</p>
+  </header>
+
+  <div class="notice">
+    본 서비스는 <strong>민간에서 개발하는 앱</strong>이며, 보건복지부·한국사회보장정보원·지방자치단체 등 정부기관과 관련이 없습니다.
+    어린이집 정보는 공공데이터를 출처와 기준일을 밝혀 그대로 보여주며, 정확한 정보는 해당 어린이집과 공식 포털에서 확인해 주세요.
+  </div>
+
+  <section>
+    <h2>제공 예정 기능</h2>
+    <div class="grid">
+      <div class="card"><strong>지도로 찾기</strong><p>동·읍·면을 고르거나 현재 위치 주변의 어린이집을 네이버지도에서 확인하고 길찾기로 연결합니다.</p></div>
+      <div class="card"><strong>어린이집 정보</strong><p>유형, 정원·현원, 통학차량, 보육교직원 현황 등 공개된 정보를 한 화면에서 봅니다.</p></div>
+      <div class="card"><strong>조건 검색</strong><p>유형, 정원 여유, 통학차량 운행 여부 등으로 원하는 어린이집을 좁혀 찾습니다.</p></div>
+      <div class="card"><strong>위반사실 공표 확인</strong><p>어린이집정보공개포털의 공식 위반사실 공표 화면으로 바로 연결합니다.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>이용 데이터 출처</h2>
+    <table>
+      <tr><th>공공데이터포털</th><td>한국사회보장정보원 어린이집 정보 (data.go.kr)</td></tr>
+      <tr><th>어린이집정보공개포털</th><td>보육정보공개 OPEN API — 어린이집 기본정보 등 (info.childcare.go.kr)</td></tr>
+      <tr><th>지도</th><td>네이버 클라우드 플랫폼 Maps</td></tr>
+    </table>
+    <p style="color:var(--muted);font-size:15px;margin-top:10px">공공데이터는 서버에서 하루 한 번 받아 저장하며, 앱 화면에 출처와 기준일을 함께 표시합니다.</p>
+  </section>
+
+  <section>
+    <h2>개인정보 보호 원칙</h2>
+    <ul>
+      <li>이름, 이메일, 전화번호, 생년월일 등은 수집하지 않을 계획입니다.</li>
+      <li>아이의 이름·생년월일·사진은 수집하지 않습니다.</li>
+      <li>현재 위치는 사용자가 "현재 위치로 찾기"를 누를 때만 사용하며, 거리 계산은 기기 안에서만 하고 서버에 저장하지 않습니다.</li>
+      <li>개인정보처리방침과 위치기반서비스 이용약관은 출시 전에 이 페이지에 공개합니다.</li>
+    </ul>
+  </section>
+
+  <footer>© 2026 우리동네 어린이집 · 서비스 지역: 전국</footer>
+</main>
+</body>
+</html>
