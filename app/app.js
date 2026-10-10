@@ -11,7 +11,8 @@
   let allRows = null;        // 전국 데이터 (영역 모드에서 시·도 경계를 넘어도 보이게)
   let programmaticMove = false;
   const AREA_MIN_ZOOM = 12;  // 이보다 멀리서는 너무 많아 자동 표시하지 않는다
-  const AREA_MAX_MARKERS = 150;
+  const AREA_MAX_MARKERS = 3000;  // 클러스터로 묶어 그리므로 화면 안 전체를 대상으로
+  const CLUSTER_PX = 56;          // 이 픽셀 칸 안의 어린이집은 하나의 묶음으로
   let markers = [];
 
   // 탭 전환
@@ -372,11 +373,50 @@
   });
 
   // 네이버 지도 (Client ID가 없으면 목록만 표시)
+  const pinIcon = (d, n) => ({ content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"};cursor:pointer" title="${esc(d.name)}${d.geocoded ? " · 주소 기준 위치" : ""}">${n}</div>`, anchor: new naver.maps.Point(14, 14) });
+  // 화면 픽셀 격자로 가까운 어린이집을 묶는다
+  function clusterize(list) {
+    const proj = map.getProjection();
+    const cells = new Map();
+    list.forEach((d, i) => {
+      const p = proj.fromCoordToOffset(new naver.maps.LatLng(d.lat, d.lng));
+      const key = `${Math.floor(p.x / CLUSTER_PX)}:${Math.floor(p.y / CLUSTER_PX)}`;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push({ d, rank: i + 1 });
+    });
+    return [...cells.values()];
+  }
+  const clusterIcon = (n) => {
+    const size = n < 10 ? 34 : n < 100 ? 42 : 50;
+    return { content: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(43,118,104,.88);color:#fff;border:3px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(40,77,57,.3);display:flex;align-items:center;justify-content:center;font:700 13px sans-serif" title="어린이집 ${n}곳 · 눌러서 확대">${n}</div>`, anchor: new naver.maps.Point(size / 2, size / 2) };
+  };
+
   function drawMarkers(list, offset = (page - 1) * PAGE) {
     if (!map) return;
     markers.forEach((m) => m.setMap(null));
+    if (area) {
+      markers = [];
+      clusterize(list.filter((d) => d.lat)).forEach((g) => {
+        if (g.length === 1) {
+          const { d, rank } = g[0];
+          const m = new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: pinIcon(d, rank) });
+          naver.maps.Event.addListener(m, "click", () => openDetail(d));
+          markers.push(m);
+          return;
+        }
+        const lat = g.reduce((a, x) => a + x.d.lat, 0) / g.length, lng = g.reduce((a, x) => a + x.d.lng, 0) / g.length;
+        const m = new naver.maps.Marker({ map, position: new naver.maps.LatLng(lat, lng), title: `어린이집 ${g.length}곳`, icon: clusterIcon(g.length), zIndex: 100 });
+        naver.maps.Event.addListener(m, "click", () => map.morph(new naver.maps.LatLng(lat, lng), Math.min(map.getZoom() + 2, 19)));
+        markers.push(m);
+      });
+      return;
+    }
     const pts = list.filter((d) => d.lat);
-    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"}" title="${d.geocoded ? "주소 기준 위치" : ""}">${area ? list.indexOf(d) + 1 : offset + list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(14, 14) } }));
+    markers = pts.map((d) => {
+      const m = new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: pinIcon(d, offset + list.indexOf(d) + 1) });
+      naver.maps.Event.addListener(m, "click", () => openDetail(d));
+      return m;
+    });
     const ll = pts.map((d) => new naver.maps.LatLng(d.lat, d.lng));
     if (userPos) ll.push(new naver.maps.LatLng(userPos.lat, userPos.lng));
     if (ll.length && !area) {
