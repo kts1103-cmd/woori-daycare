@@ -209,6 +209,7 @@
             <span class="badge">${esc(d.type)}</span> <span class="seat ${s.cls}">${s.text}</span>
             <h2 class="detail-name">${esc(d.name)}</h2>
             <p class="detail-address">${esc(d.addr || d.sigungu)}</p>
+            ${d.geocoded ? `<p class="geo-note">📍 주소 기준 위치예요. 공공데이터에 좌표가 없어 주소로 찾은 위치라 지도·거리가 실제와 조금 다를 수 있어요.</p>` : ""}
             <div class="tags">${tagsOf(d)}</div>
           </div>
           <div class="metrics">
@@ -324,7 +325,7 @@
       <li data-id="${d.id}">
         <button class="head" aria-label="${esc(d.name)} 상세 보기">
           <span class="no">${offset + i + 1}</span>
-          <span class="t"><b>${esc(d.name)}</b><small>${esc(d.type)} · ${esc(d.sigungu)}${d.dist != null ? ` · ${fmt(d.dist)}` : ""}</small>
+          <span class="t"><b>${esc(d.name)}</b><small>${esc(d.type)} · ${esc(d.sigungu)}${d.dist != null ? ` · ${d.geocoded ? "약 " : ""}${fmt(d.dist)}` : ""}${d.geocoded ? ' · <span class="geo-mini" title="주소로 찾은 위치">주소 기준 위치</span>' : ""}</small>
             <span class="tags">${tagsOf(d)}</span></span>
           <span class="seat ${s.cls}">${s.text}</span>
         </button>
@@ -365,7 +366,7 @@
     if (!map) return;
     markers.forEach((m) => m.setMap(null));
     const pts = list.filter((d) => d.lat);
-    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px solid #fff">${(page - 1) * PAGE + list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(14, 14) } }));
+    markers = pts.map((d) => new naver.maps.Marker({ map, position: new naver.maps.LatLng(d.lat, d.lng), title: d.name, icon: { content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"}" title="${d.geocoded ? "주소 기준 위치" : ""}">${(page - 1) * PAGE + list.indexOf(d) + 1}</div>`, anchor: new naver.maps.Point(14, 14) } }));
     const ll = pts.map((d) => new naver.maps.LatLng(d.lat, d.lng));
     if (userPos) ll.push(new naver.maps.LatLng(userPos.lat, userPos.lng));
     if (ll.length) {
