@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#FFFFFF">
 <title>우리동네 어린이집</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg:#FAF9F5; --surface:#fff; --text:#253E36; --muted:#62736B; --line:#E3EAE5;
@@ -44,15 +44,252 @@
   header.app-header { padding:14px 20px 12px; background:var(--surface); }
   .brand-row { display:flex; align-items:center; gap:10px; }
   [hidden] { display:none !important; }
-  .region { display:inline-flex; align-items:center; gap:4px; min-height:32px; margin:0 0 6px -2px; padding:0 2px; border:0; background:none; color:var(--accent-strong); font-size:13px; font-weight:700; cursor:pointer; border-radius:8px; }
+
+  /* My page */
+  .my-btn { margin-left:auto; display:inline-flex; align-items:center; gap:4px; height:36px; padding:0 12px 0 9px; border:1px solid var(--accent-soft); border-radius:99px; background:var(--accent-subtle); color:var(--accent-strong); font-family:var(--font-cute, inherit); font-size:14px; cursor:pointer; }
+  .my-btn svg { width:18px; height:18px; }
+  .brand-row .my-btn + .gear { margin-left:4px; }
+  .fav-btn { margin-left:auto; color:var(--muted); }
+  .fav-btn.on { color:#C2453A; } .fav-btn.on svg { fill:currentColor; }
+  body.my-mode > header.app-header, body.my-mode > main, body.my-mode > nav.tabs { display:none; }
+  .mypage { position:fixed; inset:0; z-index:12; display:flex; flex-direction:column; background:var(--bg); max-width:480px; margin:0 auto; }
+  .my-body { flex:1; overflow:auto; padding:16px 20px 28px; display:grid; gap:14px; align-content:start; }
+  .my-profile { display:flex; align-items:center; gap:12px; padding:16px; border-radius:var(--r20); background:var(--surface); border:1px solid var(--line); }
+  .my-avatar { width:52px; height:52px; border-radius:99px; background:var(--accent-soft); color:var(--accent-strong); display:grid; place-items:center; flex:none; }
+  .my-avatar svg { width:28px; height:28px; }
+  .my-profile b { font-family:var(--font-cute, inherit); font-weight:400; font-size:18px; display:block; }
+  .my-profile small { font-size:11px; color:var(--muted); }
+  .my-login { margin-left:auto; flex:none; min-height:36px; border-radius:99px; font-size:12px; }
+  .my-child { display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:14px 16px; border:0; border-radius:var(--r16); background:#FBF1D6; color:#7B601A; cursor:pointer; }
+  .my-child b { display:block; font-size:14px; } .my-child small { font-size:11px; opacity:.85; }
+  .my-child > svg:last-child { margin-left:auto; width:16px; height:16px; }
+  .my-ic svg { width:26px; height:26px; }
+  .my-stats { display:grid; grid-template-columns:repeat(3,1fr); background:var(--surface); border:1px solid var(--line); border-radius:var(--r16); }
+  .my-stats button { border:0; background:none; padding:12px 4px; display:grid; gap:2px; cursor:pointer; color:var(--text); }
+  .my-stats button + button { border-left:1px solid var(--line); }
+  .my-stats b { font-family:var(--font-cute, inherit); font-weight:400; font-size:22px; color:var(--accent-strong); }
+  .my-stats span { font-size:12px; color:var(--muted); }
+  .my-sec { background:var(--surface); border:1px solid var(--line); border-radius:var(--r20); padding:14px 16px; display:grid; gap:8px; }
+  .my-sec h3 { display:flex; align-items:center; gap:6px; font-size:15px; margin:0; }
+  .my-sec h3 svg { width:18px; height:18px; color:var(--accent); }
+  .my-sec-head { display:flex; align-items:center; justify-content:space-between; }
+  .my-sec-head button { border:0; background:none; color:var(--muted); font-size:12px; cursor:pointer; padding:6px; }
+  .my-empty { font-size:12px; color:var(--muted); margin:2px 0; }
+  .my-dc { display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:var(--r12); background:var(--surface); cursor:pointer; color:inherit; }
+  .my-dc > span { flex:1; min-width:0; } .my-dc b { display:block; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .my-dc small { font-size:11px; color:var(--muted); }
+  .my-dc > svg:last-child { width:16px; height:16px; color:var(--muted); flex:none; }
+  .my-unfav { border:0; background:none; color:#C2453A; cursor:pointer; padding:6px; display:grid; } .my-unfav svg { fill:currentColor; }
+  .my-recent { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px; }
+  .my-chip { flex:0 0 auto; max-width:150px; text-align:left; border:1px solid var(--line); background:var(--bg); border-radius:var(--r12); padding:10px 12px; cursor:pointer; color:inherit; }
+  .my-chip b { display:block; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .my-chip small { font-size:11px; color:var(--muted); }
+  .my-compare-cta, .my-clear { width:100%; min-height:46px; border-radius:var(--r16); }
+  .my-menu { background:var(--surface); border:1px solid var(--line); border-radius:var(--r20); overflow:hidden; }
+  .my-menu > * { display:flex; align-items:center; gap:10px; width:100%; min-height:52px; padding:0 16px; border:0; border-bottom:1px solid var(--line); background:none; color:var(--text); font-size:14px; text-decoration:none; cursor:pointer; text-align:left; }
+  .my-menu > *:last-child { border-bottom:0; }
+  .my-menu svg { width:18px; height:18px; color:var(--accent); } .my-menu span { flex:1; } .my-menu small { color:var(--muted); font-size:12px; }
+  .my-menu > * > svg:last-child { width:14px; height:14px; color:var(--muted); }
+  .my-row { padding:8px 0; border-bottom:1px solid var(--line); } .my-row:last-child { border-bottom:0; }
+  .my-row b { display:block; font-size:13px; font-weight:500; } .my-row small { font-size:11px; color:var(--muted); }
+  .my-table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r16); background:var(--surface); }
+  .my-table { width:100%; border-collapse:collapse; font-size:12px; min-width:320px; }
+  .my-table th, .my-table td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:center; vertical-align:middle; }
+  .my-table thead th { font-family:var(--font-cute, inherit); font-weight:400; font-size:13px; color:var(--accent-strong); background:var(--accent-subtle); }
+  .my-table tbody th { text-align:left; color:var(--muted); font-weight:500; white-space:nowrap; }
+  .my-table tr:last-child > * { border-bottom:0; }
+  .my-table td.best, .my-best-sample { color:#1E7A4C; font-weight:700; background:#E6F4EC; }
+  .my-best-sample { padding:0 4px; border-radius:4px; }
+  .my-class { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .my-class div { background:var(--accent-subtle); border-radius:var(--r12); padding:12px; display:grid; gap:4px; }
+  .my-class span { font-size:11px; color:var(--muted); } .my-class b { font-family:var(--font-cute, inherit); font-weight:400; font-size:20px; color:var(--accent-strong); }
+  .my-child-form .btn { width:100%; }
+
+
+  /* 귀여운 포인트 글꼴(Jua): 로고·제목·카드 이름·탭·버튼. 본문은 Noto Sans KR 유지 */
+  :root { --font-cute:"Jua","Noto Sans KR","Malgun Gothic",sans-serif; }
+  .wm-main, .wm-sub, .region, .section h2, .detail-name, .detail-header h2, .facts h3, .photos-head h3, .visit-note h3,
+  ol.rank .t b, ol.rank .no, .metrics strong, .sheet-top h2, .card h3, .steps b, .hero h3,
+  .cm-head h2, .cm-title, .cm-post h1, .cm-policy h3, .cm-fab, .cm-owner-head b, .cm-takedown b,
+  nav.tabs button span, .btn.primary, .action-row .btn, .chip.on, .segments button[aria-pressed="true"], .pager button[aria-current="page"] {
+    font-family:var(--font-cute); font-weight:400 !important;
+  }
+  .wm-main { font-size:23px; letter-spacing:-.3px; }
+  .wm-sub { letter-spacing:.12em; }
+  ol.rank .t b { font-size:17px; letter-spacing:-.2px; }
+  .detail-name, .cm-head h2, .section h2 { font-size:24px; letter-spacing:-.3px; }
+  .cm-title { font-size:17px; letter-spacing:-.2px; }
+  nav.tabs button span { font-size:12px; }
+  ol.rank .t small.area { display:block; color:var(--text); font-size:12.5px; }
+
+  /* 시설 사진 */
+  dialog#sheet { max-height:calc(100dvh - 40px); overflow:auto; }
+  .photo-hero { position:relative; height:220px; background:#DDF1EA; }
+  .photo-track { display:flex; height:100%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+  .photo-track::-webkit-scrollbar { display:none; }
+  .photo-track img { flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:start; cursor:zoom-in; }
+  .photo-badge, .photo-index { position:absolute; bottom:10px; font-size:10px; padding:3px 9px; border-radius:99px; }
+  .photo-badge { left:12px; background:rgba(255,255,255,.88); color:#245C52; font-weight:700; }
+  .photo-index { right:12px; background:rgba(23,57,47,.7); color:#fff; }
+  .photos-head { display:flex; align-items:baseline; gap:6px; margin-bottom:10px; }
+  .photos-head h3 { font-size:16px; margin:0; }
+  .photos-head span { font-size:12px; color:var(--muted); }
+  .photo-strip { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin-bottom:10px; }
+  .photo-strip .thumb { flex:0 0 72px; height:72px; padding:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; background:none; }
+  .photo-strip .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-empty { font-size:12px; color:var(--muted); margin:0; }
+  .owner-upload { width:100%; display:flex; align-items:center; gap:10px; border:1px dashed #8BBFB2; background:var(--accent-subtle); color:var(--accent-strong); border-radius:var(--r16); padding:12px 14px; text-align:left; cursor:pointer; }
+  .owner-upload span { display:grid; gap:2px; font-size:13px; }
+  .owner-upload small { font-size:11px; color:var(--muted); }
+  .owner-upload svg:last-child { margin-left:auto; width:16px; height:16px; }
+  .upload-form fieldset { border:0; margin:0 0 16px; padding:0; display:grid; gap:8px; }
+  .upload-form legend { font-size:14px; font-weight:700; margin-bottom:8px; padding:0; }
+  .upload-form legend small { font-weight:400; color:var(--muted); font-size:11px; }
+  .upload-form .field { display:grid; gap:6px; font-size:12px; color:var(--muted); }
+  .upload-form .field input, .upload-form .field select, .upload-form .field textarea { width:100%; border:1px solid var(--line); border-radius:var(--r12); padding:10px 12px; font-size:14px; color:var(--text); background-color:var(--surface); }
+  .upload-form .field input, .upload-form .field select { height:46px; }
+  .upload-form .field input:focus, .upload-form .field textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
+  .upload-form .note { margin:0; }
+  .pick { display:flex; align-items:center; justify-content:center; gap:8px; min-height:52px; border:1px dashed #8BBFB2; border-radius:var(--r12); background:var(--accent-subtle); color:var(--accent-strong); font-weight:700; font-size:13px; cursor:pointer; }
+  .pick input { position:absolute; width:1px; height:1px; opacity:0; }
+  .pick:focus-within { outline:3px solid #B69548; outline-offset:2px; }
+  .pick-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .pick-grid:empty { display:none; }
+  .pick-item { position:relative; aspect-ratio:1; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .pick-item img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pick-item button { position:absolute; top:3px; right:3px; width:24px; height:24px; border:0; border-radius:99px; background:rgba(23,57,47,.75); color:#fff; font-size:15px; line-height:1; cursor:pointer; }
+  .upload-form .check { margin:0; font-size:12px; }
+  .upload-form .submit { width:100%; min-height:50px; border-radius:var(--r16); margin:4px 0 8px; }
+  .upload-form .submit:disabled { opacity:.45; cursor:not-allowed; }
+  .upload-form .cm-pick { margin-bottom:4px; }
+  .form-error { font-size:12px; color:var(--danger); background:var(--danger-soft); padding:10px 12px; border-radius:var(--r12); margin:0 0 8px; }
+  .viewer-img { width:100%; max-height:56vh; object-fit:contain; border-radius:var(--r12); background:var(--bg); display:block; margin-bottom:10px; }
+  .viewer-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .viewer-actions .btn { flex:1; }
+  .btn.danger { color:var(--danger); border-color:var(--danger-soft); background:var(--danger-soft); font-weight:700; }
+
+  /* 커뮤니티 */
+  body.post-mode > header.app-header, body.post-mode nav.tabs { display:none; }
+  body.post-mode main { overflow:hidden; }
+  body.post-mode #view-community.active { display:flex; flex-direction:column; height:100%; }
+  .cm-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:18px 20px 8px; }
+  .cm-head h2 { font-size:22px; letter-spacing:-.6px; margin:0; }
+  .cm-head p { font-size:12px; color:var(--muted); margin:4px 0 0; }
+  .badge.sample { background:#F5DEA0; color:#7B601A; }
+  .cm-rules { position:relative; margin:8px 20px 4px; padding:16px; border-radius:var(--r16); background:#FDECEA; color:#8C1D18; border:1.5px solid #F2A39C; border-left:6px solid #B3261E; }
+  .cm-rules b { font-size:14px !important; }
+  .cm-rules strong { font-weight:700; text-decoration:underline; text-decoration-color:#F2A39C; text-underline-offset:3px; }
+  .cm-rules ul { margin:8px 0 10px; padding-left:18px; display:grid; gap:4px; font-size:12px; line-height:1.6; }
+  .cm-rules > a { font-size:12px; font-weight:700; color:#B3261E; }
+  .cm-rules b { font-size:13px; } .cm-rules p { margin:4px 0 0; font-size:12px; line-height:1.7; }
+  .cm-rules button { position:absolute; top:6px; right:6px; width:36px; height:36px; border:0; background:none; color:inherit; cursor:pointer; display:grid; place-items:center; border-radius:99px; }
+  .cm-rules button svg { width:16px; height:16px; }
+  .cm-rules a, .src a { color:inherit; font-weight:700; text-underline-offset:3px; }
+  .cm-cats { padding:8px 20px 4px; }
+  .cm-sort { display:flex; align-items:center; justify-content:space-between; padding:8px 20px 4px; font-size:12px; color:var(--muted); }
+  .cm-sort .segments button { min-width:62px; height:34px; }
+  .cm-list { list-style:none; margin:0; padding:8px 20px 12px; display:grid; gap:10px; }
+  .cm-card { width:100%; display:grid; gap:6px; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:var(--r20); padding:16px; cursor:pointer; color:inherit; transition:border-color .15s; }
+  .cm-card:hover { border-color:#8BBFB2; }
+  .cm-blinded { background:var(--bg); border-style:dashed; }
+  .cm-blinded .cm-title { color:var(--muted); font-size:14px; }
+  .cm-cat { font-size:11px; font-weight:700; color:var(--accent-strong); }
+  .cm-cat em { font-style:normal; font-weight:700; font-size:10px; background:#F5DEA0; color:#7B601A; padding:1px 6px; border-radius:99px; margin-left:4px; }
+  .cm-title { font-size:16px; letter-spacing:-.4px; line-height:1.5; }
+  .cm-body { font-size:13px; line-height:1.6; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .cm-daycare { display:inline-flex; align-items:center; gap:4px; justify-self:start; font-size:11px; color:var(--accent-strong); background:var(--accent-subtle); padding:4px 9px; border-radius:99px; }
+  .cm-daycare svg { width:13px; height:13px; }
+  .cm-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:11px; color:var(--muted); margin-top:4px; }
+  .cm-counts { display:flex; gap:10px; flex:none; }
+  .cm-counts span { display:inline-flex; align-items:center; gap:3px; }
+  .cm-counts svg { width:14px; height:14px; }
+  .cm-counts .on { color:#C2453A; } .cm-counts .on svg { fill:currentColor; }
+  .cm-empty { color:var(--muted); font-size:13px; padding:20px 0; text-align:center; list-style:none; }
+  .cm-fab { position:fixed; z-index:15; right:max(16px, calc(50% - 224px)); bottom:calc(78px + env(safe-area-inset-bottom)); display:inline-flex; align-items:center; gap:6px; height:50px; padding:0 20px; border:0; border-radius:99px; background:#245C52; color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(36,92,82,.3); }
+  .cm-fab:hover { background:var(--accent); }
+  #view-community:not(.active) .cm-fab, body.post-mode .cm-fab { display:none; }
+  .cm-post { padding:0 20px 20px; background:var(--surface); }
+  .cm-post article { padding:16px 20px 18px; border-bottom:8px solid var(--bg); margin:0 -20px; }
+  .cm-author { display:flex; align-items:center; gap:10px; }
+  .cm-author b { font-size:13px; display:block; } .cm-author small { font-size:11px; color:var(--muted); }
+  .cm-author .badge { margin-left:auto; }
+  .cm-avatar { width:36px; height:36px; flex:none; border-radius:99px; background:var(--accent-soft); color:var(--accent-strong); display:grid; place-items:center; font-weight:700; font-size:14px; }
+  .cm-avatar.sm { width:30px; height:30px; font-size:12px; }
+  .cm-post h1 { font-size:20px; letter-spacing:-.5px; line-height:1.5; margin:16px 0 8px; }
+  .cm-text { font-size:14px; line-height:1.8; margin:0 0 12px; }
+  .cm-review-note { font-size:11px; color:#7B601A; background:#FBF1D6; padding:8px 10px; border-radius:var(--r12); margin:10px 0 0; }
+  .cm-actions { display:flex; align-items:center; gap:14px; margin-top:14px; font-size:13px; color:var(--muted); }
+  .cm-actions span { display:inline-flex; align-items:center; gap:4px; }
+  .cm-actions svg { width:16px; height:16px; }
+  .cm-like { display:inline-flex; align-items:center; gap:5px; height:38px; padding:0 14px; border:1px solid var(--line); border-radius:99px; background:var(--surface); color:var(--muted); font-size:13px; cursor:pointer; }
+  .cm-like.on { color:#C2453A; border-color:#F2C4BE; background:#FDF1EF; font-weight:700; }
+  .cm-like.on svg { fill:currentColor; }
+  .cm-owner-reply { margin:14px 0 4px; padding:16px; border-radius:var(--r16); background:var(--accent-subtle); border-left:4px solid var(--accent); }
+  .cm-owner-head { display:flex; align-items:center; gap:6px; color:var(--accent-strong); font-size:13px; }
+  .cm-owner-head svg { width:16px; height:16px; }
+  .cm-owner-head small { margin-left:auto; color:var(--muted); font-size:11px; }
+  .cm-owner-reply p { margin:8px 0 6px; font-size:13px; line-height:1.7; }
+  .cm-owner-by { font-size:11px; color:var(--muted); }
+  .cm-owner-cta { margin:14px 0 4px; }
+  .cm-comments { padding-top:8px; }
+  .cm-comment { display:flex; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .cm-comment b { font-size:12px; } .cm-comment small { font-size:11px; color:var(--muted); }
+  .cm-comment p { margin:4px 0 0; font-size:13px; line-height:1.6; }
+  .cm-del { margin-left:auto; flex:none; align-self:flex-start; border:0; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px; }
+  .cm-delete, .cm-post > .btn { width:100%; margin-top:16px; }
+  .cm-reply { display:flex; gap:8px; align-items:center; padding:10px 12px max(12px, env(safe-area-inset-bottom)) 20px; border-top:1px solid var(--line); background:var(--surface); flex:none; }
+  .cm-reply input { flex:1; height:44px; border:1px solid var(--line); border-radius:99px; padding:0 16px; font-size:14px; background:var(--bg); color:var(--text); min-width:0; }
+  .cm-reply input:focus { outline:none; border-color:var(--accent); }
+  .cm-reply .icon-button { color:var(--accent-strong); }
+  .cm-takedown { margin:16px 0; padding:16px; border-radius:var(--r16); background:#FBF1D6; color:#7B601A; }
+  .cm-takedown b { font-size:14px; } .cm-takedown p { font-size:12px; line-height:1.7; margin:6px 0 10px; }
+  .cm-takedown dl { margin:0; display:grid; gap:4px; font-size:12px; }
+  .cm-takedown dl div { display:flex; gap:8px; } .cm-takedown dt { opacity:.75; min-width:60px; } .cm-takedown dd { margin:0; font-weight:700; }
+  .cm-mine-blinded h3 { font-size:14px; margin:0 0 8px; }
+  .cm-rights { width:100%; display:grid; gap:3px; text-align:left; border:1px solid var(--accent); background:var(--accent-subtle); color:var(--accent-strong); border-radius:var(--r12); padding:12px 14px; margin-bottom:12px; cursor:pointer; }
+  .cm-rights b { font-size:14px; } .cm-rights small { font-size:11px; color:var(--muted); line-height:1.6; }
+  .cm-write { padding:16px 20px 24px; display:grid; gap:16px; align-content:start; background:var(--surface); }
+  .cm-write fieldset { border:0; margin:0; padding:0; }
+  .cm-write legend, .cm-write .field > span { font-size:13px; font-weight:700; margin-bottom:8px; padding:0; display:block; color:var(--text); }
+  .cm-write .field small { font-weight:400; color:var(--muted); }
+  .cm-pick { display:flex; flex-wrap:wrap; gap:7px; }
+  .cm-pick input { position:absolute; opacity:0; width:1px; height:1px; }
+  .cm-pick .chip:focus-within { outline:3px solid #B69548; outline-offset:2px; }
+  .cm-write .field { display:block; }
+  .cm-write .field input, .cm-write textarea { width:100%; border:1px solid var(--line); border-radius:var(--r12); padding:12px; font-size:14px; background:var(--surface); color:var(--text); }
+  .cm-write .field input { height:46px; }
+  .cm-write .field input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
+  .cm-guide { background:#FBF1D6; color:#7B601A; border-radius:var(--r16); padding:14px; }
+  .cm-guide b { font-size:13px; } .cm-guide p { font-size:12px; line-height:1.7; margin:4px 0 0; }
+  .cm-submit { width:100%; min-height:50px; border-radius:var(--r16); }
+  .cm-submit:disabled { opacity:.45; cursor:not-allowed; }
+  .cm-write .note { margin:0; }
+  .cm-policy { padding:16px 20px 32px; background:var(--surface); }
+  .cm-draft { font-size:12px; color:#7B601A; background:#FBF1D6; padding:10px 12px; border-radius:var(--r12); margin:0 0 8px; }
+  .cm-policy section { padding:14px 0; border-bottom:1px solid var(--line); }
+  .cm-policy h3 { font-size:15px; margin:0 0 8px; }
+  .cm-policy ul { margin:0; padding-left:18px; display:grid; gap:6px; }
+  .cm-policy li { font-size:13px; line-height:1.7; color:var(--text); }
+  .cm-policy .src { padding:14px 0 0; }
+  .search-area { display:flex; gap:8px; align-items:stretch; }
+  .search-area .search-field { flex:1; min-width:0; }
+  .radius-field { display:flex; align-items:center; gap:6px; min-height:44px; padding:0 0 0 14px; border:1px solid var(--line); border-radius:var(--r12); background:var(--surface); }
+  .radius-field span { flex:none; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .radius-field select { flex:1; min-width:0; border:0; background-color:transparent; font-weight:700; color:var(--accent-strong); padding-left:0; min-height:42px; }
+  .radius-field:focus-within { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
+  .region { flex:0 1 auto; max-width:42%; display:inline-flex; align-items:center; gap:4px; height:52px; padding:0 10px 0 14px; border:1px solid var(--accent-soft); background:var(--accent-subtle); color:var(--accent-strong); font-size:14px; font-weight:700; cursor:pointer; border-radius:var(--r16); }
+  .region #regionLabel { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .region svg { flex:none; }
   .region svg { width:15px; height:15px; }
-  .region:hover { background:var(--accent-subtle); }
+  .region:hover { border-color:var(--accent); }
   .sheet-options.scroll { max-height:min(56vh, 440px); overflow:auto; padding-right:2px; }
   .sheet-options button.selected { background:var(--accent-subtle); border-color:var(--accent); color:var(--accent-strong); font-weight:700; }
   .sheet-options button small { color:var(--muted); font-weight:400; font-size:12px; }
   .sheet-back { display:inline-flex; align-items:center; gap:2px; border:0; background:none; color:var(--accent-strong); font-size:12px; font-weight:700; padding:6px 0; margin:-4px 0 6px; cursor:pointer; }
   .sheet-back svg { width:14px; height:14px; }
-  .brand-mark { display:inline-grid; place-items:center; width:34px; height:34px; border-radius:11px; background:#245C52; color:#DDF1EA; font-size:22px; flex:none; }
+  .brand-mark { display:block; width:40px; height:40px; flex:none; filter:drop-shadow(0 3px 8px rgba(36,92,82,.22)); }
+  h1.wordmark { display:flex; flex-direction:column; gap:1px; margin:0; line-height:1.1; }
+  .wm-sub { font-size:11px; font-weight:700; letter-spacing:.18em; color:var(--accent); }
+  .wm-main { font-size:21px; font-weight:700; letter-spacing:-.8px; color:var(--text); }
+  .brand-row > .badge { align-self:flex-end; margin-bottom:3px; }
   header h1 { margin:0; font-size:20px; letter-spacing:-.6px; }
   header p { margin:6px 0 0; font-size:11px; color:var(--muted); }
   main { flex:1; overflow:auto; }
@@ -102,8 +339,48 @@
   .seat.ok { background:var(--accent-subtle); color:var(--accent-strong); }
   .seat.few { background:var(--warn-soft); color:var(--warn); }
   .seat.full { background:var(--danger-soft); color:var(--danger); }
-  .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
-  .tag { font-size:11px; padding:3px 9px; border-radius:999px; background:var(--accent-subtle); color:var(--accent-strong); }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .tag { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:500; padding:4px 11px 4px 8px; border-radius:999px; background:var(--accent-subtle); color:var(--accent-strong); line-height:1.4; }
+  .tag i { font-style:normal; font-size:16px; line-height:1; }
+  ol.rank .head > .tags { grid-column:2 / -1; margin-top:0; }
+  /* 인증 학부모 별점 */
+  .tag.rating { background:#245C52; color:#fff; font-weight:700; }
+  .tag.rating i { color:#F5DEA0; } .tag.rating small { font-weight:400; opacity:.85; font-size:11px; }
+  .tag.rating.mine { background:#fff; color:#245C52; border:1px solid #8BBFB2; } .tag.rating.mine i { color:#E0A82E; }
+  .rating-sec { border:1px solid var(--line); border-radius:var(--r20); padding:16px; display:grid; gap:12px; }
+  .rating-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .rating-head h3 { font-size:16px; margin:0; }
+  .verified-badge { font-size:11px; font-weight:700; color:#245C52; background:var(--accent-soft); padding:3px 9px; border-radius:99px; white-space:nowrap; }
+  .rating-empty { font-size:13px; line-height:1.7; color:var(--muted); margin:0; } .rating-empty b { color:var(--text); }
+  .rating-demo summary { font-size:12px; font-weight:700; color:var(--accent-strong); cursor:pointer; padding:4px 0; }
+  .rating-summary { position:relative; display:grid; gap:12px; padding-top:6px; }
+  .rating-summary.demo { opacity:.75; padding:12px; border:1px dashed #E0C77A; border-radius:var(--r12); margin-top:8px; }
+  .rating-summary.demo > .badge { justify-self:start; }
+  .rating-big { display:flex; align-items:center; gap:10px; }
+  .rating-big strong { font-family:var(--font-cute, inherit); font-weight:400; font-size:34px; color:var(--text); line-height:1; }
+  .rating-big small { font-size:12px; color:var(--muted); }
+  .stars-view { display:inline-flex; gap:1px; font-size:16px; line-height:1; }
+  .stars-view.lg { font-size:22px; }
+  .stars-view span { background:linear-gradient(90deg, #E0A82E var(--fill), #DDE3DF var(--fill)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .rating-items { margin:0; display:grid; gap:7px; }
+  .rating-items div { display:grid; grid-template-columns:72px 1fr; align-items:center; gap:10px; font-size:12px; }
+  .rating-items dt { color:var(--muted); } .rating-items dd { margin:0; display:flex; align-items:center; gap:8px; }
+  .rating-items .bar { flex:1; height:8px; border-radius:99px; background:var(--accent-subtle); overflow:hidden; }
+  .rating-items .bar span { display:block; height:100%; background:#E0A82E; border-radius:99px; }
+  .rating-items b { width:24px; text-align:right; font-size:12px; }
+  .rating-mine { display:flex; align-items:center; gap:8px; font-size:12px; background:var(--accent-subtle); padding:10px 12px; border-radius:var(--r12); flex-wrap:wrap; }
+  .rating-mine > span:first-child { font-weight:700; color:var(--accent-strong); } .rating-mine small { color:var(--muted); margin-left:auto; }
+  .rate-cta { width:100%; min-height:48px; border-radius:var(--r16); background:var(--accent-subtle); border-color:transparent; color:var(--accent-strong); font-weight:700; }
+  .rating-sec .note { margin:0; }
+  .opt-radio { display:flex; align-items:center; gap:10px; min-height:48px; border:1px solid var(--line); border-radius:var(--r12); padding:10px 14px; font-size:13px; cursor:pointer; }
+  .opt-radio:has(input:checked) { border-color:var(--accent); background:var(--accent-subtle); color:var(--accent-strong); font-weight:700; }
+  .opt-radio input { accent-color:var(--accent); }
+  .rate-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .rate-stars button { border:0; background:none; font-size:28px; line-height:1; padding:2px; color:#DDE3DF; cursor:pointer; min-width:36px; min-height:40px; }
+  .rate-stars button.on { color:#E0A82E; }
+  .rate-form .btn.danger { width:100%; }
+  .tag.stat { background:#FBF1D6; color:#7B601A; } .tag.stat em { font-style:normal; font-weight:700; }
+  .tag.gray { padding-left:11px; }
   .tag.gray { background:var(--bg); color:var(--muted); border:1px solid var(--line); }
   .badge { font-size:10px; font-weight:700; padding:4px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent-strong); white-space:nowrap; vertical-align:3px; }
   .meta { font-size:12px; line-height:1.7; color:var(--muted); margin-top:4px; }
@@ -123,6 +400,9 @@
   textarea { width:100%; font-size:13px; border:1px solid var(--line); border-radius:var(--r12); padding:10px 12px; background:var(--surface); color:var(--text); }
   textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
   .note { font-size:11px; line-height:1.7; color:var(--muted); margin-top:8px; }
+  .link-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+  .link-grid .btn { margin:0; font-size:12px; justify-content:flex-start; text-align:left; }
+  .link-grid .btn.primary { grid-column:1 / -1; justify-content:center; }
   .src { font-size:11px; line-height:1.7; color:var(--muted); padding:0 20px 16px; }
 
   .section { padding:20px; } .section h2 { font-size:22px; letter-spacing:-.6px; margin:0 0 4px; }
@@ -257,23 +537,25 @@
 </head>
 <body>
 <header class="app-header">
-  <button type="button" class="region" id="regionBtn" aria-haspopup="dialog"><span id="regionLabel">지역 선택</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-  <div class="brand-row"><span class="brand-mark" aria-hidden="true">✳</span><h1>우리동네 어린이집 <span class="badge">시제품</span></h1>
-    <button type="button" class="icon-button gear" id="openSettings" aria-label="설정"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
+  <div class="brand-row"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#245C52"/><circle cx="29.5" cy="11" r="3.2" fill="#F5DEA0"/><path d="M8.5 20.5 20 11l11.5 9.5" fill="none" stroke="#DDF1EA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 31v-7.5" stroke="#DDF1EA" stroke-width="2.6" stroke-linecap="round"/><path d="M20 25.5c-4.6.3-6.6-2.2-6.6-5.2 4.3-.2 6.6 2 6.6 5.2Z" fill="#8FD6C4"/><path d="M20 24c.1-3.6 2.4-5.6 6.4-5.4-.1 3.4-2.4 5.6-6.4 5.4Z" fill="#DDF1EA"/></svg><h1 class="wordmark"><span class="wm-sub">우리동네</span><span class="wm-main">어린이집</span></h1><span class="badge">시제품</span>
+    <button type="button" class="my-btn" id="openMy" aria-label="My page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>My</span></button><button type="button" class="icon-button gear" id="openSettings" aria-label="설정"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
   <p>민간 개발 앱이며 정부기관과 관련이 없습니다.</p>
 </header>
 <main>
   <section class="view active" id="view-map" data-mode="list">
     <div class="search-area">
-      <label class="search-field"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input id="q" type="search" autocomplete="off" placeholder="어린이집 이름·주소로 검색" aria-label="어린이집 이름 또는 주소 검색"><button type="button" class="clear-search" id="qClear" aria-label="검색어 지우기" hidden>×</button></label>
+      <button type="button" class="region" id="regionBtn" aria-haspopup="dialog"><span id="regionLabel">지역 선택</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      <label class="search-field"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input id="q" type="search" autocomplete="off" placeholder="이름·주소 검색" aria-label="어린이집 이름 또는 주소 검색"><button type="button" class="clear-search" id="qClear" aria-label="검색어 지우기" hidden>×</button></label>
     </div>
     <div class="toolbar">
       <select id="sido" aria-label="시도" hidden></select>
       <select id="sigungu" aria-label="시군구" hidden></select>
-      <select id="radius" aria-label="반경">
-        <option value="0">반경 제한 없음</option><option value="500">500m</option>
-        <option value="1000">1km</option><option value="3000" selected>3km</option>
-      </select>
+      <label class="radius-field" hidden><span>내 위치 반경</span>
+        <select id="radius" aria-label="내 위치 반경 (현재 위치로 찾을 때 적용)">
+          <option value="0">제한 없음</option><option value="500">500m 이내</option>
+          <option value="1000">1km 이내</option><option value="3000" selected>3km 이내</option>
+        </select>
+      </label>
       <button class="btn primary" id="locate"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>현재 위치로 찾기</button>
     </div>
     <div class="filters" id="filters">
@@ -291,6 +573,9 @@
         <label class="chip toggle"><input type="checkbox" id="fExt"> 🌙 연장보육(맞벌이)</label>
         <label class="chip toggle"><input type="checkbox" id="fBus"> 🚌 통학차량 운영</label>
         <label class="chip toggle"><input type="checkbox" id="fPlay"> 🛝 놀이터 있음</label>
+        <label class="chip toggle" data-needs="night" hidden><input type="checkbox" id="fNight"> 🌃 야간연장</label>
+        <label class="chip toggle" data-needs="h24" hidden><input type="checkbox" id="fH24"> 🕛 24시간</label>
+        <label class="chip toggle" data-needs="hourly" hidden><input type="checkbox" id="fHourly"> ⏱️ 시간제보육</label>
         <select id="fAge" class="chip" aria-label="운영 기간">
           <option value="">운영 기간 전체</option><option value="new">새로 생긴 곳 (3년 이내)</option><option value="old">10년 이상 운영</option>
         </select>
@@ -317,17 +602,19 @@
     <div class="view-row">
       <span class="result-count" id="count" aria-live="polite"></span>
       <div class="segments" role="group" aria-label="보기 방식">
-        <button type="button" data-mode="map" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>지도</button>
         <button type="button" data-mode="list" aria-pressed="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.1M3 12h.1M3 18h.1"/></svg>목록</button>
+        <button type="button" data-mode="map" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>지도</button>
       </div>
     </div>
     <div class="notice" id="locNotice" hidden></div>
     <div id="map"></div>
-    <div class="notice list-only">ℹ️ "정원보다 N명 적음"은 <b><span class="basisDate"></span> 기준</b> 정원과 현원의 차이예요 (매일 갱신). 실시간 빈자리가 아니며, 연령반별 자리와 대기자는 반영되지 않아요. 실제 입소 가능 여부는 어린이집에 직접 문의하거나 아이사랑 입소대기에서 확인하세요.</div>
+    <div class="notice list-only">ℹ️ "정원보다 N명 적음"은 <b><span class="basisDate"></span> 기준</b> 정원과 현원의 차이예요 (매일 갱신). 실시간 빈자리가 아니며, 연령반별 자리와 대기자는 반영되지 않아요. 실제 입소 가능 여부는 어린이집에 직접 문의하거나 아이사랑 등록대기에서 확인하세요.</div>
     <ol class="rank list-only" id="list"></ol>
     <nav class="pager list-only" id="pager" aria-label="목록 페이지"></nav>
     <p class="src">출처: <span id="basis"></span> · 정확한 정보는 해당 어린이집과 공식 포털에서 확인하세요.</p>
   </section>
+
+  <section class="view" id="view-community" aria-label="커뮤니티"></section>
 
   <section class="view" id="view-detail" aria-label="어린이집 상세"></section>
 
@@ -337,17 +624,46 @@
       <p class="note" style="margin:0">대기 신청부터 입소 후 준비까지 순서대로 챙겨요.</p>
       <div class="card">
         <ol class="steps">
-          <li><b>입소대기 신청 (임신 중부터 가능)</b><p>아이사랑에서 원하는 어린이집에 대기 신청을 해요. 맞벌이·다자녀 등은 입소 우선순위가 있어요.</p></li>
+          <li><b>등록대기 신청 (임신 중부터 가능)</b><p>아이사랑에서 원하는 어린이집에 등록대기를 신청해요. 맞벌이·다자녀 등은 우선순위가 있으니 증빙 자료도 함께 제출하세요.</p></li>
           <li><b>후보 어린이집 고르기</b><p>지도·필터로 거리, 자리 여유, 연장보육, 통학차량을 비교해 보세요.</p></li>
           <li><b>맞벌이라면 연장보육 확인</b><p>연장보육은 보통 오후 4시 이후 운영돼요. 신청 조건과 운영 시간은 어린이집마다 달라요.</p></li>
           <li><b>상담·방문 예약</b><p>어린이집 카드의 "상담 체크리스트"를 열고 질문을 챙겨 가세요.</p></li>
           <li><b>공시 정보 확인</b><p>필요경비(특별활동비·현장학습비), 식단, 하루 일과는 정보공개포털 공시에서 볼 수 있어요.</p></li>
-          <li><b>입소 확정 후 준비</b><p>건강검진·예방접종 기록, 보육료 지원(아이행복카드) 신청을 미리 해 두세요.</p></li>
+          <li><b>입소 확정 후 준비</b><p>건강검진·예방접종 기록을 챙기고, 보육료 지원(국민행복카드) 신청을 미리 해 두세요.</p></li>
         </ol>
-        <a class="btn primary" href="https://www.childcare.go.kr/" target="_blank" rel="noopener">아이사랑에서 입소대기 신청</a>
-        <a class="btn" href="https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp" target="_blank" rel="noopener">정보공개포털 공시 검색</a>
+        <div class="link-grid">
+          <a class="btn primary" href="https://www.childcare.go.kr/?menuno=175" target="_blank" rel="noopener">📮 등록대기 신청</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=169" target="_blank" rel="noopener">📋 모집·신청 안내</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=179" target="_blank" rel="noopener">📎 우선순위 자료제출</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=178" target="_blank" rel="noopener">🔎 내 등록대기 현황</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=181" target="_blank" rel="noopener">💳 국민행복카드 안내</a>
+          <a class="btn" href="https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp" target="_blank" rel="noopener">💰 정보공개포털 공시</a>
+        </div>
       </div>
-      <p class="note">입소 우선순위, 연장보육 기준, 필요 서류는 지자체·시기에 따라 다를 수 있으니 아이사랑 안내를 꼭 확인하세요.</p>
+      <div class="card">
+        <h3>맞벌이 가정을 위한 보육</h3>
+        <p>늦게까지, 또는 필요한 시간만 맡길 수 있는 어린이집을 아이사랑에서 찾아보세요.</p>
+        <div class="link-grid">
+          <a class="btn" href="https://info.childcare.go.kr/info/pnis/search/NurseryEtntctClassAdditionSlL.jsp" target="_blank" rel="noopener">🌙 연장반 어린이집</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=233" target="_blank" rel="noopener">🌃 야간연장보육</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=236" target="_blank" rel="noopener">🕛 24시간 어린이집</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=200" target="_blank" rel="noopener">⏱️ 시간제보육 안내</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=242" target="_blank" rel="noopener">📅 시간제보육 신청</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=226" target="_blank" rel="noopener">🏢 지역개방 직장어린이집</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=227" target="_blank" rel="noopener">📣 직장어린이집 모집공고</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>육아 정보</h3>
+        <p>공식 기관의 안내로 연결돼요. 이 앱은 내용을 옮겨 싣지 않아요.</p>
+        <div class="link-grid">
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=293" target="_blank" rel="noopener">👶 월령별 성장·돌보기</a>
+          <a class="btn" href="https://sooyusil.com/" target="_blank" rel="noopener">🍼 수유실 찾기</a>
+          <a class="btn" href="https://www.nhis.or.kr/nhis/healthin/retrieveMdcAdminSknsClinic.do" target="_blank" rel="noopener">🏥 병원 찾기</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=215" target="_blank" rel="noopener">📢 어린이집 이용 불편신고</a>
+        </div>
+      </div>
+      <p class="note">우선순위, 연장보육 기준, 필요 서류는 지자체·시기에 따라 다를 수 있으니 아이사랑 안내를 꼭 확인하세요. 버튼을 누르면 아이사랑(임신육아종합포털)으로 이동하며, 신청·조회는 아이사랑에 로그인해서 직접 진행합니다.</p>
     </div>
   </section>
 
@@ -369,8 +685,9 @@
     </div>
   </section>
 </main>
-<nav class="tabs" role="tablist" style="grid-template-columns:repeat(3,1fr)">
+<nav class="tabs" role="tablist" style="grid-template-columns:repeat(4,1fr)">
   <button role="tab" aria-selected="true" data-view="view-map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>어린이집 찾기</span></button>
+  <button role="tab" aria-selected="false" data-view="view-community"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h13v9H8l-5 4Z"/><path d="M19 9h2v10l-3-2.5h-8V15"/></svg><span>커뮤니티</span></button>
   <button role="tab" aria-selected="false" data-view="view-guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg><span>입소 가이드</span></button>
   <button role="tab" aria-selected="false" data-view="view-violation"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="M12 8v5M12 17h.01"/></svg><span>위반시설·행위자</span></button>
 </nav>
@@ -379,6 +696,10 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="config.js"></script>
 <script src="settings.js"></script>
+<script src="photos.js"></script>
+<script src="ratings.js"></script>
 <script src="app.js"></script>
+<script src="mypage.js"></script>
+<script src="community.js"></script>
 </body>
 </html>

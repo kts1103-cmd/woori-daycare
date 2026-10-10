@@ -1,0 +1,103 @@
+name: 매일 품질 점검
+
+on:
+  workflow_run:                # 데이터 갱신이 끝나면 바로 점검
+    workflows: ["어린이집 데이터 매일 갱신"]
+    types: [completed]
+  schedule:
+    - cron: "0 0 * * *"        # 매일 09:00 KST (갱신이 안 돌았어도 점검)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write              # qa/history.csv 커밋
+  issues: write                # 문제 있으면 이슈로 알림
+
+concurrency:
+  group: qa-check
+  cancel-in-progress: false
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TZ: Asia/Seoul
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: 데이터 갱신 결과 확인
+        id: upstream
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ] && [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "- ❌ 데이터 갱신 워크플로 실패: ${{ github.event.workflow_run.html_url }}" > upstream.md
+            echo "failed=1" >> "$GITHUB_OUTPUT"
+          else
+            : > upstream.md
+          fi
+
+      - name: 데이터 점검
+        id: data
+        continue-on-error: true
+        run: python -I qa/check_data.py data.md
+
+      - name: 브라우저 준비
+        run: |
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+
+      - name: 앱 화면 점검
+        id: smoke
+        continue-on-error: true
+        run: |
+          python -m http.server 8000 >/dev/null 2>&1 &
+          sleep 2
+          python -I qa/smoke_test.py http://localhost:8000/app/ smoke.md
+
+      - name: 결과 요약
+        id: summary
+        run: |
+          {
+            echo "# 품질 점검 $(date +%Y-%m-%d)"
+            echo
+            cat upstream.md
+            echo
+            cat data.md 2>/dev/null || echo "- ❌ 데이터 점검 결과 없음"
+            echo
+            cat smoke.md 2>/dev/null || echo "- ❌ 화면 점검 결과 없음"
+            echo
+            echo "[실행 로그](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          } > report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.upstream.outputs.failed }}" = "1" ] || [ "${{ steps.data.outcome }}" != "success" ] || [ "${{ steps.smoke.outcome }}" != "success" ]; then
+            echo "failed=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 추이 기록 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add qa/history.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "품질 점검 기록: $(date +%Y-%m-%d)"
+            for i in 1 2 3; do git push && break; git pull --rebase; sleep 5; done
+          fi
+
+      # 문제가 있으면 열린 'qa' 이슈 하나에 댓글을 쌓고, 없으면 새로 만든다
+      - name: 문제 있으면 이슈로 알림
+        if: steps.summary.outputs.failed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create qa --color D93F0B --description "매일 품질 점검" 2>/dev/null || true
+          n=$(gh issue list --label qa --state open --json number --jq '.[0].number')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body-file report.md
+          else
+            gh issue create --label qa --title "품질 점검에서 문제 발견" --body-file report.md
+          fi
+          exit 1
