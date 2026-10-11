@@ -94,6 +94,7 @@
     if (sub === "recent") return renderRecent(v);
     if (sub === "compare") return renderCompare(v);
     if (sub === "child") return renderChild(v);
+    if (sub === "region") return renderRegion();
     if (sub === "activity") return renderActivity();
     if (sub === "verify") return renderVerify();
     const cm = readJSON("community:v1", {});
@@ -115,6 +116,10 @@
           <span class="my-ic">${svg(I.baby)}</span>
           ${v.child ? `<span><b>${esc(v.child.name || "우리 아이")} · ${v.child.expecting ? "출산 예정 " + v.child.year + "." + (v.child.month || 1) : classOf(v.child.year, sy)}</b><small>${sy}학년도 기준 · 내년 ${classOf(v.child.year, sy + 1)} · 정보 수정</small></span>` : `<span><b>우리 아이 정보 등록</b><small>출생·출산 예정 월을 넣으면 연령반과 지금 할 일을 알려드려요</small></span>`}
           ${svg(I.chevron)}</button>
+        <button class="my-child my-region" data-go="region">
+          <span class="my-ic">${svg('<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/>')}</span>
+          <span><b>내 동네</b><small>${esc(regionNow().label) || "아직 정하지 않았어요 · 정하면 이 동네부터 보여드려요"}</small></span>
+          ${svg(I.chevron)}</button>
         <div class="my-stats">
           <button data-go="favs"><b>${v.favs.length}</b><span>관심</span></button>
           <button data-go="recent"><b>${v.recent.length}</b><span>최근 본</span></button>
@@ -132,6 +137,7 @@
           <button data-go="activity">${svg(I.chat)}<span>내가 쓴 글·댓글</span><small>${myPosts + myComments}</small>${svg(I.chevron)}</button>
           <button data-go="activity">${svg(I.star)}<span>내 별점 평가</span><small>${myRatings}</small>${svg(I.chevron)}</button>
           ${acc ? `<button data-go="verify">${svg(I.user)}<span>학부모 인증 관리</span><small>${(acc.verifications || []).length}곳</small>${svg(I.chevron)}</button>` : ""}
+          <button data-parenting>${svg(I.baby)}<span>육아 정보</span><small>지원금·성장·수유실</small>${svg(I.chevron)}</button>
           <button data-settings>${svg(I.gear)}<span>앱 설정</span>${svg(I.chevron)}</button>
           ${acc ? `<button data-logout>${svg(I.close)}<span>로그아웃</span>${svg(I.chevron)}</button>` : ""}
           <a href="#policy" data-policy-link>${svg(I.note)}<span>커뮤니티 운영정책</span>${svg(I.chevron)}</a>
@@ -142,6 +148,7 @@
     root.querySelector("[data-timeline]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); window.TIMELINE && TIMELINE.open(); });
     root.querySelector("[data-join]")?.addEventListener("click", () => window.ACCOUNT && ACCOUNT.openSignup({ onDone: () => render() }));
     root.querySelector("[data-logout]")?.addEventListener("click", () => { if (!confirm("로그아웃할까요? (시제품: 이 기기의 가입·인증 정보가 지워져요)")) return; ACCOUNT.logout(); render(); });
+    root.querySelector("[data-parenting]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); window.openParenting && window.openParenting(); });
     root.querySelector("[data-settings]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); $("openSettings")?.click(); });
     root.querySelector("[data-policy-link]").addEventListener("click", (e) => {
       e.preventDefault(); close(); history.replaceState(null, "", location.pathname);
@@ -194,7 +201,7 @@
         <p class="sheet-copy">비교할 곳을 골라 주세요 (최대 ${MAX_COMPARE}곳). 더 좋은 값은 <b class="my-best-sample">초록</b>으로 표시돼요.</p>
         <div class="cm-pick my-pick">${v.favs.map((s) => `<label class="chip ${compareSel.includes(s.key) ? "on" : ""}"><input type="checkbox" value="${esc(s.key)}" ${compareSel.includes(s.key) ? "checked" : ""}>${esc(s.name)}</label>`).join("")}</div>
         <div class="my-table-wrap"><table class="my-table">
-          <thead><tr><th></th>${list.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr></thead>
+          <thead><tr><th scope="col"><span class="sr-only">항목</span></th>${list.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr></thead>
           <tbody>${rows.map(([label, get, dir, fmt]) => {
             const vals = list.map(get);
             const b = dir ? best(vals, dir === "low") : null;
@@ -214,6 +221,48 @@
   }
 
   // 키즈노트·아이사랑식 우리 아이 정보
+  // 내 동네: 앱이 처음 보여줄 지역 (설정의 "처음 보여줄 지역"과 같은 값)
+  function regionNow() {
+    const st = window.APP_SETTINGS ? APP_SETTINGS.get() : {}, acc = window.ACCOUNT ? ACCOUNT.get() : null;
+    const sido = st.defaultSido || (acc && acc.sido) || "", city = st.defaultSido ? st.defaultCity || "" : (acc && acc.city) || "";
+    return { sido, city, label: [sido, city].filter(Boolean).join(" ") };
+  }
+  function renderRegion() {
+    const cur = regionNow();
+    root.innerHTML = `${header("내 동네", "My로")}
+      <form class="my-body upload-form my-region-form" novalidate>
+        <p class="note" style="margin:0">앱을 열면 이 동네부터 어린이집을 보여드려요. 나의 어린이집·전체메뉴의 지도도 이 동네로 열려요.</p>
+        <label class="field"><span>시·도</span><select name="sido" required><option value="">선택해 주세요</option></select></label>
+        <label class="field"><span>시·군·구</span><select name="city" required disabled><option value="">먼저 시·도를 골라 주세요</option></select></label>
+        <button class="btn primary submit" type="submit" disabled>저장</button>
+        <p class="note">동네 정보는 이 기기에만 저장되고 서버로 보내지 않아요.</p>
+      </form>`;
+    bindCommon();
+    const f = root.querySelector("form"), btn = f.querySelector(".submit");
+    const sync = () => { btn.disabled = !(f.sido.value && f.city.value); };
+    const fill = async (sido, keep) => {
+      f.city.disabled = true; f.city.innerHTML = `<option value="">${sido ? "불러오는 중…" : "먼저 시·도를 골라 주세요"}</option>`; sync();
+      if (!sido || !window.APP) return;
+      let list = []; try { list = await APP.cities(sido); } catch {}
+      if (f.sido.value !== sido) return;
+      f.city.innerHTML = `<option value="">선택해 주세요</option>` + list.map((c) => `<option ${c === keep ? "selected" : ""}>${esc(c)}</option>`).join("");
+      f.city.disabled = !list.length; sync();
+    };
+    if (window.APP && APP.sidos) {
+      f.sido.innerHTML = `<option value="">선택해 주세요</option>` + APP.sidos().map((x) => `<option ${x === cur.sido ? "selected" : ""}>${esc(x)}</option>`).join("");
+      if (cur.sido) fill(cur.sido, cur.city);
+    }
+    f.sido.addEventListener("change", () => fill(f.sido.value, ""));
+    f.addEventListener("change", sync);
+    f.addEventListener("submit", (e) => {
+      e.preventDefault(); if (btn.disabled) return;
+      const sido = f.sido.value, city = f.city.value;
+      if (window.APP_SETTINGS) { APP_SETTINGS.set("defaultSido", sido); APP_SETTINGS.set("defaultCity", city); }
+      if (window.APP && APP.setRegion) APP.setRegion(sido, city);
+      try { const a = JSON.parse(localStorage.getItem("account:v1") || "null"); if (a) { a.sido = sido; a.city = city; localStorage.setItem("account:v1", JSON.stringify(a)); window.dispatchEvent(new Event("account:changed")); } } catch {}
+      toast(`내 동네를 ${sido} ${city}(으)로 바꿨어요.`); sub = "home"; direct = false; render();
+    });
+  }
   function renderChild(v) {
     const sy = schoolYearNow(), y = new Date().getFullYear();
     const years = Array.from({ length: 9 }, (_, i) => y + 1 - i);

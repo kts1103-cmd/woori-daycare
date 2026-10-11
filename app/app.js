@@ -357,6 +357,7 @@
             <div class="detail-name-row"><h2 class="detail-name">${esc(d.name)}</h2>
               <button type="button" class="fav-pill" id="favBtn" aria-pressed="false" aria-label="관심 어린이집에 담기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg><span>관심</span></button></div>
             <p class="detail-address">${esc(d.addr || d.sigungu)}</p>
+            ${/^https?:\/\//.test(d.site || "") ? `<a class="site-link" href="${esc(d.site)}" target="_blank" rel="noopener noreferrer" title="어린이집이 정보공개포털에 등록한 주소예요. 이 앱이 관리하는 사이트가 아니에요.">🌐 어린이집 사이트 바로가기<span aria-hidden="true">↗</span></a>` : ""}
             ${d.geocoded ? `<p class="geo-note" title="좌표가 없어 주소로 찾은 위치예요. 실제와 조금 다를 수 있어요.">📍 주소 기준 위치</p>` : ""}
             <div class="tags">${tagsOf(d)}</div>
           </div>

@@ -12,6 +12,7 @@
     notifySchedule: true, // 입소·지원 일정 (앱 안 알림, 이 기기에서만 계산)
     notifyCapacity: true, // 관심 어린이집 정원 여유
     notifyWait: true,     // 관심 어린이집 등록대기 (데이터가 생기면)
+    notifyMine: true,     // 나의 어린이집 정보 변경 · 내가 적어 둔 일정
     notifyAds: false,
   };
   const APP_VERSION = "0.1.0 (시제품)";
@@ -96,7 +97,8 @@
           ${toggle("notifySchedule", "입소·지원 일정 안내", "등록대기·학년도 시작·부모급여 신청·영유아 건강검진 시기를 알려드려요")}
           ${toggle("notifyCapacity", "관심 어린이집 정원 여유", "정원이 차거나 자리가 생기면 알려드려요 (정원에서 현재원을 뺀 계산값)")}
           ${toggle("notifyWait", "관심 어린이집 등록대기", "등록대기 인원이 바뀌면 알려드려요 (데이터가 연결되면 시작돼요)")}
-          ${toggle("notifyActivity", "내 활동 알림 (학부모 인증·댓글)", "서버가 생기면 제공돼요", true)}
+          ${toggle("notifyMine", "나의 어린이집 알림", "전화번호·주소·정원이 바뀌거나 내가 적어 둔 일정이 다가오면 알려드려요")}
+          ${toggle("notifyActivity", "내 활동 알림 (학부모 인증·댓글·학부모 모임 새 글)", "서버가 생기면 제공돼요", true)}
           ${toggle("notifyAds", "이벤트·혜택 알림 (광고성)", "별도 동의 후 발송 · 밤 9시~아침 8시에는 보내지 않아요", true)}
         </div>
 

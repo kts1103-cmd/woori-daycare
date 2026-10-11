@@ -5,12 +5,12 @@
   const KEY = "notify:v1";
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const EMPTY = () => ({ read: {}, seen: {}, events: [], favBase: {}, lastFav: "" });
+  const EMPTY = () => ({ read: {}, seen: {}, events: [], favBase: {}, lastFav: "", mineBase: null, lastMine: "" });
   const load = () => { try { return Object.assign(EMPTY(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { return EMPTY(); } };
   const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch {} };
   const my = () => { try { return Object.assign({ favs: [], child: null, tasks: {} }, JSON.parse(localStorage.getItem("my:v1") || "{}")); } catch { return { favs: [], child: null, tasks: {} }; } };
   const cfg = () => (window.APP_SETTINGS ? APP_SETTINGS.get() : {});
-  const ON = { schedule: "notifySchedule", capacity: "notifyCapacity", wait: "notifyWait" };
+  const ON = { schedule: "notifySchedule", capacity: "notifyCapacity", wait: "notifyWait", mine: "notifyMine" };
   const LINK = { wait: "https://www.childcare.go.kr/?menuno=175", waitStatus: "https://www.childcare.go.kr/?menuno=178", bokjiro: "https://www.bokjiro.go.kr/" };
   const SRC_LINE = "아이사랑·복지로·국민건강보험공단 안내 기준(2026.10)";
 
@@ -71,11 +71,49 @@
     if (changed) refresh();
   }
 
+  // ---- 나의 어린이집: 정보 변경(전화·주소·정원·공시 목록에서 사라짐) 하루 한 번 점검 ----
+  // 공시 데이터에는 운영 중인 곳만 있어서, 목록에서 이틀 연속 안 보이면 "확인해 보세요"로만 알린다 (휴원·폐원이라고 단정하지 않음)
+  async function checkMine(force) {
+    const st = load(), m = my().mine, t = today();
+    if (!m || !window.APP || !APP.snapByKey || (!force && st.lastMine === t)) return;
+    let n; try { n = await APP.snapByKey(m.sido, m.key); } catch { return; }
+    const b = st.mineBase && st.mineBase.key === m.key ? st.mineBase : null, ev = [];
+    const add = (id, ic, title, body) => ev.push({ id: `mine-${m.key}-${id}-${t}`, kind: "mine", ic, at: Date.now(), title, body, fav: { sido: m.sido, key: m.key }, mine: true });
+    if (!n) {
+      const miss = (b ? b.miss || 0 : 0) + 1;
+      st.mineBase = { ...(b || { key: m.key }), key: m.key, miss };
+      if (miss === 2) add("gone", "⚠️", `${esc(m.name)}이(가) 공시 목록에서 보이지 않아요`, "휴원·폐원·이름 변경일 수 있어요. 어린이집에 전화로 확인해 보세요.");
+    } else {
+      const cur = { key: m.key, tel: n.tel || "", addr: n.addr || "", capacity: n.capacity ?? null, miss: 0 };
+      if (b && b.tel !== undefined) {
+        if (b.tel !== cur.tel && cur.tel) add("tel", "📞", `${esc(n.name)} 전화번호가 바뀌었어요`, `${esc(b.tel || "-")} → ${esc(cur.tel)}`);
+        if (b.addr !== cur.addr && cur.addr) add("addr", "📍", `${esc(n.name)} 주소가 바뀌었어요`, `${esc(cur.addr)}`);
+        if (b.capacity != null && cur.capacity != null && b.capacity !== cur.capacity) add("cap", "👥", `${esc(n.name)} 정원이 바뀌었어요`, `${b.capacity}명 → ${cur.capacity}명`);
+      }
+      st.mineBase = cur;
+    }
+    st.events = ev.concat(st.events).slice(0, 30); st.lastMine = t; save(st);
+    if (ev.length) refresh();
+  }
+  // 나의 어린이집 일정·준비물 메모(mine:v1, 이 기기)에서 하루 전·당일 알림
+  function noteItems(now) {
+    let notes = []; try { notes = (JSON.parse(localStorage.getItem("mine:v1") || "{}").events) || []; } catch {}
+    const day0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(), out = [];
+    notes.forEach((e) => {
+      if (e.done || !/^\d{4}-\d\d-\d\d$/.test(e.date || "")) return;
+      const [y, mo, d] = e.date.split("-").map(Number), diff = Math.round((new Date(y, mo - 1, d).getTime() - day0) / DAY);
+      if (diff !== 0 && diff !== 1) return;
+      out.push({ id: `mev-${e.id}-${diff}`, kind: "mine", ic: "🗓️", title: `${diff ? "내일" : "오늘"}: ${esc(e.title)}`, body: e.items ? `준비물: ${esc(e.items)}` : "나의 어린이집에 적어 둔 일정이에요.", open: "mine" });
+    });
+    return out;
+  }
+
   // ---- 목록 ----
   function list() {
     const st = load(), s = cfg(), v = my(), now = new Date(), items = [];
     const seen = st.seen; let dirty = false;
     scheduleItems(v, now).forEach((it) => { if (!seen[it.id]) { seen[it.id] = Date.now(); dirty = true; } items.push({ ...it, at: seen[it.id] }); });
+    noteItems(now).forEach((it) => { if (!seen[it.id]) { seen[it.id] = Date.now(); dirty = true; } items.push({ ...it, at: seen[it.id] }); });
     st.events.forEach((e) => items.push(e));
     if (dirty) save(st);
     return items.filter((it) => s[ON[it.kind]] !== false).map((it) => ({ ...it, unread: !st.read[it.id] })).sort((a, b) => (b.at || 0) - (a.at || 0));
@@ -135,6 +173,7 @@
       const it = items[+b.dataset.i];
       if (it.fav && window.APP) leave(() => APP.openByKey(it.fav.sido, it.fav.key));
       else if (it.open === "timeline" && window.TIMELINE) leave(() => TIMELINE.open());
+      else if (it.open === "mine") leave(() => document.querySelector('nav.tabs [data-view="view-mine"]')?.click());
       else if (it.link) window.open(it.link, "_blank", "noopener");
     }));
   }
@@ -151,9 +190,9 @@
   if (location.hash === "#alerts") history.replaceState(null, "", location.pathname + location.search);
 
   function refresh() { ensureUI(); badge(); if (root && !root.hidden) render(); }
-  window.NOTIFY = { list, unread, open, refresh, check: checkFavs };
+  window.NOTIFY = { list, unread, open, refresh, check: checkFavs, checkMine };
 
-  const start = () => { refresh(); setTimeout(() => checkFavs().catch(() => {}), 2000); };
+  const start = () => { refresh(); setTimeout(() => { checkFavs().catch(() => {}); checkMine().catch(() => {}); }, 2000); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
   window.addEventListener("my:changed", refresh);
   window.addEventListener("storage", refresh);

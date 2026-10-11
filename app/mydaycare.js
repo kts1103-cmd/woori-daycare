@@ -1,7 +1,9 @@
 // 나의 어린이집 탭 (앱개발): 다니는(다닐) 어린이집을 하나 등록하면 매일 볼 것을 모아 보여준다.
 // - 오늘: 식단·공지(서울시 보육포털 / 정보공개포털 공시 링크 — 내용은 가져오지 않음), 대기질 링크, 지금 할 일·새 알림
 // - 급할 때 맡길 곳: 서울시 특화 보육(365열린·거점형 야간·주말·휴일) 어린이집을 가까운 순으로 (서울만)
-// 저장: my:v1.mine = {key, sido, name, type, area} (이 기기에만)
+// - 일정·준비물 메모: 어린이집 행사·준비물을 직접 적어 두면 하루 전·당일 알림(notify.js)
+// - 학부모 모임: 이 어린이집을 재원 인증한 학부모만 들어가는 게시판 (parentroom.js)
+// 저장: my:v1.mine = {key, sido, name, type, area}, mine:v1.events = [{id, date, title, items, done}] (이 기기에만)
 (function () {
   const KEY = "my:v1";
   const $ = (id) => document.getElementById(id);
@@ -12,6 +14,57 @@
   const LINK = { info: "https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp", isarang: "https://www.childcare.go.kr/", hourly: "https://www.childcare.go.kr/?menuno=242", iseoulSvc: "https://iseoul.seoul.go.kr/portal/reservation/guide.do" };
   const view = () => $("view-mine");
   let picking = false, nearCache = null;
+
+  // ---- 광고 1개 ("급할 때 맡길 곳" 위). 광고임을 항상 표시(표시·광고법). 실제 광고는 window.MINE_ADS = [{brand,title,body,url}]로 채우고, 없으면 자리표시.
+  // 커뮤니티 광고(community.js)와 같은 모양(.cm-ad)을 쓴다. 지역·어린이집 정보로 타기팅하지 않는다(개인정보 최소).
+  const ADS = [{ brand: "광고 자리", title: "여기에 광고가 들어가요", body: "나의 어린이집 화면에 하나만 보여요. 시제품 자리표시예요.", url: "" }];
+  function adHTML() {
+    const list = Array.isArray(window.MINE_ADS) && window.MINE_ADS.length ? window.MINE_ADS : ADS;
+    const a = list[Math.floor(Date.now() / 864e5) % list.length]; // 하루에 하나씩 돌아가며
+    const ok = /^https?:\/\//i.test(a.url || "");
+    const inner = `<span class="cm-ad-tag">광고</span><span class="cm-ad-brand">${esc(a.brand || "")}</span><b class="cm-ad-title">${esc(a.title)}</b><span class="cm-ad-body">${esc(a.body || "")}</span>`;
+    return ok ? `<a class="cm-ad mine-ad" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer sponsored" aria-label="광고: ${esc(a.title)}">${inner}</a>` : `<div class="cm-ad mine-ad" role="note" aria-label="광고: ${esc(a.title)}">${inner}</div>`;
+  }
+
+  // ---- 일정·준비물 메모 (서버가 생기면 이 두 함수만 바꾼다) ----
+  const NOTE_KEY = "mine:v1";
+  const loadNotes = () => { try { return (JSON.parse(localStorage.getItem(NOTE_KEY) || "{}").events) || []; } catch { return []; } };
+  const saveNotes = (events) => { try { localStorage.setItem(NOTE_KEY, JSON.stringify({ events })); } catch {} window.dispatchEvent(new Event("my:changed")); };
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const dday = (date) => { const [y, m, d] = date.split("-").map(Number), t = new Date(); const diff = Math.round((new Date(y, m - 1, d) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5); return diff === 0 ? "오늘" : diff === 1 ? "내일" : diff > 0 ? `D-${diff}` : `${-diff}일 지남`; };
+  const dateKo = (date) => { const [, m, d] = date.split("-").map(Number); return `${m}월 ${d}일`; };
+  function notesHTML() {
+    const list = loadNotes().filter((e) => !e.done).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+    return `<h3 class="mine-h">일정·준비물 메모</h3>
+      <div class="mine-list">${list.length ? list.map((e) => `<div class="mine-note-row"><label><input type="checkbox" data-done="${esc(e.id)}" aria-label="${esc(e.title)} 완료"><span><b>${esc(e.title)}</b><small>${dateKo(e.date)} · ${dday(e.date)}${e.items ? ` · 준비물: ${esc(e.items)}` : ""}</small></span></label><button type="button" class="mine-x" data-rm="${esc(e.id)}" aria-label="${esc(e.title)} 삭제">✕</button></div>`).join("") : `<p class="mine-lead">어린이집 행사·준비물을 적어 두면 하루 전과 당일에 알림으로 알려드려요.</p>`}</div>
+      <details class="mine-add"><summary>＋ 일정 추가</summary>
+        <form data-nform novalidate><label>날짜<input type="date" name="date" required value="${todayStr()}" min="${todayStr()}"></label>
+          <label>무슨 일정인가요?<input type="text" name="title" maxlength="30" placeholder="예: 가을 소풍, 학부모 상담" required></label>
+          <label>준비물 <small>(선택)</small><input type="text" name="items" maxlength="60" placeholder="예: 도시락, 여벌옷"></label>
+          <p class="mine-note">이 기기에만 저장돼요. 아이 이름 같은 개인정보는 적지 않아도 돼요.</p>
+          <button type="submit" class="btn primary" disabled>추가</button></form></details>`;
+  }
+  function bindNotes(el) {
+    el.querySelectorAll("[data-done]").forEach((c) => c.addEventListener("change", () => { saveNotes(loadNotes().map((e) => (e.id === c.dataset.done ? { ...e, done: true } : e))); render(); }));
+    el.querySelectorAll("[data-rm]").forEach((b) => b.addEventListener("click", () => { saveNotes(loadNotes().filter((e) => e.id !== b.dataset.rm)); render(); }));
+    const f = el.querySelector("[data-nform]"); if (!f) return;
+    const btn = f.querySelector("button"), sync = () => { btn.disabled = !(f.date.value && f.title.value.trim()); };
+    f.addEventListener("input", sync);
+    f.addEventListener("submit", (e) => {
+      e.preventDefault(); if (btn.disabled) return;
+      const all = loadNotes(); if (all.length >= 50) return;
+      all.push({ id: Date.now().toString(36), date: f.date.value, title: f.title.value.trim(), items: f.items.value.trim(), done: false });
+      saveNotes(all); render();
+    });
+  }
+  // ---- 학부모 모임 입구 ----
+  function roomHTML(m, d) {
+    const ok = !!(window.ACCOUNT && ACCOUNT.verifiedFor(m.key)), pend = !!(window.ACCOUNT && ACCOUNT.pendingFor && ACCOUNT.pendingFor(m.key));
+    return `<h3 class="mine-h">학부모 모임</h3>` + (ok
+      ? `<button type="button" class="mine-item" data-room><span class="mi-ic" aria-hidden="true">👥</span><span><b>${esc(d.name)} 학부모 모임</b><small>같은 어린이집을 재원 인증한 학부모끼리 묻고 나눠요</small></span><span aria-hidden="true">›</span></button>`
+      : `<div class="mine-item locked"><span class="mi-ic" aria-hidden="true">🔒</span><span><b>재원 인증을 하면 들어갈 수 있어요</b><small>${pend ? "인증을 확인하고 있어요. 확인이 끝나면 열려요." : "이 어린이집을 다니는 학부모만 같은 모임에 들어올 수 있어요."}</small></span></div>${pend ? "" : `<button type="button" class="btn primary" data-verify>이 어린이집 재원 인증하기</button>`}`)
+      + `<p class="mine-note">시제품에서는 글이 이 기기 안에서만 보여요. 서버가 연결되면 같은 어린이집 학부모들과 이어져요.</p>`;
+  }
 
 
   function setMine(s) {
@@ -74,6 +127,8 @@
         </div>
       </section>
 
+      ${roomHTML(m, d)}
+
       <h3 class="mine-h">오늘 챙겨 볼 것</h3>
       <div class="mine-list">
         ${seoul ? `<a class="mine-item" href="${esc(d.iseoul)}" target="_blank" rel="noopener"><span class="mi-ic" aria-hidden="true">🍱</span><span><b>오늘 식단·공지 보기</b><small>어린이집이 서울시 보육포털에 올린 식단표·공지·가정통신문으로 연결해요</small></span><span aria-hidden="true">↗</span></a>`
@@ -81,6 +136,10 @@
         ${childTodo ? `<button type="button" class="mine-item" data-todo><span class="mi-ic" aria-hidden="true">📋</span><span><b>우리 아이 지금 할 일</b><small>입소 타임라인에서 이번 달 할 일을 확인해요</small></span><span aria-hidden="true">›</span></button>` : ""}
         <button type="button" class="mine-item" data-alerts><span class="mi-ic" aria-hidden="true">🔔</span><span><b>알림${todo ? ` <em>${todo}개 새로 왔어요</em>` : ""}</b><small>입소 일정·관심 어린이집 변화</small></span><span aria-hidden="true">›</span></button>
       </div>
+
+      ${notesHTML()}
+
+      ${adHTML()}
 
       ${seoul ? `<h3 class="mine-h">급할 때 맡길 곳</h3>
       <div id="mineNear"><p class="mine-lead">가까운 곳을 찾는 중…</p></div>` : `<h3 class="mine-h">급할 때 맡길 곳</h3>
@@ -94,6 +153,9 @@
     el.querySelector("[data-detail]").addEventListener("click", () => APP.openByKey(m.sido, m.key));
     el.querySelector("[data-todo]")?.addEventListener("click", () => TIMELINE.open());
     el.querySelector("[data-alerts]").addEventListener("click", () => NOTIFY && NOTIFY.open());
+    bindNotes(el);
+    el.querySelector("[data-room]")?.addEventListener("click", () => window.PARENTROOM && PARENTROOM.open({ key: m.key, sido: m.sido, name: d.name }));
+    el.querySelector("[data-verify]")?.addEventListener("click", () => window.ACCOUNT && ACCOUNT.openVerify({ key: m.key, sido: m.sido, name: d.name, area: d.area }, { onDone: () => render() }));
     if (seoul) renderNear(d);
   }
 
@@ -114,6 +176,9 @@
         <span><b>${esc(x.name)}</b><small>${km(x.dist)} · ${x.kinds.map((k) => `${S[k]?.ic || ""} ${S[k]?.label || k}`).join(" · ")}</small></span>
         <span class="mine-near-act">${x.tel ? `<a class="btn" href="tel:${esc(String(x.tel).replace(/[^0-9+]/g, ""))}" aria-label="${esc(x.name)} 전화">📞</a>` : ""}<a class="btn" href="${esc(S[x.kinds[0]]?.url || x.iseoul)}" target="_blank" rel="noopener">예약</a></span></div>`).join("")}</div>
       <p class="mine-note">나의 어린이집에서 가까운 순(직선거리, 계산)이에요.</p>`;
+    // 하나를 열면 나머지는 접는다
+    const kinds = box.querySelectorAll("details.mine-kind");
+    kinds.forEach((el) => el.addEventListener("toggle", () => { if (el.open) kinds.forEach((o) => { if (o !== el) o.open = false; }); }));
   }
 
   function css() {
@@ -124,6 +189,9 @@
 #view-mine .mine-pick{display:grid;gap:12px}#view-mine .mine-card{padding:18px;border-radius:var(--r20,20px);background:var(--accent-subtle);border:1px solid var(--accent-soft);display:grid;gap:6px}
 #view-mine .mine-badge{justify-self:start;padding:2px 10px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px}#view-mine .mine-sub{margin:0;color:var(--muted);font-size:13px}
 #view-mine .mine-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}#view-mine .mine-actions .btn{min-height:44px}#view-mine .mine-h{margin:8px 0 0;font-family:var(--font-cute,inherit);font-weight:400;font-size:18px}
+#view-mine .mine-note-row{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r12,12px);background:var(--surface)}#view-mine .mine-note-row label{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}#view-mine .mine-note-row b{display:block;font-size:15px;overflow-wrap:anywhere}#view-mine .mine-note-row small{color:var(--muted);font-size:12px;line-height:1.4}#view-mine .mine-note-row input[type=checkbox]{width:22px;height:22px;flex:none}
+#view-mine .mine-x{min-width:44px;min-height:44px;border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer}#view-mine .mine-add{border:1px solid var(--line);border-radius:var(--r12,12px);background:var(--surface);padding:0 12px}#view-mine .mine-add summary{min-height:48px;display:flex;align-items:center;cursor:pointer;color:var(--accent-strong);font-weight:700}
+#view-mine .mine-add form{display:grid;gap:10px;padding:4px 0 14px}#view-mine .mine-add label{display:grid;gap:4px;font-size:14px}#view-mine .mine-add input{min-height:48px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r12,12px);background:var(--bg);color:var(--text);font:inherit;font-size:16px}#view-mine .mine-item.locked{background:var(--accent-subtle);cursor:default}
 #view-mine .mine-item{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r16,16px);background:var(--surface);color:var(--text);text-decoration:none;text-align:left;font:inherit;cursor:pointer;width:100%}
 #view-mine .mine-item b{display:block;font-size:15px}#view-mine .mine-item em{font-style:normal;color:var(--danger);font-size:13px}#view-mine .mine-item small{display:block;color:var(--muted);font-size:12px;line-height:1.45}#view-mine .mine-item>span:nth-child(2){flex:1;min-width:0}
 #view-mine .mi-ic{font-size:22px}#view-mine .mine-kinds{display:grid;grid-template-columns:1fr 1fr;gap:8px}#view-mine .mine-kind{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r12,12px);background:var(--surface);font-size:13px}

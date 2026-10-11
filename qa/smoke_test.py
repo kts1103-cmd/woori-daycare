@@ -31,7 +31,7 @@ with sync_playwright() as p:
         try:
             page.goto(url, wait_until="networkidle", timeout=60000)
             page.click('.segments [data-mode="list"]')  # 지도 키가 있으면 지도 모드로 시작하므로 목록으로 전환
-            page.wait_for_selector('button[aria-label$="상세 보기"]', timeout=30000)
+            page.wait_for_selector('[aria-label$="상세 보기"]', timeout=30000)
             count = page.text_content("#count") or ""
             check("곳" in count and not count.startswith("조건에 맞는 어린이집 0곳"), f"[{name}] 목록 표시: {count}")
             check(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"[{name}] 가로 넘침 없음")
@@ -47,12 +47,36 @@ with sync_playwright() as p:
                 page.fill("#q", "")
                 page.wait_for_timeout(500)
                 # 상세 화면
-                page.click('button[aria-label$="상세 보기"] >> nth=0')
+                page.click('[aria-label$="상세 보기"] >> nth=0')
                 page.wait_for_timeout(500)
                 check(page.evaluate("location.hash") == "#detail", "상세 화면 열림")
                 page.go_back()
                 page.wait_for_timeout(500)
-                # 지역 전환: 시트에서 다른 시·도 선택
+                # 하단 탭 5개 + 나의 어린이집 탭
+                vis = page.evaluate("[...document.querySelectorAll('nav.tabs [role=tab]')].filter(b => b.offsetParent).length")  # 숨은 탭(가이드·위반)은 메뉴에서 연다
+                check(vis == 5, f"보이는 하단 탭 {vis}개 (기대 5)")
+                page.click('nav.tabs [data-view="view-mine"]')
+                page.wait_for_timeout(500)
+                check(page.evaluate("document.getElementById('view-mine').classList.contains('active')"), "나의 어린이집 탭 열림")
+                page.click('nav.tabs [role="tab"] >> nth=0')
+                page.wait_for_timeout(300)
+                # 알림 버튼
+                if page.locator("#openAlerts").count():
+                    page.click("#openAlerts")
+                    page.wait_for_timeout(500)
+                    check(page.evaluate("!!document.querySelector('dialog[open], .mypage, [role=dialog]')"), "알림 화면 열림")
+                    page.keyboard.press("Escape")
+                    page.go_back() if page.evaluate("location.hash") else None
+                    page.wait_for_timeout(300)
+                else:
+                    check(False, "알림 버튼(#openAlerts) 없음")
+                # 처음 실행 시작 흐름 (자동화 브라우저는 건너뛰므로 ?onboard=1 로 강제)
+                p2 = browser.new_page(viewport=vp)
+                p2.route("**/*map.naver.com/**", lambda r: r.abort())
+                p2.goto(url + ("&" if "?" in url else "?") + "onboard=1", wait_until="networkidle", timeout=60000)
+                p2.wait_for_timeout(800)
+                check(p2.locator("#onboard").count() > 0, "시작 흐름(#onboard) 표시")
+                p2.close()                # 지역 전환: 시트에서 다른 시·도 선택
                 before = page.text_content("#regionLabel")
                 page.click("#regionBtn")
                 page.click("#sheet [data-sido] >> nth=0")

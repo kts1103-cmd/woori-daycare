@@ -28,12 +28,18 @@
       { author: "도토리아빠", body: "CCTV 열람 절차도요!", at: now - 7 * H }] },
     { id: "s4", cls: "만 1세반", cat: "worry", title: "적응기간 2주째인데 아침마다 울어요", body: "등원할 때마다 너무 울어서 마음이 아파요. 다들 얼마나 걸리셨나요?", author: "콩이맘", at: now - 26 * H, likes: 45, views: 512, comments: [
       { author: "햇살맘", body: "저희는 한 달 정도 걸렸어요. 인사는 짧게 하고 나오는 게 오히려 빨리 적응하더라고요.", at: now - 25 * H }] },
-    { id: "s5", cls: "만 3세반", cat: "local", title: "양덕동 키즈카페 새로 생겼어요", body: "4세 이하 존이 따로 있고 평일 오전은 한산해요. 주차는 건물 지하 2시간 무료예요.", author: "동네아빠", at: now - 50 * H, likes: 18, views: 240, comments: [] },
+    { id: "s5", cls: "만 3세반", cat: "local", title: "동네에 키즈카페 새로 생겼어요", body: "4세 이하 존이 따로 있고 평일 오전은 한산해요. 주차는 건물 지하 2시간 무료예요.", author: "동네아빠", at: now - 50 * H, likes: 18, views: 240, comments: [] },
   ].map((p) => ({ ...p, seed: true }));
 
   const store = {
     load() {
-      try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && v.posts) return v; } catch {}
+      try {
+        const v = JSON.parse(localStorage.getItem(KEY) || "null");
+        if (v && v.posts) { // 저장된 예시 글은 최신 예시 문구로 갱신 (공감·댓글은 유지)
+          v.posts.forEach((p) => { const sd = p.seed && SEED.find((x) => x.id === p.id); if (sd) { p.title = sd.title; p.body = sd.body; } });
+          return v;
+        }
+      } catch {}
       return { posts: SEED, liked: [], reported: [], nick: "" };
     },
     save(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch {} },

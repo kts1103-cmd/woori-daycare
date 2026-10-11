@@ -60,6 +60,10 @@
     let cmNick = ""; try { cmNick = JSON.parse(localStorage.getItem("community:v1") || "{}").nick || ""; } catch {}
     root.innerHTML = `${header("회원가입")}<form class="my-body upload-form" novalidate>${steps(2)}
       <label class="field"><span>닉네임</span><input name="nick" maxlength="12" required value="${esc(state.nick || cmNick)}" placeholder="2~12자 (실명은 피해 주세요)"></label>
+      <fieldset class="join-region"><legend>사는 동네 <small>(앱이 이 동네부터 보여드려요)</small></legend>
+        <label class="field"><span>시·도</span><select name="sido" required><option value="">선택해 주세요</option></select></label>
+        <label class="field"><span>시·군·구</span><select name="city" required disabled><option value="">먼저 시·도를 골라 주세요</option></select></label>
+      </fieldset>
       <fieldset><legend>약관 동의</legend>
         <label class="check"><input type="checkbox" name="agreeAll">전체 동의</label>
         <label class="check"><input type="checkbox" name="t1" data-req>[필수] 서비스 이용약관</label>
@@ -71,12 +75,28 @@
     bindX();
     const f = root.querySelector("form"), btn = f.querySelector(".submit"), req = [...f.querySelectorAll("[data-req]")];
     const all = f.elements.agreeAll;
-    const sync = () => { btn.disabled = !(f.nick.value.trim().length >= 2 && req.every((c) => c.checked)); };
+    const sync = () => { btn.disabled = !(f.nick.value.trim().length >= 2 && f.sido.value && f.city.value && req.every((c) => c.checked)); };
     // '전체 동의'는 자기 change에서만 하위 항목을 바꾸고, 하위 항목이 바뀌면 '전체 동의' 표시만 맞춘다
     all.addEventListener("change", () => { req.forEach((c) => (c.checked = all.checked)); sync(); });
     req.forEach((c) => c.addEventListener("change", () => { all.checked = req.every((x) => x.checked); }));
+    // 사는 동네: 시·도 → 시·군·구 (설정에 이미 있으면 미리 채운다)
+    const pref = window.APP_SETTINGS ? APP_SETTINGS.get() : {};
+    const fillCities = async (sido, keep) => {
+      f.city.disabled = true; f.city.innerHTML = `<option value="">${sido ? "불러오는 중…" : "먼저 시·도를 골라 주세요"}</option>`; sync();
+      if (!sido || !window.APP) return;
+      let list = []; try { list = await APP.cities(sido); } catch {}
+      if (f.sido.value !== sido) return; // 그사이 다른 시·도를 고름
+      f.city.innerHTML = `<option value="">선택해 주세요</option>` + list.map((c) => `<option ${c === keep ? "selected" : ""}>${esc(c)}</option>`).join("");
+      f.city.disabled = !list.length; sync();
+    };
+    if (window.APP && APP.sidos) {
+      const sidos = APP.sidos(), cur = state.sido || pref.defaultSido || "";
+      f.sido.innerHTML = `<option value="">선택해 주세요</option>` + sidos.map((v) => `<option ${v === cur ? "selected" : ""}>${esc(v)}</option>`).join("");
+      if (cur) fillCities(cur, state.city || pref.defaultCity || "");
+    }
+    f.sido.addEventListener("change", () => fillCities(f.sido.value, ""));
     f.addEventListener("input", sync); f.addEventListener("change", sync); sync();
-    f.addEventListener("submit", (e) => { e.preventDefault(); if (btn.disabled) return; state.nick = f.nick.value.trim(); step3(); });
+    f.addEventListener("submit", (e) => { e.preventDefault(); if (btn.disabled) return; state.nick = f.nick.value.trim(); state.sido = f.sido.value; state.city = f.city.value; step3(); });
   }
 
   // 학부모 인증 (확정 방식, PLAN.md 3.5): 어린이집 선택 → 증빙 캡처 1장 (재원 중인 학부모만)
@@ -116,9 +136,9 @@
       <fieldset><legend>3. 캡처 사진 올리기</legend>
         <label class="pick"><input type="file" name="shot" accept="image/*"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-pick-label>캡처 사진 고르기 (1장)</span></label>
         <div class="proof-preview" hidden></div>
-        <p class="note proof-privacy">🔒 올린 사진은 판독 직후 바로 삭제돼요. 아이 이름은 자동으로 가려져요. 인증은 1년에 한 번(3월 새 학년)이에요.</p>
+        <p class="note proof-privacy">🔒 시제품: 올린 사진은 저장하지도, 서버로 보내지도 않아요. 서버가 연결되면 판독 직후 바로 삭제하고 아이 이름은 가려서 처리할 예정이에요. 인증은 1년에 한 번(3월 새 학년)이에요.</p>
       </fieldset>
-      <label class="check"><input type="checkbox" name="ok">[필수] 인증을 위해 캡처 속 정보(어린이집명, 결제 월, 아이 이름)를 판독하고 즉시 삭제하는 데 동의합니다.</label>
+      <label class="check"><input type="checkbox" name="ok">[필수] 시제품: 선택한 사진은 이 기기 안에서만 쓰고 저장·전송하지 않는다는 점을 확인했어요. (서버 연결 후 판독·즉시 삭제 동의는 따로 받아요)</label>
       <div class="proof-result" hidden aria-live="polite"></div>
       <button class="btn primary submit" type="submit" disabled>${submitLabel}</button>
       ${skippable ? `<button class="btn join-skip" type="button" data-skip>나중에 인증할게요</button><p class="note">인증하지 않아도 가입은 돼요. 다만 별점 평가는 인증한 어린이집에만 남길 수 있어요.</p>` : ""}
@@ -174,8 +194,8 @@
     const result = (kind, title, body) => { resBox.className = `proof-result ${kind}`; resBox.innerHTML = `<b>${title}</b><small>${body}</small>`; resBox.hidden = false; };
     f.addEventListener("submit", async (e) => {
       e.preventDefault(); if (btn.disabled) return;
-      busy = true; btn.textContent = "판독 중…"; sync();
-      result("reading", "🔍 판독 중…", "어린이집 이름과 날짜를 찾고 있어요.");
+      busy = true; btn.textContent = "확인 중…"; sync();
+      result("reading", "🔍 확인 중…", "시제품: 실제 판독이 아니라 파일 이름으로 간단히 확인해요.");
       let tooSmall = false;
       try { const bmp = await createImageBitmap(file); tooSmall = Math.max(bmp.width, bmp.height) < 300; bmp.close && bmp.close(); } catch { tooSmall = true; }
       await new Promise((r) => setTimeout(r, 1200));
@@ -189,8 +209,8 @@
       }
       const auto = norm(file.name).includes(norm(picked.name).replace(/어린이집$/, "")) && norm(picked.name).length >= 2;
       done();
-      if (auto) { result("ok", "✅ 인증이 완료됐어요", `${esc(picked.name)} · ${esc(base.status)}`); setTimeout(() => onSubmit({ ...base, state: "approved" }), 700); }
-      else { result("wait", "⏳ 운영자가 확인하고 있어요", "24시간 안에 결과를 알려 드려요. 확인이 끝나면 평가를 남길 수 있어요."); setTimeout(() => onSubmit({ ...base, state: "pending" }), 900); }
+      if (auto) { result("ok", "✅ 시제품 인증 완료", `${esc(picked.name)} · ${esc(base.status)} · 실제 판독이 아니에요`); setTimeout(() => onSubmit({ ...base, state: "approved" }), 700); }
+      else { result("wait", "⏳ 확인 대기 (시제품)", "시제품에는 운영자 확인이 아직 없어요. 서버가 연결되면 운영자가 증빙을 확인한 뒤 평가를 남길 수 있어요."); setTimeout(() => onSubmit({ ...base, state: "pending" }), 900); }
     });
   }
   function step3() {
@@ -202,12 +222,19 @@
     bindVerify(f, state.pre, (ver) => { state.verifications = [ver]; finish(); });
     f.querySelector("[data-skip]").addEventListener("click", () => { state.verifications = []; finish(); });
   }
+  // 가입한 동네를 "처음 보여줄 지역"으로 저장하고 지금 목록·지도도 그 동네로 맞춘다
+  function applyRegion(sido, city) {
+    if (!sido) return;
+    if (window.APP_SETTINGS) { APP_SETTINGS.set("defaultSido", sido); APP_SETTINGS.set("defaultCity", city || ""); }
+    if (window.APP && APP.setRegion) APP.setRegion(sido, city || "");
+  }
   function finish() {
-    write({ nick: state.nick, joinedAt: Date.now(), verifications: state.verifications });
+    write({ nick: state.nick, sido: state.sido || "", city: state.city || "", joinedAt: Date.now(), verifications: state.verifications });
+    applyRegion(state.sido, state.city);
     root.innerHTML = `${header("가입 완료")}<div class="my-body">${steps(4)}
       <section class="join-hero done"><span class="join-check">✔</span><b>${esc(state.nick)}님, 가입을 환영해요!</b>
       <p>${!state.verifications.length ? "학부모 인증은 My에서 언제든 추가할 수 있어요."
-        : state.verifications[0].state === "pending" ? `<span class="verified-badge pending">⏳ ${esc(state.verifications[0].name)} · 확인 중</span><br>운영자가 24시간 안에 확인해요. 확인이 끝나면 별점 평가를 남길 수 있어요.`
+        : state.verifications[0].state === "pending" ? `<span class="verified-badge pending">⏳ ${esc(state.verifications[0].name)} · 확인 중</span><br>시제품: 운영자 확인은 서버 연결 후 열려요. 확인이 끝나면 별점 평가를 남길 수 있어요.`
         : `<span class="verified-badge">✔ ${esc(state.verifications[0].name)} · ${esc(state.verifications[0].status)} 인증</span><br>이제 이 어린이집에 별점 평가를 남길 수 있어요.`}</p></section>
       <button class="btn primary submit" data-ok>${onDone ? "평가하러 가기" : "시작하기"}</button></div>`;
     bindX();
@@ -224,7 +251,7 @@
     bindX();
     bindVerify(root.querySelector("form"), pre, (ver) => {
       const a = read(); a.verifications = [ver, ...(a.verifications || []).filter((x) => x.key !== ver.key)]; write(a);
-      toast(ver.state === "pending" ? `${ver.name} 인증을 운영자가 확인하고 있어요.` : `${ver.name} 학부모 인증을 마쳤어요.`);
+      toast(ver.state === "pending" ? `${ver.name} 인증은 확인 대기 중이에요. (시제품: 운영자 확인은 서버 연결 후)` : `${ver.name} 학부모 인증을 마쳤어요.`);
       const cb = onDone; history.back(); cb && setTimeout(cb, 50);
     });
     show();

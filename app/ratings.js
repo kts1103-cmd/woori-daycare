@@ -29,7 +29,7 @@
     return { n, avg: n ? list.reduce((a, r) => a + avgOf(r), 0) / n : 0, items, tags, public: n >= MIN_PUBLIC, mine: store.mine(key) };
   }
 
-  const starRow = (v, size = "") => `<span class="stars-view ${size}" aria-label="별점 ${v.toFixed(1)}점">${[1, 2, 3, 4, 5].map((i) => `<span style="--fill:${Math.max(0, Math.min(1, v - i + 1)) * 100}%">★</span>`).join("")}</span>`;
+  const starRow = (v, size = "") => `<span class="stars-view ${size}" role="img" aria-label="별점 ${v.toFixed(1)}점">${[1, 2, 3, 4, 5].map((i) => `<span style="--fill:${Math.max(0, Math.min(1, v - i + 1)) * 100}%">★</span>`).join("")}</span>`;
 
   // 목록 카드용 배지
   function badge(key) {
@@ -43,7 +43,7 @@
     const top = Object.entries(s.tags).sort((a, b) => b[1] - a[1]).slice(0, 4);
     return `
       <div class="rating-summary ${demo ? "demo" : ""}">
-        ${demo ? '<span class="badge sample">예시</span>' : ""}
+        ${demo ? '<span class="badge sample">예시 · 실제 평가 아님</span>' : ""}
         <div class="rating-big"><strong>${s.avg.toFixed(1)}</strong>${starRow(s.avg, "lg")}<small>인증 학부모 ${s.n}명</small></div>
         <dl class="rating-items">${ITEMS.map((it) => `<div><dt>${it}</dt><dd><span class="bar"><span style="width:${(s.items[it] / 5) * 100}%"></span></span><b>${s.items[it].toFixed(1)}</b></dd></div>`).join("")}</dl>
         ${top.length ? `<div class="tags">${top.map(([t, c]) => `<span class="tag">${esc(t)} <small>${c}</small></span>`).join("")}</div>` : ""}
@@ -57,9 +57,9 @@
     const A = acct();
     if (!A || !A.isMember()) return `<button class="btn rate-cta" type="button" data-rate>⭐ 회원가입하고 평가하기</button><p class="note rate-why">평가는 가입할 때 <b>재원 인증</b>을 한 학부모만 남길 수 있어요.</p>`;
     const v = A.verifiedFor(key);
-    if (!v && A.pendingFor && A.pendingFor(key)) return `<button class="btn rate-cta" type="button" disabled>⏳ 인증 확인 중이에요 (24시간 이내)</button><p class="note rate-why">운영자 확인이 끝나면 평가를 남길 수 있어요.</p>`;
+    if (!v && A.pendingFor && A.pendingFor(key)) return `<button class="btn rate-cta" type="button" disabled>⏳ 인증 확인 대기 중이에요 (시제품)</button><p class="note rate-why">시제품: 운영자 확인은 서버 연결 후 열려요. 확인이 끝나면 평가를 남길 수 있어요.</p>`;
     if (!v) return `<button class="btn rate-cta" type="button" data-rate>🔒 이 어린이집 학부모 인증하고 평가하기</button><p class="note rate-why">${esc(A.get().nick)}님은 아직 이 어린이집을 인증하지 않았어요.</p>`;
-    return `<div class="rate-verified"><span class="verified-badge">✔ ${esc(v.status)} 인증 회원</span></div><button class="btn rate-cta" type="button" data-rate>${mine ? "내 평가 수정하기" : "⭐ 평가하기"}</button>`;
+    return `<div class="rate-verified"><span class="verified-badge" title="시제품: 서버에서 증빙을 확인하기 전에는 자동 확인으로 표시돼요">✔ ${esc(v.status)} 인증 회원(시제품)</span></div><button class="btn rate-cta" type="button" data-rate>${mine ? "내 평가 수정하기" : "⭐ 평가하기"}</button>`;
   }
 
   // 상세 화면 섹션
@@ -68,7 +68,7 @@
     const mine = s.mine;
     return `
       <section class="rating-sec" data-rating-sec>
-        <div class="rating-head"><h3>인증 학부모 평가</h3><span class="verified-badge">✔ 재원 인증</span></div>
+        <div class="rating-head"><h3>인증 학부모 평가</h3><span class="verified-badge" title="시제품: 서버에서 증빙을 확인하기 전에는 자동 확인으로 표시돼요">✔ 재원 인증(시제품)</span></div>
         ${s.public ? summaryHTML(s) : `
         <p class="rating-empty">아직 공개된 평균이 없어요. <b>인증 학부모 ${MIN_PUBLIC}명 이상</b>이 평가하면 평균을 보여드려요. <small>(현재 ${s.n}명)</small></p>
         <details class="rating-demo"><summary>공개되면 이렇게 보여요</summary>${summaryHTML(DEMO, true)}</details>`}
@@ -90,7 +90,7 @@
     function step2() {
       sh.setAttribute("aria-label", "별점 평가");
       sh.innerHTML = `${top("별점 평가")}
-        <p class="sheet-copy"><span class="verified-badge">✔ ${esc(v.verified.status)} 인증</span> 항목마다 별을 눌러 주세요.</p>
+        <p class="sheet-copy"><span class="verified-badge" title="시제품: 서버에서 증빙을 확인하기 전에는 자동 확인으로 표시돼요">✔ ${esc(v.verified.status)} 인증(시제품)</span> 항목마다 별을 눌러 주세요.</p>
         <form class="upload-form rate-form" novalidate>
           ${ITEMS.map((it) => `<div class="rate-row"><span>${it}</span><span class="rate-stars" data-item="${it}" role="radiogroup" aria-label="${it}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-n="${n}" class="${(v.scores[it] || 0) >= n ? "on" : ""}" aria-label="${it} ${n}점" aria-pressed="${v.scores[it] === n}">★</button>`).join("")}</span></div>`).join("")}
           <fieldset><legend>좋았던 점 <small>(선택)</small></legend>

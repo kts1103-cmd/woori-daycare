@@ -97,6 +97,11 @@ def main():
     if r.returncode != 0 or not os.path.exists(os.path.join(tmp, "seoul_svc.json")):
         prev = os.path.join(app_data, "seoul_svc.json")  # 이전 파일이 있으면 그대로 유지
         if os.path.exists(prev): shutil.copy(prev, os.path.join(tmp, "seoul_svc.json"))
+    # 달빛어린이병원·소아과·심야/휴일 약국 (국립중앙의료원, DATAGO_KEY 필요). 실패하거나 키가 없으면 이전 파일을 유지한다
+    subprocess.run([sys.executable, "-I", os.path.join(ROOT, "medical.py"), tmp])
+    prev_med = os.path.join(app_data, "night_care.json")
+    if not os.path.exists(os.path.join(tmp, "night_care.json")) and os.path.exists(prev_med):
+        shutil.copy(prev_med, os.path.join(tmp, "night_care.json"))
     # 새 데이터가 다 만들어진 뒤에 폴더 단위로 교체한다
     if os.path.exists(app_data):
         os.replace(app_data, old)

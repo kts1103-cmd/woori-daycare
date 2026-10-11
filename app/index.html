@@ -749,9 +749,145 @@
   html #view-mine .mine-near b { font-size:15px; }
   html #view-mine .mine-near-act .btn { border-radius:12px; }
   html #view-mine .mine-pick button, html #view-mine .mine-cands > * { min-height:56px; }
+  /* 나의 어린이집: 일정·준비물 메모, 학부모 모임 입구 */
+  html #view-mine .mine-note-row { gap:4px; padding:4px 6px 4px 14px; border-radius:var(--r16); }
+  html #view-mine .mine-note-row label { gap:12px; }
+  html #view-mine .mine-note-row input[type=checkbox], html #view-mine .mine-add input[type=checkbox] { appearance:none; -webkit-appearance:none; flex:none; width:22px; height:22px; margin:0; border:1.5px solid #8BA59A; border-radius:7px; background:var(--surface); display:inline-grid; place-items:center; cursor:pointer; }
+  html #view-mine .mine-note-row input[type=checkbox]:checked { background:var(--accent); border-color:var(--accent); }
+  html #view-mine .mine-note-row input[type=checkbox]:checked::after { content:""; width:6px; height:11px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg) translate(-1px,-1px); }
+  html #view-mine .mine-note-row:has(input:checked) b { text-decoration:line-through; color:var(--muted); }
+  html #view-mine .mine-note-row:has(input:checked) { background:var(--bg); }
+  html #view-mine .mine-note-row b { font-size:15px; line-height:1.35; }
+  html #view-mine .mine-note-row small { font-size:12px; color:var(--muted); line-height:1.5; }
+  html #view-mine .mine-note-row input:focus-visible, html #view-mine .mine-x:focus-visible, html #view-mine .mine-add summary:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html #view-mine .mine-x { border-radius:50%; color:#8BA59A; font-size:15px; }
+  html #view-mine .mine-x:hover { background:var(--danger-soft); color:var(--danger); }
+  html #view-mine .mine-add { padding:0 14px; border-radius:var(--r16); border-style:dashed; border-color:var(--accent); background:var(--accent-subtle); }
+  html #view-mine .mine-add summary { min-height:52px; color:var(--accent-strong); font-weight:700; font-size:14px; list-style:none; }
+  html #view-mine .mine-add summary::-webkit-details-marker { display:none; }
+  html #view-mine .mine-add[open] { background:var(--surface); border-style:solid; }
+  html #view-mine .mine-add form { gap:12px; padding:4px 0 16px; }
+  html #view-mine .mine-add label { font-size:13px; font-weight:700; gap:6px; }
+  html #view-mine .mine-add label small { font-weight:400; color:var(--muted); font-size:12px; }
+  html #view-mine .mine-add input { min-height:52px; border-radius:var(--r16); background:var(--surface); }
+  html #view-mine .mine-add input:focus-visible { outline:3px solid #B69548; outline-offset:2px; border-color:var(--accent); }
+  html #view-mine .mine-add .btn.primary { min-height:52px; width:100%; border-radius:var(--r16); }
+  html #view-mine .mine-add .btn.primary:disabled { background:var(--line); border-color:var(--line); color:var(--muted); }
+  html #view-mine .mine-item.locked { cursor:default; border-style:dashed; background:var(--bg); }
+  html #view-mine .mine-item.locked .mi-ic { background:#EDEEEA; }
+  html #view-mine .mine-item.locked b { color:var(--text); }
+  html #view-mine .mine-item.locked [data-verify] { min-height:44px; }
+  /* 학부모 모임 화면 (parentroom.js의 임시 CSS를 덮어씀) */
+  html #parentroom { background:var(--bg); }
+  html #parentroom .pr-body { padding:16px 20px 96px; gap:14px; }
+  html #parentroom .pr-rule { padding:12px 14px; border-radius:var(--r16); font-size:13px; line-height:1.65; }
+  html #parentroom .pr-chips button { min-height:44px; padding:0 16px; font-size:14px; }
+  html #parentroom .pr-chips button[aria-pressed=true] { font-weight:700; }
+  html #parentroom .pr-post { padding:16px; border-radius:var(--r20); gap:10px; }
+  html #parentroom .pr-top { font-size:12px; gap:8px; }
+  html #parentroom .pr-top b { font-size:13px; color:var(--accent-strong); }
+  html #parentroom .pr-text { font-size:15px; line-height:1.65; color:var(--text); }
+  html #parentroom .pr-acts { gap:8px; padding-top:4px; border-top:1px solid var(--line); }
+  html #parentroom .pr-acts button { min-height:44px; padding:0 14px; font-size:13px; font-weight:700; }
+  html #parentroom .pr-acts button:hover { background:var(--accent-soft); }
+  html #parentroom .pr-blind { padding:16px; border-radius:var(--r16); background:var(--surface); font-size:13px; }
+  html #parentroom .pr-cm { padding:10px 12px; border-radius:var(--r12); font-size:14px; }
+  html #parentroom textarea, html #parentroom input[type=text] { padding:14px; border-radius:var(--r16); }
+  html #parentroom :is(textarea,input[type=text]):focus-visible { outline:3px solid #B69548; outline-offset:2px; border-color:var(--accent); }
+  html #parentroom .pr-go { min-height:56px; box-shadow:0 6px 16px rgba(36,92,82,.22); }
+  html #parentroom .pr-go:disabled { box-shadow:none; }
+  html #parentroom :is(.pr-go,.pr-chips button,.pr-acts button):focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html #parentroom .pr-empty { margin:4px 0; padding:36px 16px; border:1px dashed var(--line); border-radius:var(--r20); background:var(--surface); }
   /* 하단 탭 5개: 라벨은 한 줄 */
   nav.tabs button { padding-left:2px; padding-right:2px; }
-  nav.tabs button span { white-space:nowrap; letter-spacing:-.4px; }
+  nav.tabs button { justify-content:flex-start; gap:2px; min-height:66px; padding:9px 4px 8px; }
+  nav.tabs button svg { width:21px; height:21px; flex:none; }
+  nav.tabs button span { display:block; max-width:100%; font-size:12px; line-height:1.2; text-align:center; letter-spacing:-.5px; white-space:normal; word-break:keep-all; }
+  /* 상세: 어린이집 사이트 바로가기 (주소 바로 아래, 눈에 띄게) */
+  .site-link { display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px; margin:10px 0 2px; padding:0 16px; border-radius:var(--r16); background:var(--accent); color:#fff; font-family:var(--font-cute); font-size:16px; text-decoration:none; }
+  .site-link:hover { background:var(--accent-strong); }
+  .site-link:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  /* 육아 정보 화면: 링크 4개를 한 줄씩 */
+  :is(#view-parenting,#view-hospital) .link-grid { grid-template-columns:1fr; gap:10px; }
+  :is(#view-parenting,#view-hospital) .link-grid .btn { justify-content:flex-start; min-height:56px; padding:0 16px; gap:10px; border-radius:var(--r16); font-size:14px; font-weight:700; text-align:left; }
+  :is(#view-parenting,#view-hospital) .link-grid .btn:hover { border-color:#8BBFB2; background:var(--accent-subtle); }
+  :is(#view-parenting,#view-hospital) .card { padding:16px; }
+  /* 육아 정보: 밤에 아플 때 · 우리 아이 지원금 (parenting.js의 임시 CSS를 덮어씀) */
+  html :is(#view-parenting,#view-hospital) .section { gap:14px; }
+  html :is(#view-parenting,#view-hospital) .pi-card { padding:18px 16px; border-radius:var(--r20); gap:12px; }
+  html :is(#view-parenting,#view-hospital) .pi-card h3 { font-size:20px; line-height:1.3; color:var(--text); }
+  html :is(#view-parenting,#view-hospital) .pi-lead { font-size:13px; line-height:1.65; }
+  html :is(#view-parenting,#view-hospital) .pi-btns { gap:10px; }
+  html :is(#view-parenting,#view-hospital) .pi-link { min-height:64px; padding:10px 14px; gap:14px; border-radius:var(--r16); transition:border-color .15s; }
+  html :is(#view-parenting,#view-hospital) .pi-link:hover { border-color:#8BBFB2; background:var(--accent-subtle); }
+  html :is(#view-parenting,#view-hospital) .pi-link:focus-visible, html :is(#view-parenting,#view-hospital) .pi-cta:focus-visible, html :is(#view-parenting,#view-hospital) select:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html :is(#view-parenting,#view-hospital) .pi-ic { flex:none; width:44px; height:44px; display:grid; place-items:center; border-radius:14px; background:var(--accent-subtle); font-size:22px; }
+  html :is(#view-parenting,#view-hospital) .pi-link:hover .pi-ic { background:var(--surface); }
+  html :is(#view-parenting,#view-hospital) .pi-link b { font-size:15px; line-height:1.35; }
+  html :is(#view-parenting,#view-hospital) .pi-link small { margin-top:2px; font-size:12px; line-height:1.5; }
+  html :is(#view-parenting,#view-hospital) .pi-link > span:last-child { color:var(--muted); }
+  html :is(#view-parenting,#view-hospital) select { min-height:52px; padding-right:38px; border-radius:var(--r16); appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2362736B' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; background-size:16px; }
+  html :is(#view-parenting,#view-hospital) .pi-urgent { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:var(--r16); font-size:13px; font-weight:700; line-height:1.5; }
+  html :is(#view-parenting,#view-hospital) .pi-urgent::before { content:"🚨"; font-size:20px; flex:none; }
+  html :is(#view-parenting,#view-hospital) .pi-sup { padding:14px 16px; border-radius:var(--r16); gap:6px; }
+  html :is(#view-parenting,#view-hospital) .pi-sup b { font-size:15px; line-height:1.4; }
+  html :is(#view-parenting,#view-hospital) .pi-sup em { padding:2px 9px; font-weight:700; vertical-align:1px; }
+  html :is(#view-parenting,#view-hospital) .pi-sup p { font-size:13px; line-height:1.6; color:var(--text); }
+  html :is(#view-parenting,#view-hospital) .pi-sup.me { border-width:1.5px; box-shadow:inset 4px 0 0 var(--accent); }
+  html :is(#view-parenting,#view-hospital) .pi-cta { padding:0 4px; font-size:14px; font-weight:700; }
+  /* 육아 정보: 가까운 병원·약국 (#piNear) */
+  html :is(#view-parenting,#view-hospital) .pi-near-box { gap:10px; padding-bottom:14px; border-bottom:1px dashed var(--line); margin-bottom:2px; }
+  /* 병원 찾기 탭 칩: 잘리지 않게 2열 격자 */
+  html :is(#view-parenting,#view-hospital) .pi-chips { display:grid; grid-template-columns:1fr 1fr; gap:8px; overflow:visible; padding:0; margin:0; }
+  html :is(#view-parenting,#view-hospital) .pi-chips button { width:100%; justify-content:center; padding:0 8px; font-size:14px; white-space:nowrap; transition:border-color .15s; }
+  html :is(#view-parenting,#view-hospital) .pi-chips button[aria-selected=true] { font-weight:700; }
+  html :is(#view-parenting,#view-hospital) .pi-chips button:focus-visible, html :is(#view-parenting,#view-hospital) .pi-near-act .btn:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html :is(#view-parenting,#view-hospital) .pi-near { gap:12px; padding:12px 12px 12px 14px; border-radius:var(--r16); }
+  html :is(#view-parenting,#view-hospital) .pi-near b { font-size:15px; line-height:1.35; }
+  html :is(#view-parenting,#view-hospital) .pi-near small { display:block; margin-top:3px; font-size:12px; line-height:1.6; }
+  html :is(#view-parenting,#view-hospital) .pi-near small i { font-style:normal; font-weight:700; color:var(--muted); }
+  html :is(#view-parenting,#view-hospital) .pi-near small i.on { color:var(--accent-strong); }
+  html :is(#view-parenting,#view-hospital) .pi-near small i::before { content:""; display:inline-block; width:7px; height:7px; margin-right:4px; border-radius:50%; background:#B8C4BD; vertical-align:1px; }
+  html :is(#view-parenting,#view-hospital) .pi-near small i.on::before { background:#2E9E6B; }
+  html :is(#view-parenting,#view-hospital) .pi-near-act { gap:8px; }
+  html :is(#view-parenting,#view-hospital) .pi-near-act .btn { border-radius:12px; background:var(--surface); font-size:18px; }
+  html :is(#view-parenting,#view-hospital) .pi-near-act .btn:hover { border-color:#8BBFB2; background:var(--accent-subtle); }
+  html :is(#view-parenting,#view-hospital) [data-locate] { border-style:dashed; border-color:var(--accent); background:var(--accent-subtle); width:100%; text-align:left; cursor:pointer; }
+  /* 전체메뉴 탭 */
+  .menu-all { padding:16px 20px 32px; display:grid; gap:6px; }
+  .menu-all h2 { margin:0 0 6px; }
+  .menu-group { padding:14px 0 6px; border-top:1px solid var(--line); }
+  .menu-group:first-of-type { border-top:0; padding-top:4px; }
+  .menu-group h3 { margin:0 0 6px; font-family:var(--font-body,inherit); font-size:13px; font-weight:700; color:var(--muted); letter-spacing:0; }
+  .menu-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 12px; }
+  .menu-item { display:flex; align-items:center; gap:12px; min-height:56px; padding:6px 4px; border:0; border-radius:var(--r12); background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
+  .menu-item:hover { background:var(--accent-subtle); }
+  .menu-item:active { background:var(--accent-soft); }
+  .menu-item:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  .menu-ic { flex:none; width:40px; height:40px; display:grid; place-items:center; border-radius:12px; font-size:20px; background:#DDF1EA; }
+  .menu-ic.pink { background:#FBE4EE; } .menu-ic.blue { background:#E3ECFB; } .menu-ic.yellow { background:#FBF1D6; }
+  .menu-ic.teal { background:#DDF3F1; } .menu-ic.purple { background:#ECE6F8; } .menu-ic.red { background:#FDECEA; }
+  .menu-name { flex:1; min-width:0; font-size:15px; line-height:1.3; word-break:keep-all; }
+  .menu-ext { flex:none; color:var(--muted); font-size:13px; }
+  .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  /* 병원 찾기: 운영시간 외(접힘) */
+  html :is(#view-parenting,#view-hospital) .pi-closed { display:grid; gap:10px; }
+  html :is(#view-parenting,#view-hospital) .pi-closed > summary { list-style:none; display:flex; align-items:center; justify-content:space-between; min-height:48px; padding:0 14px; border:1px dashed var(--line); border-radius:var(--r16); background:var(--bg); color:var(--muted); font-size:14px; font-weight:700; cursor:pointer; }
+  html :is(#view-parenting,#view-hospital) .pi-closed > summary::-webkit-details-marker { display:none; }
+  html :is(#view-parenting,#view-hospital) .pi-closed > summary::after { content:""; width:8px; height:8px; border:solid currentColor; border-width:0 2px 2px 0; transform:rotate(45deg); margin:-3px 2px 0 8px; transition:transform .15s; }
+  html :is(#view-parenting,#view-hospital) .pi-closed[open] > summary::after { transform:rotate(-135deg); margin-top:3px; }
+  html :is(#view-parenting,#view-hospital) .pi-closed > summary:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html :is(#view-parenting,#view-hospital) .pi-closed .pi-near { opacity:.85; }
+  /* 병원 찾기: 주소·동네 검색 */
+  html :is(#view-parenting,#view-hospital) .pi-search { display:flex; gap:8px; }
+  html :is(#view-parenting,#view-hospital) .pi-search input { flex:1; min-width:0; min-height:52px; padding:0 14px; border:1px solid var(--line); border-radius:var(--r16); background:var(--surface); color:var(--text); font:inherit; font-size:16px; }
+  html :is(#view-parenting,#view-hospital) .pi-search input:focus-visible { outline:3px solid #B69548; outline-offset:2px; border-color:var(--accent); }
+  html :is(#view-parenting,#view-hospital) .pi-search button { flex:none; min-width:72px; min-height:52px; padding:0 16px; border:0; border-radius:var(--r16); background:var(--accent); color:#fff; font-family:var(--font-cute); font-size:16px; cursor:pointer; }
+  html :is(#view-parenting,#view-hospital) .pi-search button:hover { background:var(--accent-strong); }
+  html :is(#view-parenting,#view-hospital) .pi-search button:focus-visible, html :is(#view-parenting,#view-hospital) .pi-here:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html :is(#view-parenting,#view-hospital) .pi-here-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  html :is(#view-parenting,#view-hospital) .pi-here { min-height:44px; padding:0 16px; border:1px solid var(--accent); border-radius:99px; background:var(--accent-subtle); color:var(--accent-strong); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  html :is(#view-parenting,#view-hospital) .pi-status { font-size:12px; line-height:1.5; color:var(--warn); }
   /* 간편 로그인 버튼 공통 */
   .join-btn { display:flex; align-items:center; justify-content:center; gap:8px; transition:filter .15s, transform .05s; }
   .join-btn:hover { filter:brightness(.96); } .join-btn:active { transform:scale(.99); }
@@ -846,7 +982,7 @@
   /* 알림 센터 (notify.js의 임시 CSS를 덮어씀) */
   .brand-row .alert-btn { color:var(--accent-strong); margin-left:auto; }
   .brand-row .alert-btn svg { width:22px; height:22px; }
-  .brand-row .alert-btn .dot { top:4px; right:2px; min-width:18px; height:18px; padding:0 5px; font:700 12px/18px var(--font,inherit); border:2px solid var(--bg); box-sizing:content-box; background:var(--danger); }
+  .brand-row .alert-btn .dot { top:-1px; right:-6px; min-width:18px; height:18px; padding:0 5px; font:700 12px/18px var(--font,inherit); border:2px solid var(--bg); box-sizing:content-box; background:var(--danger); }
   html #alerts .my-body { gap:0; }
   html #alerts .al-set { justify-self:start; align-self:flex-start; display:inline-flex; align-items:center; margin:0 0 14px; padding:0 16px; min-height:44px; border:1px solid var(--accent-soft); border-radius:99px; background:var(--accent-subtle); color:var(--accent-strong); font-size:13px; font-weight:700; text-decoration:none; }
   html #alerts .al-item { position:relative; align-items:center; gap:12px; margin:0 0 10px; padding:14px 16px 14px 14px; border-radius:var(--r16); box-shadow:none; transition:border-color .15s; }
@@ -997,21 +1133,35 @@
           <a class="btn" href="https://www.childcare.go.kr/?menuno=227" target="_blank" rel="noopener">📣 직장어린이집 모집공고</a>
         </div>
       </div>
-      <div class="card">
-        <h3>육아 정보</h3>
-        <p>공식 기관의 안내로 연결돼요. 이 앱은 내용을 옮겨 싣지 않아요.</p>
-        <div class="link-grid">
-          <a class="btn" href="https://www.childcare.go.kr/?menuno=293" target="_blank" rel="noopener">👶 월령별 성장·돌보기</a>
-          <a class="btn" href="https://sooyusil.com/" target="_blank" rel="noopener">🍼 수유실 찾기</a>
-          <a class="btn" href="https://www.nhis.or.kr/nhis/healthin/retrieveMdcAdminSknsClinic.do" target="_blank" rel="noopener">🏥 병원 찾기</a>
-          <a class="btn" href="https://www.childcare.go.kr/?menuno=215" target="_blank" rel="noopener">📢 어린이집 이용 불편신고</a>
-        </div>
-      </div>
       <p class="note">우선순위, 연장보육 기준, 필요 서류는 지자체·시기에 따라 다를 수 있으니 아이사랑 안내를 꼭 확인하세요. 버튼을 누르면 아이사랑(임신육아종합포털)으로 이동하며, 신청·조회는 아이사랑에 로그인해서 직접 진행합니다.</p>
       <p class="src-line">아이사랑·복지로 안내 기준(2026.10)</p>
     </div>
   </section>
 
+  <section class="view" id="view-hospital" aria-label="병원 찾기">
+    <div class="section">
+      <h2>병원 찾기</h2>
+    </div>
+  </section>
+
+  <section class="view" id="view-parenting" aria-label="육아 정보">
+    <div class="section">
+      <h2>육아 정보</h2>
+      <p class="note" style="margin:0">공식 기관의 안내로 연결돼요. 이 앱은 내용을 옮겨 싣지 않아요.</p>
+      <div class="card">
+        <div class="link-grid">
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=293" target="_blank" rel="noopener">👶 월령별 성장·돌보기</a>
+          <a class="btn" href="https://sooyusil.com/" target="_blank" rel="noopener">🍼 수유실 찾기</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=215" target="_blank" rel="noopener">📢 어린이집 이용 불편신고</a>
+        </div>
+      </div>
+      <p class="src-line">아이사랑·건강보험공단 안내 기준(2026.10)</p>
+    </div>
+  </section>
+
+  <section class="view" id="view-menu" aria-label="전체메뉴">
+    <div class="section menu-all" id="menuAll"></div>
+  </section>
   <section class="view" id="view-violation">
     <div class="section">
       <h2>위반시설·행위자</h2>
@@ -1034,9 +1184,11 @@
 <nav class="tabs" role="tablist" style="grid-template-columns:repeat(5,1fr)">
   <button role="tab" aria-selected="true" data-view="view-map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>어린이집 찾기</span></button>
   <button role="tab" aria-selected="false" data-view="view-mine"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9H4Z"/><path d="M12 20v-5M9.5 15.5c0-1.5 1-2.5 2.5-2.5s2.5 1 2.5 2.5"/></svg><span>나의 어린이집</span></button>
+  <button role="tab" aria-selected="false" data-view="view-hospital"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg><span>병원 찾기</span></button>
   <button role="tab" aria-selected="false" data-view="view-community"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h13v9H8l-5 4Z"/><path d="M19 9h2v10l-3-2.5h-8V15"/></svg><span>커뮤니티</span></button>
-  <button role="tab" aria-selected="false" data-view="view-guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg><span>입소 가이드</span></button>
-  <button role="tab" aria-selected="false" data-view="view-violation"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="M12 8v5M12 17h.01"/></svg><span>위반시설·행위자</span></button>
+  <button role="tab" hidden aria-selected="false" data-view="view-guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg><span>입소 가이드</span></button>
+  <button role="tab" hidden aria-selected="false" data-view="view-violation"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="M12 8v5M12 17h.01"/></svg><span>위반시설·<wbr>행위자</span></button>
+  <button role="tab" aria-selected="false" data-view="view-menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg><span>전체메뉴</span></button>
 </nav>
 <section id="settings" aria-label="설정" hidden></section>
 <dialog id="sheet" aria-label="길찾기 방법 선택"></dialog>
@@ -1054,8 +1206,11 @@
 <script src="onboarding.js"></script>
 <script src="joinprompt.js"></script>
 <script src="mydaycare.js"></script>
+<script src="parentroom.js"></script>
+<script src="parenting.js"></script>
 <script src="applink.js"></script>
 <script src="community.js"></script>
+<script src="appmenu.js"></script>
 <script>
 /* 상세 필터 개수 표시 (접힌 상태에서도 켜진 필터를 알 수 있게) */
 (function(){var d=document.getElementById('moreFilters'),c=document.getElementById('moreCount');if(!d||!c)return;
