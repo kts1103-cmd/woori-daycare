@@ -18,17 +18,17 @@
   const KEY = "community:v1";
   const now = Date.now(), H = 3600e3;
   const SEED = [
-    { id: "s1", cls: "만 0세반", cat: "admission", title: "국공립 대기 순번 얼마나 걸리셨어요?", body: "3월 입소 목표로 작년 가을에 신청했는데 아직 대기 12번이에요. 맞벌이 가점 있어도 이 정도면 다른 곳도 같이 넣어둬야 할까요?", author: "새싹맘", at: now - 2 * H, likes: 14, views: 182, comments: [
+    { id: "s1", cat: "admission", title: "국공립 대기 순번 얼마나 걸리셨어요?", body: "3월 입소 목표로 작년 가을에 신청했는데 아직 대기 12번이에요. 맞벌이 가점 있어도 이 정도면 다른 곳도 같이 넣어둬야 할까요?", author: "새싹맘", at: now - 2 * H, likes: 14, views: 182, comments: [
       { author: "도토리아빠", body: "저희는 대기 9번에서 4개월 걸렸어요. 2~3곳 같이 넣어두시는 거 추천해요.", at: now - 1.5 * H },
       { author: "햇살맘", body: "3월은 졸업생 빠지는 시기라 순번이 갑자기 당겨지기도 해요!", at: now - 1 * H }] },
-    { id: "s2", cls: "만 2세반", cat: "review", title: "연장보육 7시 반까지 되는 곳 다녀본 후기", body: "연장반을 따로 운영해서 담당 선생님이 계시고, 저녁 간식도 나와요. 상담 때 연장반 아이 수와 담당 선생님을 꼭 물어보세요.", daycare: "123키즈어린이집", author: "퇴근길엄마", at: now - 5 * H, likes: 31, views: 420, ownerReply: { name: "김○○", body: "좋은 후기 감사합니다. 연장반은 담당 교사 1명과 보조 교사가 함께 운영하고 있어요. 상담은 평일 오후에 언제든 가능합니다.", at: now - 3 * H }, comments: [
+    { id: "s2", cat: "review", title: "연장보육 7시 반까지 되는 곳 다녀본 후기", body: "연장반을 따로 운영해서 담당 선생님이 계시고, 저녁 간식도 나와요. 상담 때 연장반 아이 수와 담당 선생님을 꼭 물어보세요.", daycare: "123키즈어린이집", author: "퇴근길엄마", at: now - 5 * H, likes: 31, views: 420, ownerReply: { name: "김○○", body: "좋은 후기 감사합니다. 연장반은 담당 교사 1명과 보조 교사가 함께 운영하고 있어요. 상담은 평일 오후에 언제든 가능합니다.", at: now - 3 * H }, comments: [
       { author: "민트맘", body: "연장반 담당 따로 있는지 꼭 물어볼게요. 감사해요!", at: now - 4 * H }] },
-    { id: "s3", cls: "예비", cat: "question", title: "상담 갈 때 꼭 물어봐야 할 것 있을까요?", body: "처음 어린이집 보내는 거라 뭘 물어봐야 할지 모르겠어요. 필요경비랑 적응기간 말고 또 뭐가 있을까요?", author: "초보엄마", at: now - 9 * H, likes: 22, views: 301, comments: [
+    { id: "s3", cat: "question", title: "상담 갈 때 꼭 물어봐야 할 것 있을까요?", body: "처음 어린이집 보내는 거라 뭘 물어봐야 할지 모르겠어요. 필요경비랑 적응기간 말고 또 뭐가 있을까요?", author: "초보엄마", at: now - 9 * H, likes: 22, views: 301, comments: [
       { author: "두아이맘", body: "아플 때 귀가 기준, 낮잠 시간, 바깥놀이 횟수 물어보세요. 앱 상세 화면에 상담 체크리스트도 있어요.", at: now - 8 * H },
       { author: "도토리아빠", body: "CCTV 열람 절차도요!", at: now - 7 * H }] },
-    { id: "s4", cls: "만 1세반", cat: "worry", title: "적응기간 2주째인데 아침마다 울어요", body: "등원할 때마다 너무 울어서 마음이 아파요. 다들 얼마나 걸리셨나요?", author: "콩이맘", at: now - 26 * H, likes: 45, views: 512, comments: [
+    { id: "s4", cat: "worry", title: "적응기간 2주째인데 아침마다 울어요", body: "등원할 때마다 너무 울어서 마음이 아파요. 다들 얼마나 걸리셨나요?", author: "콩이맘", at: now - 26 * H, likes: 45, views: 512, comments: [
       { author: "햇살맘", body: "저희는 한 달 정도 걸렸어요. 인사는 짧게 하고 나오는 게 오히려 빨리 적응하더라고요.", at: now - 25 * H }] },
-    { id: "s5", cls: "만 3세반", cat: "local", title: "동네에 키즈카페 새로 생겼어요", body: "4세 이하 존이 따로 있고 평일 오전은 한산해요. 주차는 건물 지하 2시간 무료예요.", author: "동네아빠", at: now - 50 * H, likes: 18, views: 240, comments: [] },
+    { id: "s5", cat: "local", title: "동네에 키즈카페 새로 생겼어요", body: "4세 이하 존이 따로 있고 평일 오전은 한산해요. 주차는 건물 지하 2시간 무료예요.", author: "동네아빠", at: now - 50 * H, likes: 18, views: 240, comments: [] },
   ].map((p) => ({ ...p, seed: true }));
 
   const store = {
@@ -36,7 +36,7 @@
       try {
         const v = JSON.parse(localStorage.getItem(KEY) || "null");
         if (v && v.posts) { // 저장된 예시 글은 최신 예시 문구로 갱신 (공감·댓글은 유지)
-          v.posts.forEach((p) => { const sd = p.seed && SEED.find((x) => x.id === p.id); if (sd) { p.title = sd.title; p.body = sd.body; } });
+          v.posts.forEach((p) => { const sd = p.seed && SEED.find((x) => x.id === p.id); if (sd) { p.title = sd.title; p.body = sd.body; delete p.cls; } });
           return v;
         }
       } catch {}
@@ -67,8 +67,10 @@
 
   // ---- 상태 ----
   let cat = "all", sort = "new", openId = null, mode = "feed", sameCls = false;
-  const myCls = () => (window.TIMELINE ? TIMELINE.childClass() : null);
-  const clsLabel = (c) => (c === "예비" ? "예비 부모" : `${c} 부모`);
+  // 연령반은 선택해서만 표시하고, "예비(임신 중)"는 어디에도 드러내지 않는다 (임신 사실 공개 방지)
+  const myCls = () => { const c = window.TIMELINE ? TIMELINE.childClass() : null; return c && c !== "예비" ? c : null; };
+  const clsLabel = (c) => `${c} 부모`;
+  const showCls = (c) => !!c && c !== "예비";
 
   function setMode(m) {
     mode = m;
@@ -161,8 +163,8 @@
       <span class="cm-cat">${emoji} ${label}${p.seed ? ' <em>예시</em>' : ""}</span>
       <b class="cm-title">${esc(p.title)}</b>
       <span class="cm-body">${esc(p.body)}</span>
-      ${p.daycare ? `<span class="cm-daycare">${svg(I.school)}${esc(p.daycare)}${p.ownerReply ? " · 원장 답변" : ""}</span>` : ""}
-      <span class="cm-meta"><span>${esc(p.author)}${p.cls ? ` <i class="cm-cls">${esc(clsLabel(p.cls))}</i>` : ""} · ${ago(p.at)} · 조회 ${p.views}</span>
+      ${p.daycare ? `<span class="cm-daycare">${svg(I.school)}${esc(p.daycare)}</span>` : ""}
+      <span class="cm-meta"><span>${esc(p.author)}${showCls(p.cls) ? ` <i class="cm-cls">${esc(clsLabel(p.cls))}</i>` : ""} · ${ago(p.at)} · 조회 ${p.views}</span>
         <span class="cm-counts"><span class="${liked ? "on" : ""}">${svg(I.heart)}${p.likes}</span><span>${svg(I.chat)}${p.comments.length}</span></span></span>
     </button></li>`;
   }
@@ -175,13 +177,12 @@
     if (!p._viewed) { p.views++; p._viewed = true; commit(); }
     const [, label, emoji] = catOf(p.cat);
     const liked = db.liked.includes(p.id);
-    const r = p.ownerReply;
     root.innerHTML = `
       <header class="detail-header"><button class="icon-button" data-back aria-label="목록으로">${svg(I.back)}</button><h2>${emoji} ${label}</h2>
         <button class="icon-button" data-report aria-label="신고하기">${svg(I.flag)}</button></header>
       <div class="detail-body cm-post">
         <article>
-          <div class="cm-author"><span class="cm-avatar" aria-hidden="true">${esc(p.author.slice(0, 1))}</span><div><b>${esc(p.author)}${p.cls ? ` <i class="cm-cls">${esc(clsLabel(p.cls))}</i>` : ""}</b><small>${esc(region())} · ${ago(p.at)} · 조회 ${p.views}</small></div>${p.seed ? '<span class="badge sample">예시</span>' : ""}</div>
+          <div class="cm-author"><span class="cm-avatar" aria-hidden="true">${esc(p.author.slice(0, 1))}</span><div><b>${esc(p.author)}${showCls(p.cls) ? ` <i class="cm-cls">${esc(clsLabel(p.cls))}</i>` : ""}</b><small>${esc(region())} · ${ago(p.at)} · 조회 ${p.views}</small></div>${p.seed ? '<span class="badge sample">예시</span>' : ""}</div>
           <h1>${esc(p.title)}</h1>
           <p class="cm-text">${esc(p.body).replace(/\n/g, "<br>")}</p>
           ${p.daycare ? `<span class="cm-daycare">${svg(I.school)}${esc(p.daycare)}</span>` : ""}
@@ -189,19 +190,12 @@
           ${p.takedown && p.takedown.status === "restored" ? `<p class="cm-review-note">권리침해 신고 검토 후 다시 게시된 글이에요.</p>` : ""}
           <div class="cm-actions"><button class="cm-like ${liked ? "on" : ""}" data-like aria-pressed="${liked}">${svg(I.heart)}공감 ${p.likes}</button><span>${svg(I.chat)}댓글 ${p.comments.length}</span></div>
         </article>
-        ${p.daycare ? (r ? `
-        <section class="cm-owner-reply" aria-label="어린이집 공식 답변">
-          <div class="cm-owner-head">${svg(I.school)}<b>${esc(p.daycare)} 공식 답변</b><small>${ago(r.at)}</small></div>
-          <p>${esc(r.body).replace(/\n/g, "<br>")}</p>
-          <small class="cm-owner-by">원장 ${esc(r.name)} · 원장 확인 후 게시</small>
-        </section>` : `
-        <button class="owner-upload cm-owner-cta" data-owner-reply>${svg(I.school)}<span><b>${esc(p.daycare)} 원장님이신가요?</b><small>이 글에 어린이집 공식 답변을 남길 수 있어요</small></span>${svg('<path d="m9 5 7 7-7 7"/>')}</button>`) : ""}
         <section class="cm-comments" aria-label="댓글">
           ${p.comments.length ? p.comments.map((c, i) => `<div class="cm-comment"><span class="cm-avatar sm" aria-hidden="true">${esc(c.author.slice(0, 1))}</span><div><b>${esc(c.author)}</b> <small>${ago(c.at)}</small><p>${esc(c.body)}</p></div>${c.mine ? `<button class="cm-del" data-del-c="${i}">삭제</button>` : ""}</div>`).join("") : `<p class="cm-empty">첫 댓글을 남겨 보세요.</p>`}
         </section>
         ${p.mine ? `<button class="btn danger cm-delete" data-delete>글 삭제</button>` : ""}
       </div>
-      <form class="cm-reply"><input name="c" maxlength="300" autocomplete="off" placeholder="따뜻한 댓글을 남겨 주세요" aria-label="댓글 입력"><button class="icon-button" aria-label="댓글 등록">${svg(I.send)}</button></form>`;
+      <form class="cm-reply"><input name="c" maxlength="300" autocomplete="off" placeholder="따뜻한 댓글을 남겨 주세요 (300자까지)" aria-label="댓글 입력"><button class="icon-button" aria-label="댓글 등록">${svg(I.send)}</button></form>`;
     root.querySelector("[data-back]").addEventListener("click", () => history.back());
     root.querySelector("[data-like]").addEventListener("click", () => {
       const on = db.liked.includes(p.id);
@@ -209,7 +203,6 @@
       p.likes += on ? -1 : 1; commit(); renderPost();
     });
     root.querySelector("[data-report]").addEventListener("click", () => openReport(p));
-    root.querySelector("[data-owner-reply]")?.addEventListener("click", () => openOwnerReply(p));
     root.querySelector("[data-delete]")?.addEventListener("click", () => {
       if (!confirm("이 글을 삭제할까요?")) return;
       db.posts = db.posts.filter((x) => x.id !== p.id); commit(); toast("글을 삭제했어요."); history.back();
@@ -310,33 +303,6 @@
     });
   }
 
-  // 원장 공식 답변
-  function openOwnerReply(p) {
-    const sh = $("sheet");
-    sh.setAttribute("aria-label", "어린이집 공식 답변");
-    sh.innerHTML = `<div class="sheet-top"><h2>공식 답변 남기기</h2><button class="icon-button" data-close aria-label="닫기">${svg(I.close)}</button></div>
-      <p class="sheet-copy"><b>${esc(p.daycare)}</b> 원장(대표자)만 답변할 수 있어요. 답변은 글 아래에 "공식 답변"으로 표시돼요.</p>
-      <form class="upload-form" novalidate>
-        <label class="field"><span>원장(대표자) 이름</span><input name="owner" maxlength="20" required autocomplete="name"></label>
-        <p class="note">정식 서비스에서는 휴대폰 본인인증과 어린이집 인가 정보로 원장 여부를 확인해요.</p>
-        <label class="field"><span>답변</span><textarea name="body" rows="5" maxlength="1000" required placeholder="사실과 다른 부분은 설명하고, 개선한 점이 있다면 알려 주세요."></textarea></label>
-        <label class="check"><input type="checkbox" name="ok">작성자나 아이를 특정할 수 있는 정보(이름·반·날짜 등)를 쓰지 않았어요.</label>
-        <button class="btn primary submit" type="submit" disabled>답변 등록하기</button>
-        <p class="note">시제품: 이 기기에만 저장돼요.</p>
-      </form>`;
-    const f = sh.querySelector("form"), btn = f.querySelector(".submit");
-    const sync = () => { btn.disabled = !(f.owner.value.trim() && f.body.value.trim().length >= 5 && f.ok.checked); };
-    f.addEventListener("input", sync); f.addEventListener("change", sync); sync();
-    sh.querySelector("[data-close]").addEventListener("click", () => sh.close());
-    f.addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (btn.disabled) return;
-      p.ownerReply = { name: f.owner.value.trim(), body: f.body.value.trim(), at: Date.now() };
-      commit(); sh.close(); toast("공식 답변을 등록했어요."); renderPost();
-    });
-    sh.showModal();
-  }
-
   // ---- 운영정책 (초안 · 법률 검토 전) ----
   function renderPolicy() {
     const sec = (h, items) => `<section><h3>${h}</h3><ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul></section>`;
@@ -365,10 +331,11 @@
         <label class="field"><span>내용</span><textarea name="body" rows="8" maxlength="2000" required placeholder="${esc(region())} 부모님들과 나누고 싶은 이야기를 적어 주세요."></textarea></label>
         <label class="field" data-daycare-field><span>관련 어린이집 <small>(선택)</small></span><input name="daycare" maxlength="40" placeholder="예: 새싹어린이집"></label>
         <div class="cm-guide" data-review-guide hidden><b>후기 작성 원칙</b><p>직접 겪은 사실만 적어 주세요. 선생님·아이의 실명, 얼굴 사진, 확인되지 않은 의혹은 올릴 수 없어요. 문제가 있다면 해당 지자체나 아이사랑 상담 창구에 먼저 알려 주세요.</p></div>
+        ${myCls() ? `<label class="check"><input type="checkbox" name="showCls">내 아이 연령반(${esc(myCls())})을 글에 함께 표시할게요 <small>(선택 · 기본은 표시 안 해요)</small></label>` : ""}
         <label class="check"><input type="checkbox" name="agree">개인정보(실명·연락처·사진)와 비방 내용이 없는지 확인했어요.</label>
         <p class="form-error" data-err role="alert" hidden></p>
         <button class="btn primary cm-submit" type="submit" disabled>등록하기</button>
-        <p class="note">작성자는 "${esc(nick())}"${myCls() ? ` · ${esc(clsLabel(myCls()))}` : ""}로 표시돼요.${myCls() ? "" : " My에 아이를 등록하면 연령반이 함께 표시돼요."} 시제품: 이 기기에만 저장돼요.</p>
+        <p class="note">작성자는 "${esc(nick())}"로 표시돼요. 연령반은 위에서 고른 경우에만 함께 보여요. 시제품: 이 기기에만 저장돼요.</p>
       </form>`;
     const f = root.querySelector("form");
     const btn = f.querySelector(".cm-submit");
@@ -390,7 +357,7 @@
       const err = f.querySelector("[data-err]");
       const text = `${f.title.value} ${f.body.value}`;
       if (flagged(text)) { err.hidden = false; err.textContent = "특정인을 지목한 의혹 제기는 올릴 수 없어요. 해당 지자체나 아이사랑 상담 창구에 알려 주세요."; return; }
-      const p = { id: "u" + Date.now(), cat: f.cat.value, title: f.title.value.trim(), body: f.body.value.trim(), daycare: (f.cat.value === "review" && f.daycare.value.trim()) || undefined, author: nick(), cls: myCls() || undefined, at: Date.now(), likes: 0, views: 0, comments: [], mine: true };
+      const p = { id: "u" + Date.now(), cat: f.cat.value, title: f.title.value.trim(), body: f.body.value.trim(), daycare: (f.cat.value === "review" && f.daycare.value.trim()) || undefined, author: nick(), cls: (f.showCls && f.showCls.checked && myCls()) || undefined, at: Date.now(), likes: 0, views: 0, comments: [], mine: true };
       db.posts.unshift(p); commit();
       cat = "all"; sort = "new";
       history.back();

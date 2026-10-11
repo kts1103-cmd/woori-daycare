@@ -1,7 +1,7 @@
 // 회원가입 + 학부모(재원) 인증 (시제품)
 // - 가입할 때 지금 다니는 어린이집을 인증한다 (재원 인증만, 졸업 인증 없음). 별점 평가는 그 어린이집을 인증한 회원만 할 수 있다.
 // - 서버가 없어 계정은 이 기기 localStorage(account:v1)에만 저장한다. 비밀번호는 받지 않는다.
-//   정식 서비스: 카카오·네이버 간편 로그인 + 증빙 사진 업로드 → 운영자 확인 후 인증 완료.
+//   정식 서비스: 카카오·네이버·Google·Apple 간편 로그인 + 증빙 사진 업로드 → 운영자 확인 후 인증 완료.
 (function () {
   const KEY = "account:v1";
   const $ = (id) => document.getElementById(id);
@@ -49,6 +49,7 @@
       <section class="join-hero"><b>새싹이네에 오신 걸 환영해요</b><p>가입하면 <b>인증 학부모 평가</b>를 남기고, 관심 어린이집과 아이 정보를 다른 기기에서도 이어서 볼 수 있어요.</p></section>
       <button class="join-btn kakao" data-soon>카카오로 시작하기</button>
       <button class="join-btn naver" data-soon>네이버로 시작하기</button>
+      <button class="join-btn google" data-soon><svg class="g-logo" viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google로 시작하기</button>
       <button class="join-btn apple" data-soon>Apple로 시작하기</button>
       <button class="join-btn demo" data-next>시제품으로 체험 가입</button>
       <p class="note">시제품 가입은 이 기기에만 저장돼요. 간편 로그인은 서버 연결 후 열려요.</p></div>`;
@@ -66,8 +67,10 @@
       </fieldset>
       <fieldset><legend>약관 동의</legend>
         <label class="check"><input type="checkbox" name="agreeAll">전체 동의</label>
+        <label class="check"><input type="checkbox" name="t0" data-req>[필수] 만 14세 이상입니다</label>
         <label class="check"><input type="checkbox" name="t1" data-req>[필수] 서비스 이용약관</label>
         <label class="check"><input type="checkbox" name="t2" data-req>[필수] 개인정보 수집·이용</label>
+        <p class="agree-detail"><b>수집 항목</b> 닉네임, 동네(시·도·시·군·구), 인증한 어린이집 정보 · <b>목적</b> 가입, 학부모 인증, 평가·커뮤니티 이용 · <b>보유 기간</b> 탈퇴 시까지(시제품은 이 기기에만 저장) · 동의를 거부할 수 있지만, 거부하면 가입할 수 없어요.</p>
         <label class="check"><input type="checkbox" name="t3" data-req>[필수] 커뮤니티·평가 운영정책 (허위 인증·비방 시 이용 제한)</label>
       </fieldset>
       <button class="btn primary submit" type="submit" disabled>다음 · 학부모 인증</button>

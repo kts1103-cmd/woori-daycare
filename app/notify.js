@@ -60,8 +60,8 @@
       if (!n) continue;
       const base = st.favBase[f.key], left = n.left, wait = n.waitTotal;
       if (base) {
-        if (s.notifyCapacity !== false && base.left === 0 && left > 0) { st.events.unshift({ id: `cap-${f.key}-${t}`, kind: "capacity", ic: "🪑", at: Date.now(), title: `${esc(n.name)}에 자리가 생겼어요`, body: `정원 ${n.capacity}명 중 ${n.current}명 · 여유 ${left}자리(계산)`, fav: { sido: f.sido, key: f.key } }); changed = true; }
-        else if (s.notifyCapacity !== false && base.left > 0 && left === 0) { st.events.unshift({ id: `cap-${f.key}-${t}`, kind: "capacity", ic: "🪑", at: Date.now(), title: `${esc(n.name)} 정원이 찼어요`, body: `정원 ${n.capacity}명 중 ${n.current}명(계산)`, fav: { sido: f.sido, key: f.key } }); changed = true; }
+        if (s.notifyCapacity !== false && base.left === 0 && left > 0) { st.events.unshift({ id: `cap-${f.key}-${t}`, kind: "capacity", ic: "🪑", at: Date.now(), title: `${esc(n.name)} 정원 여유가 생겼어요(계산)`, body: `정원 ${n.capacity}명 중 ${n.current}명 · 여유 ${left}자리(계산)`, fav: { sido: f.sido, key: f.key } }); changed = true; }
+        else if (s.notifyCapacity !== false && base.left > 0 && left === 0) { st.events.unshift({ id: `cap-${f.key}-${t}`, kind: "capacity", ic: "🪑", at: Date.now(), title: `${esc(n.name)} 정원 여유가 없어졌어요(계산)`, body: `정원 ${n.capacity}명 중 ${n.current}명(계산)`, fav: { sido: f.sido, key: f.key } }); changed = true; }
         if (s.notifyWait !== false && typeof base.wait === "number" && typeof wait === "number" && base.wait !== wait) { st.events.unshift({ id: `wait-${f.key}-${t}`, kind: "wait", ic: "⏳", at: Date.now(), title: `${esc(n.name)} 등록대기가 바뀌었어요`, body: `${base.wait}명 → ${wait}명`, fav: { sido: f.sido, key: f.key } }); changed = true; }
       }
       st.favBase[f.key] = { left: left == null ? null : left, wait: typeof wait === "number" ? wait : null };
@@ -162,7 +162,7 @@
       <header class="detail-header"><button class="icon-button" data-close aria-label="알림 닫기">${svg('<path d="m15 5-7 7 7 7"/>')}</button><h2>알림</h2></header>
       <div class="my-body">
         <button type="button" class="al-set" data-set>알림 종류 설정</button>
-        ${window.ACCOUNT && !ACCOUNT.isMember() ? `<button type="button" class="al-item al-join" data-join><span class="al-ic" aria-hidden="true">📱</span><span><b>가입하면 앱 밖에서도 알려드려요</b><small>앱을 닫아 둬도 자리가 생기거나 일정이 다가오면 알림을 받아요 (출시 후). 지금 알림은 가입 없이도 받아요.</small></span></button>` : ""}
+        ${window.ACCOUNT && !ACCOUNT.isMember() ? `<button type="button" class="al-item al-join" data-join><span class="al-ic" aria-hidden="true">📱</span><span><b>가입하면 앱 밖에서도 알려드려요</b><small>앱을 닫아 둬도 정원 여유(계산)가 바뀌거나 일정이 다가오면 알림을 받아요 (출시 후). 지금 알림은 가입 없이도 받아요.</small></span></button>` : ""}
         ${items.length ? items.map((it, i) => `<button type="button" class="al-item${it.unread ? " unread" : ""}" data-i="${i}"><span class="al-ic" aria-hidden="true">${it.ic}</span><span><b>${it.title}</b><small>${it.body}</small></span></button>`).join("")
           : `<p class="al-empty">새 알림이 없어요.<br>아이를 등록하고 어린이집에 ♡를 담으면 일정과 변화를 알려드려요.</p>`}
         <p class="src-line">${SRC_LINE}</p>

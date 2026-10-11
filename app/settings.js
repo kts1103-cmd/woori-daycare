@@ -151,7 +151,7 @@
       ${group(`
         ${toggle("notifySchedule", "입소·지원 일정 안내", "등록대기 신청·순번 확인, 학년도 시작, 부모급여 신청 시기를 알려드려요")}
         ${toggle("notifyCheckup", "영유아 건강검진 시기", "아이 개월 수에 맞춰 시작하는 달과 마지막 달에 알려드려요")}
-        ${toggle("notifyCapacity", "관심 어린이집 정원 여유", "정원이 차거나 자리가 생기면 알려드려요 (정원에서 현재원을 뺀 계산값)")}
+        ${toggle("notifyCapacity", "관심 어린이집 정원 여유", "정원 여유(계산)가 생기거나 없어지면 알려드려요. 정원에서 현원을 뺀 값이고 실시간 빈자리가 아니에요")}
         ${toggle("notifyWait", "관심 어린이집 등록대기", "등록대기 인원이 바뀌면 알려드려요 (데이터가 연결되면 시작돼요)")}
         ${toggle("notifyMine", "나의 어린이집 정보 변경", "전화번호·주소·정원이 바뀌면 알려드려요")}
         ${toggle("notifyNotes", "내가 적어 둔 일정", "나의 어린이집 일정·준비물을 하루 전과 당일에 알려드려요")}
@@ -262,7 +262,7 @@
           <small class="set-result" id="setNickOut" role="status" aria-live="polite" hidden></small></form>` : `<div class="set-row"><span><b>닉네임</b><small>실명은 피해 주세요 · 커뮤니티 글에 표시돼요</small></span><span class="muted">${esc(nick || "-")}</span></div>`}
         <div class="set-row"><span><b>우리 아이</b><small>연·월만 받아요 · 이 기기에만 저장돼요</small></span>${window.MYPAGE && MYPAGE.open ? `<button type="button" class="set-val-btn" data-child>${child ? esc(child.name || "등록됨") : "등록하기"} ›</button>` : ""}</div>
         <div class="set-row"><span><b>가입 방법</b><small>${acc ? `시제품 체험 가입 · 이 기기에만 저장${when ? ` · ${esc(when)}` : ""}` : "아직 가입하지 않았어요"}</small></span>${!acc && window.ACCOUNT && ACCOUNT.openSignup ? `<button type="button" class="btn" data-signup>가입하기</button>` : ""}</div>
-        ${serverRow("간편 로그인 연결", "카카오·네이버·Apple")}
+        ${serverRow("간편 로그인 연결", "카카오·네이버·Google·Apple")}
         ${acc && window.MYPAGE && MYPAGE.open ? `<button type="button" class="set-row link" data-verify><span><b>학부모 인증 관리</b><small>${(acc.verifications || []).length}곳</small></span><span aria-hidden="true">›</span></button>` : ""}
       `)}
       ${acc && window.ACCOUNT && ACCOUNT.withdraw ? group(`<div class="set-row col set-danger"><span><b>탈퇴하기</b><small>가입·인증 정보와 내 별점 평가가 이 기기에서 지워져요. 관심·아이 정보는 남아요. 전부 지우려면 내 기록·데이터의 "이 기기 데이터 모두 지우기"를 써 주세요.</small></span><button type="button" class="btn danger-btn" data-withdraw>탈퇴하기</button></div>`) : ""}

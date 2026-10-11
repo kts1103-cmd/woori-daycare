@@ -84,14 +84,18 @@
         <label class="ob-f">부르는 이름 <small class="muted">(선택 · 별명도 좋아요)</small>
           <input id="obName" maxlength="10" autocomplete="off" placeholder="예: 콩이"></label>
         <p class="ob-preview" id="obPreview" hidden></p>
+        <label class="check ob-agree"><input type="checkbox" id="obC1">[필수] 아이 정보(연·월·별명)를 이 기기에 저장해 연령반·입소 일정을 계산하는 데 쓰는 것에 동의해요.</label>
+        ${isExp ? `<label class="check ob-agree"><input type="checkbox" id="obC2">[필수] 출산 예정 정보는 임신 사실을 알 수 있는 민감한 정보예요. 위 동의와 별도로 동의해요.</label>` : ""}
         <div class="ob-spacer"></div>
         <button type="button" class="ob-main" data-save disabled>다음</button></div>`;
       const sel = $("obYm"), btn = r.querySelector("[data-save]"), pv = $("obPreview");
       sel.addEventListener("change", () => {
         const [y, m] = sel.value.split("-").map(Number);
-        btn.disabled = !sel.value; const t = sel.value ? previewText(y, m, isExp) : "";
-        pv.hidden = !t; pv.innerHTML = t;
+        const t = sel.value ? previewText(y, m, isExp) : "";
+        pv.hidden = !t; pv.innerHTML = t; ready();
       });
+      const ready = () => { btn.disabled = !(sel.value && $("obC1").checked && (!isExp || $("obC2").checked)); };
+      r.querySelectorAll(".ob-agree input").forEach((c) => c.addEventListener("change", ready));
       btn.addEventListener("click", () => {
         const [y, m] = sel.value.split("-").map(Number);
         const v = readMy(); v.child = { name: $("obName").value.trim().slice(0, 10), year: y, month: m, expecting: isExp };
@@ -143,7 +147,7 @@
         <img class="ob-art sm" src="img/ob-join.png" width="96" height="96" alt="">
         <h2>가입하면 이런 게<br>더 좋아요</h2>
         <ul class="ob-perks">
-          <li><span aria-hidden="true">🔔</span><span><b>자리가 생기면 바로 알림</b><small>관심 어린이집 정원 여유·입소 일정을 앱 밖에서도 알려드려요 (출시 후)</small></span></li>
+          <li><span aria-hidden="true">🔔</span><span><b>정원 여유가 보이면 알려요</b><small>관심 어린이집의 정원·현원 차이(계산)와 입소 일정이 바뀌면 앱 밖에서도 알려드려요 (출시 후)</small></span></li>
           <li><span aria-hidden="true">📱</span><span><b>휴대폰을 바꿔도 그대로</b><small>관심 어린이집·아이 정보·할 일을 이어서 봐요 (출시 후)</small></span></li>
           <li><span aria-hidden="true">⭐</span><span><b>인증 학부모 평가·커뮤니티</b><small>지금 다니는 어린이집을 인증하면 평가를 남길 수 있어요</small></span></li>
         </ul>
@@ -151,6 +155,7 @@
         <div class="ob-join">
           <button type="button" class="join-btn kakao" data-join>카카오로 시작하기</button>
           <button type="button" class="join-btn naver" data-join>네이버로 시작하기</button>
+          <button type="button" class="join-btn google" data-join><svg class="g-logo" viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google로 시작하기</button>
           <button type="button" class="join-btn apple" data-join>Apple로 시작하기</button>
         </div>
         <button type="button" class="ob-sub" data-later>나중에 할게요</button>

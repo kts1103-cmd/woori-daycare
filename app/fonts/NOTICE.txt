@@ -1,0 +1,5 @@
+이 폴더의 글꼴은 Google Fonts에서 받은 웹폰트(woff2)를 자체 호스팅한 것입니다 (2026-10-11).
+- Jua (주아체) — SIL Open Font License 1.1 (Google Fonts 표기 기준)
+- Noto Sans KR — SIL Open Font License 1.1 (Google Fonts 표기 기준)
+OFL 1.1 전문: https://openfontlicense.org
+출시 전 각 글꼴의 저작권 표기·라이선스 전문을 Google Fonts 페이지에서 다시 확인해 이 파일에 보강합니다.

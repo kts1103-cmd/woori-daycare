@@ -32,8 +32,7 @@
       ['<img class="sp" src="img/sp-growth.png" alt="">', "월령별 성장·돌보기", "link:" + CC + "293", "yellow"], ["📝", "일정·준비물 메모", "tab:view-mine", "yellow"],
     ]],
     ["건강·급할 때", [
-      ["🏥", "병원·약국·응급실", "tab:view-hospital", "teal"], ['<img class="sp" src="img/sp-sick.png" alt="">', "밤에 아플 때", "tab:view-hospital", "teal"],
-      ["🍼", "수유실 찾기", "link:https://sooyusil.com/", "teal"],
+      ["🏥", "병원·약국·응급실", "tab:view-hospital", "teal"], ["🍼", "수유실 찾기", "link:https://sooyusil.com/", "teal"],
     ]],
     ["소통", [
       ["💬", "커뮤니티", "tab:view-community", "purple"], ["👥", "학부모 모임", "tab:view-mine", "purple"],
