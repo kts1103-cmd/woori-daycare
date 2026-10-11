@@ -8,7 +8,6 @@
   const MIN_PUBLIC = 5;
   const ITEMS = ["시설·청결", "급식", "소통", "안전", "프로그램"];
   const TAGS = ["알림장 소통 원활", "적응 기간 배려", "급식 만족", "통학차량 시간 정확", "놀이 공간 넓음", "연장보육 만족", "선생님이 자주 바뀌지 않음"];
-  const METHODS = ["어린이집 발급 재원·졸업 확인서", "보육료 결제 내역 (국민행복카드)", "입소 확정 안내 (아이사랑 문자·알림)"];
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const $ = (id) => document.getElementById(id);
 
@@ -52,6 +51,17 @@
   }
   const DEMO = { n: 12, avg: 4.3, items: { "시설·청결": 4.5, "급식": 4.2, "소통": 4.6, "안전": 4.4, "프로그램": 3.9 }, tags: { "알림장 소통 원활": 9, "급식 만족": 7, "적응 기간 배려": 6, "놀이 공간 넓음": 4 } };
 
+  // 평가 버튼: 비회원 → 가입 / 회원이지만 이 어린이집 미인증 → 인증 / 인증 회원 → 평가
+  const acct = () => window.ACCOUNT;
+  function ctaHTML(key, mine) {
+    const A = acct();
+    if (!A || !A.isMember()) return `<button class="btn rate-cta" type="button" data-rate>⭐ 회원가입하고 평가하기</button><p class="note rate-why">평가는 가입할 때 <b>재원·졸업 인증</b>을 한 학부모만 남길 수 있어요.</p>`;
+    const v = A.verifiedFor(key);
+    if (!v && A.pendingFor && A.pendingFor(key)) return `<button class="btn rate-cta" type="button" disabled>⏳ 인증 확인 중이에요 (24시간 이내)</button><p class="note rate-why">운영자 확인이 끝나면 평가를 남길 수 있어요.</p>`;
+    if (!v) return `<button class="btn rate-cta" type="button" data-rate>🔒 이 어린이집 학부모 인증하고 평가하기</button><p class="note rate-why">${esc(A.get().nick)}님은 아직 이 어린이집을 인증하지 않았어요.</p>`;
+    return `<div class="rate-verified"><span class="verified-badge">✔ ${esc(v.status)} 인증 회원</span></div><button class="btn rate-cta" type="button" data-rate>${mine ? "내 평가 수정하기" : "⭐ 평가하기"}</button>`;
+  }
+
   // 상세 화면 섹션
   function section(key) {
     const s = summary(key);
@@ -63,40 +73,19 @@
         <p class="rating-empty">아직 공개된 평균이 없어요. <b>인증 학부모 ${MIN_PUBLIC}명 이상</b>이 평가하면 평균을 보여드려요. <small>(현재 ${s.n}명)</small></p>
         <details class="rating-demo"><summary>공개되면 이렇게 보여요</summary>${summaryHTML(DEMO, true)}</details>`}
         ${mine ? `<div class="rating-mine"><span>내 평가</span>${starRow(avgOf(mine))}<b>${avgOf(mine).toFixed(1)}</b><small>${esc(mine.verified.status)} · ${new Date(mine.at).toLocaleDateString("ko-KR")}</small></div>` : ""}
-        <button class="btn rate-cta" type="button" data-rate>${mine ? "내 평가 수정하기" : "⭐ 다니고 있어요 · 다녔어요 — 평가하기"}</button>
+        ${ctaHTML(key, mine)}
+        <p class="src-line">개인 의견이며 앱이 보증하지 않아요</p>
         <p class="note">시제품: 내 평가만 이 기기에 저장돼요. 실제 다른 학부모 평가는 아직 없어요.</p>
       </section>`;
   }
 
-  // 평가 시트: 1) 학부모 인증  2) 항목별 별점·태그
+  // 평가 시트: 항목별 별점·태그 (학부모 인증은 회원가입 때 account.js에서)
   function openRate(key, name, onDone) {
     const sh = $("sheet");
     const prev = store.mine(key);
     const v = prev ? JSON.parse(JSON.stringify(prev)) : { scores: {}, tags: [], verified: null };
     const close = () => sh.close();
     const top = (title) => `<div class="sheet-top"><h2>${title}</h2><button class="icon-button" data-close aria-label="닫기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>`;
-
-    function step1() {
-      sh.setAttribute("aria-label", "학부모 인증");
-      sh.innerHTML = `${top("학부모 인증")}
-        <p class="sheet-copy"><b>${esc(name)}</b>에 다니거나 다녔던 학부모만 평가할 수 있어요.</p>
-        <form class="upload-form" novalidate>
-          <fieldset><legend>재원 상태</legend>
-            <div class="cm-pick">${["재원 중", "졸업·퇴소"].map((t, i) => `<label class="chip ${(v.verified?.status || "재원 중") === t ? "on" : ""}"><input type="radio" name="status" value="${t}" ${(v.verified?.status || "재원 중") === t ? "checked" : ""}>${t}</label>`).join("")}</div>
-          </fieldset>
-          <fieldset><legend>인증 방법</legend>
-            <div class="sheet-options">${METHODS.map((m, i) => `<label class="opt-radio"><input type="radio" name="method" value="${esc(m)}" ${(v.verified?.method || METHODS[0]) === m ? "checked" : ""}><span>${esc(m)}</span></label>`).join("")}</div>
-            <p class="note">정식 서비스에서는 증빙 사진을 올리면 운영자가 확인한 뒤 인증해요. 증빙 사진은 확인 후 바로 삭제해요.</p>
-          </fieldset>
-          <label class="check"><input type="checkbox" name="ok" ${v.verified ? "checked" : ""}>허위로 인증하면 평가가 삭제되고 이용이 제한될 수 있음을 확인해요.</label>
-          <button class="btn primary submit" type="submit" ${v.verified ? "" : "disabled"}>다음 · 평가하기</button>
-        </form>`;
-      const f = sh.querySelector("form"), btn = f.querySelector(".submit");
-      const sync = () => { f.querySelectorAll(".cm-pick .chip").forEach((c) => c.classList.toggle("on", c.querySelector("input").checked)); btn.disabled = !f.ok.checked; };
-      f.addEventListener("change", sync);
-      sh.querySelector("[data-close]").addEventListener("click", close);
-      f.addEventListener("submit", (e) => { e.preventDefault(); if (btn.disabled) return; v.verified = { status: f.status.value, method: f.method.value, at: Date.now() }; step2(); });
-    }
 
     function step2() {
       sh.setAttribute("aria-label", "별점 평가");
@@ -128,20 +117,32 @@
       f.addEventListener("submit", (e) => { e.preventDefault(); if (btn.disabled) return; v.at = Date.now(); store.save(key, v); close(); onDone && onDone("saved"); });
     }
 
-    step1();
+    const ver = acct() && acct().verifiedFor(key);
+    if (!ver) return; // 인증 회원만 (bind에서 먼저 확인)
+    v.verified = { status: ver.status, method: ver.method, at: ver.at };
+    step2();
     if (!sh.open) sh.showModal();
   }
 
   // 상세 화면에서 섹션을 그린 뒤 호출
-  function bind(root, key, name) {
+  function bind(root, key, name, snap) {
     const sec = root.querySelector("[data-rating-sec]");
     if (!sec) return;
-    sec.querySelector("[data-rate]").addEventListener("click", () => openRate(key, name, (r) => {
-      sec.outerHTML = section(key);
-      bind(root, key, name);
+    const refresh = () => { const cur = root.querySelector("[data-rating-sec]"); if (cur) { cur.outerHTML = section(key); bind(root, key, name, snap); } };
+    const rate = () => openRate(key, name, (r) => {
+      refresh();
       const t = $("toast"); if (t) { t.textContent = r === "deleted" ? "내 평가를 삭제했어요." : "평가를 저장했어요. 고마워요!"; t.classList.add("visible"); setTimeout(() => t.classList.remove("visible"), 3000); }
       window.dispatchEvent(new CustomEvent("ratings:changed"));
-    }));
+    });
+    sec.querySelector("[data-rate]")?.addEventListener("click", () => { // 인증 확인 중이면 버튼이 없음
+      const A = acct();
+      const pre = snap || { key, name };
+      const after = () => { refresh(); if (A.verifiedFor(key)) rate(); };
+      if (!A) return;
+      if (!A.isMember()) return A.openSignup({ daycare: pre, onDone: after });
+      if (!A.verifiedFor(key)) return A.openVerify(pre, { onDone: after });
+      rate();
+    });
   }
 
   window.RATINGS = { MIN_PUBLIC, badge, section, bind, summary };

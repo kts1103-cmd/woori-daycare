@@ -34,6 +34,8 @@
     const sg = String(d.sigungu || "").trim();
     const [c, g] = sg.split(/\s+/);
     if (g) { d.city = c; d.gu = g; return; }
+    const m = sg.match(/^(.+?시)(.+구)$/); // "수원시영통구"처럼 붙어 있는 경우
+    if (m) { d.city = m[1]; d.gu = m[2]; return; }
     const p = String(d.addr || "").trim().split(/\s+/);
     d.city = sg;
     d.gu = /시$/.test(sg) && p[1] === sg && /구$/.test(p[2] || "") ? p[2] : "";
@@ -160,6 +162,22 @@
     const ages = d.waitByAge ? Object.entries(d.waitByAge).filter(([, n]) => n > 0).map(([a, n]) => `만 ${a}세 ${n}명`).join(", ") : "";
     return `${d.waitTotal}명${ages ? ` <small>(${ages})</small>` : ""} · ${link}`;
   }
+  // 목록 카드용 등록대기 배지: 우리 아이 연령반(My에 등록한 아이)이 있으면 그 반 대기자 수를 먼저 보여준다
+  // 우리 아이 반 기준 대기자 수 (아이 미등록·반 정보 없음이면 null)
+  function myClassWait(d) {
+    const cls = window.TIMELINE && TIMELINE.childClass ? TIMELINE.childClass() : null; // "만 1세반" 등
+    const age = cls && (cls.match(/만 (\d)세반/) || [])[1];
+    return { cls, n: age != null && d.waitByAge && d.waitByAge[age] != null ? d.waitByAge[age] : null };
+  }
+  // 정렬용: 우리 아이 반 대기 → 없으면 전체 대기, 데이터 없으면 null
+  const waitOf = (d) => (d.waitTotal == null ? null : myClassWait(d).n ?? d.waitTotal);
+  function waitBadge(d) {
+    if (d.waitTotal == null) return "";
+    const { cls, n } = myClassWait(d);
+    const text = n != null ? `${cls} 대기 <em>${n}명</em>` : `등록대기 <em>${d.waitTotal}명</em>`;
+    const level = (n ?? d.waitTotal) === 0 ? "ok" : (n ?? d.waitTotal) >= 10 ? "many" : "";
+    return `<span class="tag wait ${level}${n != null ? " mine" : ""}" title="아이사랑 등록대기 아동 수 (정보공개포털 기준)"><i aria-hidden="true">⏳</i>${text}</span>`;
+  }
   const seatsLeft = (d) => (d.capacity && d.current != null ? d.capacity - d.current : null);
   const ratioOf = (d) => (d.staff && d.current ? d.current / d.staff : null);
   const spaceOf = (d) => (d.area && d.current ? d.area / d.current : null);
@@ -202,6 +220,12 @@
       ratio: (a, b) => (ratioOf(a) ?? 1e9) - (ratioOf(b) ?? 1e9),
       space: (a, b) => (spaceOf(b) ?? -1) - (spaceOf(a) ?? -1),
       name: (a, b) => a.name.localeCompare(b.name, "ko"),
+      // 등록대기 적은 순: 데이터 없는 곳은 맨 뒤, 같으면 남은 정원 많은 순
+      wait: (a, b) => {
+        const wa = waitOf(a), wb = waitOf(b);
+        if (wa == null || wb == null) return (wa == null) - (wb == null) || (seatsLeft(b) ?? -1e9) - (seatsLeft(a) ?? -1e9);
+        return wa - wb || (seatsLeft(b) ?? -1e9) - (seatsLeft(a) ?? -1e9);
+      },
     };
     return [...list].sort(by[sort === "dist" && !userPos && !area ? "name" : sort]);
   }
@@ -212,7 +236,7 @@
     const parts = String(d.addr || "").trim().split(/\s+/);
     const out = parts.length ? [parts[0]] : [];
     for (const t of parts.slice(1, 3)) { if (/(시|군|구)$/.test(t)) out.push(t); else break; }
-    if (d.city) return [d.sido, d.city, d.gu].filter(Boolean).join(" ");
+    if (d.city) return [d.sido, d.city !== d.sido ? d.city : "", d.gu].filter(Boolean).join(" "); // 세종처럼 시도=시군이면 한 번만
     return out.length > 1 ? out.join(" ") : [d.sido, d.sigungu].filter(Boolean).join(" ");
   };
   // My page(관심·최근·비교)에 저장할 요약 (mypage.js)
@@ -220,6 +244,12 @@
     left: seatsLeft(d) != null ? Math.max(0, seatsLeft(d)) : null, ratio: ratioOf(d), space: spaceOf(d), extended: d.extended, bus: d.bus, playground: d.playground, years: yearsOf(d) });
   // My page에서 어린이집을 다시 열 때
   window.APP = {
+    // 회원가입 학부모 인증에서 어린이집 이름 검색 (지금 불러온 지역 데이터 기준)
+    search(q, n = 8) {
+      const w = String(q || "").replace(/\s+/g, "");
+      if (w.length < 2) return [];
+      return data.filter((d) => String(d.name).replace(/\s+/g, "").includes(w)).slice(0, n).map(snapOf);
+    },
     async openByKey(sido, key) {
       const rows = sido ? await loadSido(sido) : (await loadAll()).rows;
       const d = rows.find((r) => keyOf(r) === key);
@@ -228,7 +258,26 @@
       openDetail(d);
     },
   };
+  // 교직원 평균 근속연수: 어린이집정보공개포털 OPEN API(어린이집별 기본정보 조회) 연동 후 d.tenureAvg(년)로 들어옴
+  const tenureOf = (d) => (typeof d.tenureAvg === "number" && d.tenureAvg >= 0 ? d.tenureAvg : null);
+  const tenureTag = (d) => tenureOf(d) == null ? "" : `<span class="tag stat tenure" title="교직원 평균 근속연수(추정)"><i aria-hidden="true">🌳</i>평균 근속 <em>${tenureOf(d).toFixed(1)}년</em></span>`;
+  // 근속 구간 분포 막대 (d.tenureDist = {lt1, 1to2, 2to4, 4to6, ge6} 인원)
+  const TENURE_BINS = [["lt1", "1년 미만"], ["1to2", "1~2년"], ["2to4", "2~4년"], ["4to6", "4~6년"], ["ge6", "6년 이상"]];
+  function tenureDistHTML(d) {
+    const t = d.tenureDist; if (!t || tenureOf(d) == null) return "";
+    const total = TENURE_BINS.reduce((a, [k]) => a + (Number(t[k]) || 0), 0); if (!total) return "";
+    return `<div class="tenure-dist" role="img" aria-label="근속연수 분포: ${TENURE_BINS.map(([k, l]) => `${l} ${Number(t[k]) || 0}명`).join(", ")}">
+      <span class="td-bar">${TENURE_BINS.map(([k], i) => `<i class="td${i}" style="flex:${Number(t[k]) || 0}"></i>`).join("")}</span>
+      <span class="td-legend">${TENURE_BINS.map(([k, l], i) => `<small><i class="td${i}"></i>${l} ${Number(t[k]) || 0}</small>`).join("")}</span></div>`;
+  }
   const rbOf = (d) => (window.RATINGS ? RATINGS.badge(keyOf(d)) : ""); // 인증 학부모 별점 배지 (ratings.js)
+  // 화면별 출처 (디자인 세션) — 정보 바로 아래에 붙인다
+  const srcLine = (html) => `<p class="src-line">출처: ${html}</p>`;
+  const SRC = {
+    basic: () => `어린이집정보공개포털(한국사회보장정보원) · 기준일 ${esc(index ? index.basis : "")}`,
+    ext: "연장보육: 공공데이터포털(2024)",
+  };
+  window.APP_SRC = SRC;
   const tagsOf = (d) => `${d.extended ? '<span class="tag"><i aria-hidden="true">🌙</i>연장보육</span>' : ""}${d.bus ? '<span class="tag"><i aria-hidden="true">🚌</i>통학차량</span>' : ""}${d.playground > 0 ? '<span class="tag"><i aria-hidden="true">🛝</i>놀이터</span>' : ""}${yearsOf(d) != null && yearsOf(d) <= 3 ? '<span class="tag"><i aria-hidden="true">✨</i>신규</span>' : ""}${yearsOf(d) >= 10 ? `<span class="tag gray">${Math.floor(yearsOf(d))}년 운영</span>` : ""}`;
   const ICON = {
     back: '<path d="m15 5-7 7 7 7"/>', chevron: '<path d="m9 5 7 7-7 7"/>', close: '<path d="m6 6 12 12M6 18 18 6"/>',
@@ -263,20 +312,20 @@
       <header class="detail-header">
         <button class="icon-button" id="detailBack" aria-label="목록으로 돌아가기">${ic("back")}</button>
         <h2>어린이집 정보</h2>
-        <button class="icon-button fav-btn" id="favBtn" aria-pressed="false" aria-label="관심 어린이집에 담기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg></button>
       </header>
       <div class="detail-body">
         <div id="photoHero">${staticMap(d) || houseArt}</div>
         <div class="detail-content">
           <div>
             <span class="badge">${esc(d.type)}</span> <span class="seat ${s.cls}">${s.text}</span>
-            <h2 class="detail-name">${esc(d.name)}</h2>
+            <div class="detail-name-row"><h2 class="detail-name">${esc(d.name)}</h2>
+              <button type="button" class="fav-pill" id="favBtn" aria-pressed="false" aria-label="관심 어린이집에 담기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg><span>관심</span></button></div>
             <p class="detail-address">${esc(d.addr || d.sigungu)}</p>
-            ${d.geocoded ? `<p class="geo-note">📍 주소 기준 위치예요. 공공데이터에 좌표가 없어 주소로 찾은 위치라 지도·거리가 실제와 조금 다를 수 있어요.</p>` : ""}
+            ${d.geocoded ? `<p class="geo-note" title="좌표가 없어 주소로 찾은 위치예요. 실제와 조금 다를 수 있어요.">📍 주소 기준 위치</p>` : ""}
             <div class="tags">${tagsOf(d)}</div>
           </div>
           <div class="metrics">
-            <div><span>${d.dist != null ? "현재 위치에서" : "남은 정원"}</span><strong>${d.dist != null ? fmt(d.dist) : left != null ? Math.max(0, left) + "명" : "-"}</strong></div>
+            <div><span ${d.dist != null ? "" : 'title="정원에서 현원을 뺀 값"'}>${d.dist != null ? "현재 위치에서" : "남은 정원(계산)"}</span><strong>${d.dist != null ? fmt(d.dist) : left != null ? Math.max(0, left) + "명" : "-"}</strong></div>
             <div><span>정원</span><strong>${d.capacity ?? "-"}명</strong></div>
             <div><span>현원</span><strong>${d.current ?? "-"}명</strong></div>
           </div>
@@ -284,8 +333,10 @@
           <section class="facts">
             <h3>시설 정보</h3>
             <dl>
-              ${row("교직원 1명당 아이", r ? `${r.toFixed(1)}명` : "정보 없음")}
-              ${row("보육실 · 면적", `${d.rooms ?? "-"}개 · ${d.area ?? "-"}㎡${sp ? ` <small>(1명당 ${sp.toFixed(1)}㎡)</small>` : ""}`)}
+              ${row('<span title="현원 ÷ 교직원 수">교직원 1명당 아이(계산)</span>', r ? `${r.toFixed(1)}명` : "정보 없음")}
+              ${row('<span title="근속연수 구간 인원으로 계산 (6년 이상은 7년)">교직원 평균 근속(추정)</span>', tenureOf(d) != null ? `${tenureOf(d).toFixed(1)}년` : "정보 준비 중")}
+              ${tenureDistHTML(d)}
+              ${row("보육실 · 면적", `${d.rooms ?? "-"}개 · ${d.area ?? "-"}㎡${sp ? ` <small title="보육실 면적 ÷ 현원">(1명당 ${sp.toFixed(1)}㎡, 계산)</small>` : ""}`)}
               ${row("놀이터", d.playground ? `${d.playground}곳` : "없음")}
               ${row("CCTV", d.cctv != null ? `${d.cctv}대` : "정보 없음")}
               ${row("통학차량", d.bus ? "운영" : "미운영")}
@@ -298,6 +349,7 @@
           <section class="photos-sec">
             <div class="photos-head"><h3>시설 사진</h3><span id="photoCount"></span></div>
             <div class="photo-strip" id="photoStrip"></div>
+            <p class="src-line">원장 등록 사진</p>
             <button class="owner-upload" id="ownerUpload">${ic("camera")}<span><b>원장님이신가요?</b><small>시설 사진을 직접 등록해 주세요</small></span>${ic("chevron")}</button>
           </section>
           <section class="visit-note">
@@ -312,7 +364,7 @@
           <div class="slot"></div>
           <a class="info-shortcut" href="https://www.childcare.go.kr/?menuno=215" target="_blank" rel="noopener">${ic("shield")}<span>이용 중 불편이 있었나요? 아이사랑 불편신고</span>${ic("chevron")}</a>
           <button class="info-shortcut" id="toViolation">${ic("shield")}<span>위반시설·행위자 공표 확인하기</span>${ic("chevron")}</button>
-          <p class="source-note">출처: ${esc(index.source)} · 기준일 ${esc(index.basis)}<br>정확한 정보는 해당 어린이집과 공식 포털에서 확인하세요.</p>
+          ${srcLine(`${SRC.basic()} · ${SRC.ext}`)}
         </div>
       </div>
       <div class="detail-actions">
@@ -340,7 +392,7 @@
     }));
     root.querySelector("#ownerUpload").addEventListener("click", () => openUploadSheet(d));
     renderPhotos(d);
-    if (window.RATINGS) RATINGS.bind(root, keyOf(d), d.name);
+    if (window.RATINGS) RATINGS.bind(root, keyOf(d), d.name, snapOf(d));
     if (window.MYPAGE) { const snap = snapOf(d); MYPAGE.track(snap); MYPAGE.bindFav(root.querySelector("#favBtn"), snap); }
     showDetail(true);
     history.pushState({ detail: true }, "", "#detail");
@@ -467,6 +519,7 @@
     else main.scrollTop = listScroll;
   }
   window.addEventListener("popstate", () => {
+    if (document.querySelector("#account:not([hidden])")) return; // 회원가입 화면이 먼저 닫힘 (account.js)
     if (!detailOpen) return;
     if ($("sheet").open) $("sheet").close();
     showDetail(false);
@@ -510,18 +563,23 @@
       const s = seat(d);
       return `
       <li data-id="${d.id}">
-        <button class="head" aria-label="${esc(d.name)} 상세 보기">
-          <span class="no">${offset + i + 1}</span>
-          <span class="t"><b>${esc(d.name)}</b><small class="area">${esc(areaOf(d))}</small><small>${esc(d.type)}${d.dist != null ? ` · ${d.geocoded ? "약 " : ""}${fmt(d.dist)}` : ""}${d.geocoded ? ' · <span class="geo-mini" title="주소로 찾은 위치">주소 기준 위치</span>' : ""}</small>
+        <div class="head" role="button" tabindex="0" aria-label="${esc(d.name)} 상세 보기">
+          <span class="no-col"><span class="no emo" data-t="${typeKey(d)}" aria-hidden="true">${emojiOf(d)}</span><span class="no-type" data-t="${typeKey(d)}">${esc(typeShort(d))}</span></span>
+          <span class="t"><span class="name-row"><b>${esc(d.name)}</b>${window.MYPAGE ? `<button type="button" class="fav-mini" data-fav aria-pressed="false" aria-label="${esc(d.name)} 관심 담기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg></button>` : ""}</span><small class="area">${esc(areaOf(d))}</small>${d.dist != null || d.geocoded ? `<small>${[d.dist != null ? `${d.geocoded ? "약 " : ""}${fmt(d.dist)}` : "", d.geocoded ? '<span class="geo-mini" title="주소로 찾은 위치">주소 기준 위치</span>' : ""].filter(Boolean).join(" · ")}</small>` : ""}${waitBadge(d) ? `<span class="wait-line">${waitBadge(d)}</span>` : ""}
 </span>
-          <span class="seat ${s.cls}">${s.text}</span>
-          ${rbOf(d) || ratioOf(d) || tagsOf(d) ? `<span class="tags">${rbOf(d)}${ratioOf(d) ? `<span class="tag stat"><i aria-hidden="true">🧑‍🏫</i>교직원당 아이 <em>${ratioOf(d).toFixed(1)}명</em></span>` : ""}${tagsOf(d)}</span>` : ""}
-        </button>
+          <span class="side"><span class="seat ${s.cls}">${s.text}</span></span>
+          ${rbOf(d) || ratioOf(d) || tenureOf(d) != null || tagsOf(d) ? `<span class="tags">${rbOf(d)}${ratioOf(d) ? `<span class="tag stat"><i aria-hidden="true">🧑‍🏫</i>교직원당 아이 <em>${ratioOf(d).toFixed(1)}명</em></span>` : ""}${tenureTag(d)}${tagsOf(d)}</span>` : ""}
+        </div>
       </li>`;
     }).join("") : `<li class="empty-row">조건에 맞는 어린이집이 없습니다. 필터를 줄여 보세요.</li>`;
     $("list").querySelectorAll("li[data-id]").forEach((li) => {
       const d = list.find((x) => x.id === li.dataset.id);
-      li.querySelector(".head").addEventListener("click", () => openDetail(d));
+      const head = li.querySelector(".head");
+      head.addEventListener("click", () => openDetail(d));
+      head.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target === head) { e.preventDefault(); openDetail(d); } });
+      // 이름 옆 하트: 관심 어린이집 담기 (mypage.js)
+      const fav = li.querySelector("[data-fav]");
+      if (fav && window.MYPAGE) { fav.addEventListener("click", (e) => e.stopPropagation()); MYPAGE.bindFav(fav, snapOf(d)); }
     });
     // 지역 선택 모드: 그 지역 전체를 클러스터로 그리고, 페이지 넘김이 아닐 때만 지도를 지역에 맞춘다
     if (area) drawMarkers(all.slice(0, AREA_MAX_MARKERS), offset);
@@ -553,7 +611,16 @@
   });
 
   // 네이버 지도 (Client ID가 없으면 목록만 표시)
-  const pinIcon = (d, n) => ({ content: `<div style="background:#245C52;color:#fff;border-radius:50%;width:28px;height:28px;box-shadow:0 2px 8px rgba(40,77,57,.25);display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"};cursor:pointer" title="${esc(d.name)}${d.geocoded ? " · 주소 기준 위치" : ""}">${n}</div>`, anchor: new naver.maps.Point(14, 14) });
+  // 유형별 귀여운 이모티콘 (목록 카드·지도 마커 공통)
+  const TYPE_EMOJI = { "국공립": "🏫", "민간": "🎈", "가정": "🏡", "직장": "💼", "사회복지법인": "🤝", "법인·단체등": "🌈", "협동": "🌱" };
+  const emojiOf = (d) => TYPE_EMOJI[d.type] || "🐣";
+  // 유형별 원 배경색 (디자인 세션) — 목록 .no.emo[data-t]와 지도 마커가 같은 색
+  const TYPE_KEY = { "국공립": "pub", "민간": "pri", "가정": "home", "직장": "work", "사회복지법인": "soc", "법인·단체등": "corp", "협동": "coop" };
+  const TYPE_BG = { pub: "#DDF1EA", pri: "#E3ECFB", home: "#FBF1D6", work: "#ECE6F8", soc: "#DDF3F1", corp: "#FBE4EE", coop: "#E2F3D8", etc: "#EEF0EC" };
+  const typeKey = (d) => TYPE_KEY[d.type] || "etc";
+  const TYPE_SHORT = { "사회복지법인": "사회복지", "법인·단체등": "법인·단체" }; // 이모티콘 아래 칸에 맞게 짧게
+  const typeShort = (d) => TYPE_SHORT[d.type] || d.type || "기타";
+  const pinIcon = (d, n) => ({ content: `<div style="position:relative;width:32px;height:32px;border-radius:50%;background:${TYPE_BG[typeKey(d)]};border:2px ${d.geocoded ? "dashed #E9CB7A" : "solid #fff"};box-shadow:0 2px 8px rgba(40,77,57,.3);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;cursor:pointer;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif" title="${n}번 ${esc(d.name)} · ${esc(d.type)}${d.geocoded ? " · 주소 기준 위치" : ""}">${emojiOf(d)}</div>`, anchor: new naver.maps.Point(16, 16) });
   // 화면 픽셀 격자로 가까운 어린이집을 묶는다
   function clusterize(list) {
     const proj = map.getProjection();
@@ -807,6 +874,8 @@
   window.addEventListener("ratings:changed", () => render({ keepPage: true }));
   ["fSeat", "fBus", "fExt", "fPlay", "fNight", "fH24", "fHourly", "fAge", "fCap", "fCur", "sort"].forEach((id) => $(id).addEventListener("change", render));
   // 야간·24시간·시간제 정보는 정보공개포털 OPEN API(cpmsapi030) 연동 후 데이터에 들어오면 필터가 자동으로 보인다
+  // "등록대기 적은 순"을 고르면 오해하지 않도록 안내를 함께 보여준다
+  $("sort").addEventListener("change", () => { $("waitSortNote").hidden = $("sort").value !== "wait"; });
   function showOptionalFilters(rows) {
     document.querySelectorAll("[data-needs]").forEach((el) => { el.hidden = !rows.some((d) => d[el.dataset.needs] != null); });
   }
@@ -852,7 +921,7 @@
       showLoadError(e.message, () => location.reload());
       return;
     }
-    $("basis").textContent = `${index.source} · 기준일 ${index.basis}`;
+    $("basis").textContent = `어린이집정보공개포털(한국사회보장정보원) · 기준일 ${index.basis} · 연장보육: 공공데이터포털(2024)`;
     document.querySelectorAll(".basisDate").forEach((e) => { e.textContent = index.basis; });
     $("sido").innerHTML = `<option value="">전국</option>` + index.sidos.map((s) => `<option>${esc(s.sido)}</option>`).join("");
     const pref = window.APP_SETTINGS ? APP_SETTINGS.get() : {};

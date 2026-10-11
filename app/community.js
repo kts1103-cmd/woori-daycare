@@ -18,17 +18,17 @@
   const KEY = "community:v1";
   const now = Date.now(), H = 3600e3;
   const SEED = [
-    { id: "s1", cat: "admission", title: "국공립 대기 순번 얼마나 걸리셨어요?", body: "3월 입소 목표로 작년 가을에 신청했는데 아직 대기 12번이에요. 맞벌이 가점 있어도 이 정도면 다른 곳도 같이 넣어둬야 할까요?", author: "새싹맘", at: now - 2 * H, likes: 14, views: 182, comments: [
+    { id: "s1", cls: "만 0세반", cat: "admission", title: "국공립 대기 순번 얼마나 걸리셨어요?", body: "3월 입소 목표로 작년 가을에 신청했는데 아직 대기 12번이에요. 맞벌이 가점 있어도 이 정도면 다른 곳도 같이 넣어둬야 할까요?", author: "새싹맘", at: now - 2 * H, likes: 14, views: 182, comments: [
       { author: "도토리아빠", body: "저희는 대기 9번에서 4개월 걸렸어요. 2~3곳 같이 넣어두시는 거 추천해요.", at: now - 1.5 * H },
       { author: "햇살맘", body: "3월은 졸업생 빠지는 시기라 순번이 갑자기 당겨지기도 해요!", at: now - 1 * H }] },
-    { id: "s2", cat: "review", title: "연장보육 7시 반까지 되는 곳 다녀본 후기", body: "연장반을 따로 운영해서 담당 선생님이 계시고, 저녁 간식도 나와요. 상담 때 연장반 아이 수와 담당 선생님을 꼭 물어보세요.", daycare: "123키즈어린이집", author: "퇴근길엄마", at: now - 5 * H, likes: 31, views: 420, ownerReply: { name: "김○○", body: "좋은 후기 감사합니다. 연장반은 담당 교사 1명과 보조 교사가 함께 운영하고 있어요. 상담은 평일 오후에 언제든 가능합니다.", at: now - 3 * H }, comments: [
+    { id: "s2", cls: "만 2세반", cat: "review", title: "연장보육 7시 반까지 되는 곳 다녀본 후기", body: "연장반을 따로 운영해서 담당 선생님이 계시고, 저녁 간식도 나와요. 상담 때 연장반 아이 수와 담당 선생님을 꼭 물어보세요.", daycare: "123키즈어린이집", author: "퇴근길엄마", at: now - 5 * H, likes: 31, views: 420, ownerReply: { name: "김○○", body: "좋은 후기 감사합니다. 연장반은 담당 교사 1명과 보조 교사가 함께 운영하고 있어요. 상담은 평일 오후에 언제든 가능합니다.", at: now - 3 * H }, comments: [
       { author: "민트맘", body: "연장반 담당 따로 있는지 꼭 물어볼게요. 감사해요!", at: now - 4 * H }] },
-    { id: "s3", cat: "question", title: "상담 갈 때 꼭 물어봐야 할 것 있을까요?", body: "처음 어린이집 보내는 거라 뭘 물어봐야 할지 모르겠어요. 필요경비랑 적응기간 말고 또 뭐가 있을까요?", author: "초보엄마", at: now - 9 * H, likes: 22, views: 301, comments: [
+    { id: "s3", cls: "예비", cat: "question", title: "상담 갈 때 꼭 물어봐야 할 것 있을까요?", body: "처음 어린이집 보내는 거라 뭘 물어봐야 할지 모르겠어요. 필요경비랑 적응기간 말고 또 뭐가 있을까요?", author: "초보엄마", at: now - 9 * H, likes: 22, views: 301, comments: [
       { author: "두아이맘", body: "아플 때 귀가 기준, 낮잠 시간, 바깥놀이 횟수 물어보세요. 앱 상세 화면에 상담 체크리스트도 있어요.", at: now - 8 * H },
       { author: "도토리아빠", body: "CCTV 열람 절차도요!", at: now - 7 * H }] },
-    { id: "s4", cat: "worry", title: "적응기간 2주째인데 아침마다 울어요", body: "등원할 때마다 너무 울어서 마음이 아파요. 다들 얼마나 걸리셨나요?", author: "콩이맘", at: now - 26 * H, likes: 45, views: 512, comments: [
+    { id: "s4", cls: "만 1세반", cat: "worry", title: "적응기간 2주째인데 아침마다 울어요", body: "등원할 때마다 너무 울어서 마음이 아파요. 다들 얼마나 걸리셨나요?", author: "콩이맘", at: now - 26 * H, likes: 45, views: 512, comments: [
       { author: "햇살맘", body: "저희는 한 달 정도 걸렸어요. 인사는 짧게 하고 나오는 게 오히려 빨리 적응하더라고요.", at: now - 25 * H }] },
-    { id: "s5", cat: "local", title: "양덕동 키즈카페 새로 생겼어요", body: "4세 이하 존이 따로 있고 평일 오전은 한산해요. 주차는 건물 지하 2시간 무료예요.", author: "동네아빠", at: now - 50 * H, likes: 18, views: 240, comments: [] },
+    { id: "s5", cls: "만 3세반", cat: "local", title: "양덕동 키즈카페 새로 생겼어요", body: "4세 이하 존이 따로 있고 평일 오전은 한산해요. 주차는 건물 지하 2시간 무료예요.", author: "동네아빠", at: now - 50 * H, likes: 18, views: 240, comments: [] },
   ].map((p) => ({ ...p, seed: true }));
 
   const store = {
@@ -60,7 +60,9 @@
   const flagged = (text) => /(선생님|교사|원장)\s*[가-힣]{2,4}/.test(text) && /(때리|때렸|때려|폭행|학대|방치|폭언|체벌)/.test(text);
 
   // ---- 상태 ----
-  let cat = "all", sort = "new", openId = null, mode = "feed";
+  let cat = "all", sort = "new", openId = null, mode = "feed", sameCls = false;
+  const myCls = () => (window.TIMELINE ? TIMELINE.childClass() : null);
+  const clsLabel = (c) => (c === "예비" ? "예비 부모" : `${c} 부모`);
 
   function setMode(m) {
     mode = m;
@@ -76,12 +78,13 @@
     setMode(m);
     m === "post" ? renderPost() : m === "policy" ? renderPolicy() : renderWrite();
   }
-  window.addEventListener("popstate", () => { if (mode !== "feed") { const s = $("sheet"); if (s && s.open) s.close(); setMode("feed"); } });
+  window.addEventListener("popstate", () => { if (document.querySelector("#account:not([hidden])")) return; if (mode !== "feed") { const s = $("sheet"); if (s && s.open) s.close(); setMode("feed"); } });
   if (/^#(post|write|policy)$/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search);
 
   // ---- 피드 ----
   function visiblePosts() {
-    let list = db.posts.filter((p) => !db.reported.includes(p.id) && (cat === "all" || p.cat === cat));
+    const mc = myCls();
+    let list = db.posts.filter((p) => !db.reported.includes(p.id) && (cat === "all" || p.cat === cat) && (!sameCls || !mc || p.cls === mc));
     return sort === "hot" ? list.sort((a, b) => (b.likes + b.comments.length * 2) - (a.likes + a.comments.length * 2)) : list.sort((a, b) => b.at - a.at);
   }
   function renderFeed() {
@@ -105,12 +108,14 @@
         <button class="chip ${cat === "all" ? "on" : ""}" data-cat="all">전체</button>
         ${CATS.map(([k, l, e]) => `<button class="chip ${cat === k ? "on" : ""}" data-cat="${k}">${e} ${l}</button>`).join("")}
       </div>
-      <div class="cm-sort"><span>글 ${posts.length}개</span><div class="segments" role="group" aria-label="정렬">
+      <div class="cm-sort"><span>글 ${posts.length}개</span>${myCls() ? `<button type="button" class="cm-same ${sameCls ? "on" : ""}" data-same aria-pressed="${sameCls}">👶 ${esc(clsLabel(myCls()))}만</button>` : ""}<div class="segments" role="group" aria-label="정렬">
         <button type="button" data-sort="new" aria-pressed="${sort === "new"}">최신순</button><button type="button" data-sort="hot" aria-pressed="${sort === "hot"}">인기순</button></div></div>
       <ul class="cm-list">${posts.length ? posts.map(cardHTML).join("") : `<li class="cm-empty">아직 글이 없어요. 첫 글을 남겨 보세요.</li>`}</ul>
+      <p class="src-line">개인 의견이며 앱이 보증하지 않아요</p>
       <p class="src">시제품: 글과 댓글은 이 기기에만 저장돼요. "예시" 글은 화면 확인용으로 만든 글이에요. · <a href="#policy" data-policy>커뮤니티 운영정책</a></p>
       <button class="cm-fab" type="button" data-write>${svg(I.pen)}글쓰기</button>`;
     root.querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => { cat = b.dataset.cat; renderFeed(); }));
+    root.querySelector("[data-same]")?.addEventListener("click", () => { sameCls = !sameCls; renderFeed(); });
     root.querySelectorAll("[data-sort]").forEach((b) => b.addEventListener("click", () => { sort = b.dataset.sort; renderFeed(); }));
     root.querySelectorAll("[data-post]").forEach((b) => b.addEventListener("click", () => push("post", b.dataset.post)));
     root.querySelector("[data-write]").addEventListener("click", () => push("write"));
@@ -136,7 +141,7 @@
       <b class="cm-title">${esc(p.title)}</b>
       <span class="cm-body">${esc(p.body)}</span>
       ${p.daycare ? `<span class="cm-daycare">${svg(I.school)}${esc(p.daycare)}${p.ownerReply ? " · 원장 답변" : ""}</span>` : ""}
-      <span class="cm-meta"><span>${esc(p.author)} · ${ago(p.at)} · 조회 ${p.views}</span>
+      <span class="cm-meta"><span>${esc(p.author)}${p.cls ? ` <i class="cm-cls">${esc(clsLabel(p.cls))}</i>` : ""} · ${ago(p.at)} · 조회 ${p.views}</span>
         <span class="cm-counts"><span class="${liked ? "on" : ""}">${svg(I.heart)}${p.likes}</span><span>${svg(I.chat)}${p.comments.length}</span></span></span>
     </button></li>`;
   }
@@ -155,7 +160,7 @@
         <button class="icon-button" data-report aria-label="신고하기">${svg(I.flag)}</button></header>
       <div class="detail-body cm-post">
         <article>
-          <div class="cm-author"><span class="cm-avatar" aria-hidden="true">${esc(p.author.slice(0, 1))}</span><div><b>${esc(p.author)}</b><small>${esc(region())} · ${ago(p.at)} · 조회 ${p.views}</small></div>${p.seed ? '<span class="badge sample">예시</span>' : ""}</div>
+          <div class="cm-author"><span class="cm-avatar" aria-hidden="true">${esc(p.author.slice(0, 1))}</span><div><b>${esc(p.author)}${p.cls ? ` <i class="cm-cls">${esc(clsLabel(p.cls))}</i>` : ""}</b><small>${esc(region())} · ${ago(p.at)} · 조회 ${p.views}</small></div>${p.seed ? '<span class="badge sample">예시</span>' : ""}</div>
           <h1>${esc(p.title)}</h1>
           <p class="cm-text">${esc(p.body).replace(/\n/g, "<br>")}</p>
           ${p.daycare ? `<span class="cm-daycare">${svg(I.school)}${esc(p.daycare)}</span>` : ""}
@@ -342,7 +347,7 @@
         <label class="check"><input type="checkbox" name="agree">개인정보(실명·연락처·사진)와 비방 내용이 없는지 확인했어요.</label>
         <p class="form-error" data-err role="alert" hidden></p>
         <button class="btn primary cm-submit" type="submit" disabled>등록하기</button>
-        <p class="note">작성자는 "${esc(nick())}" 닉네임으로 표시돼요. 시제품: 이 기기에만 저장돼요.</p>
+        <p class="note">작성자는 "${esc(nick())}"${myCls() ? ` · ${esc(clsLabel(myCls()))}` : ""}로 표시돼요.${myCls() ? "" : " My에 아이를 등록하면 연령반이 함께 표시돼요."} 시제품: 이 기기에만 저장돼요.</p>
       </form>`;
     const f = root.querySelector("form");
     const btn = f.querySelector(".cm-submit");
@@ -361,7 +366,7 @@
       const err = f.querySelector("[data-err]");
       const text = `${f.title.value} ${f.body.value}`;
       if (flagged(text)) { err.hidden = false; err.textContent = "특정인을 지목한 의혹 제기는 올릴 수 없어요. 해당 지자체나 아이사랑 상담 창구에 알려 주세요."; return; }
-      const p = { id: "u" + Date.now(), cat: f.cat.value, title: f.title.value.trim(), body: f.body.value.trim(), daycare: f.daycare.value.trim() || undefined, author: nick(), at: Date.now(), likes: 0, views: 0, comments: [], mine: true };
+      const p = { id: "u" + Date.now(), cat: f.cat.value, title: f.title.value.trim(), body: f.body.value.trim(), daycare: f.daycare.value.trim() || undefined, author: nick(), cls: myCls() || undefined, at: Date.now(), likes: 0, views: 0, comments: [], mine: true };
       db.posts.unshift(p); commit();
       cat = "all"; sort = "new";
       history.back();

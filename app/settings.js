@@ -100,7 +100,7 @@
         <div class="set-group">
           <div class="set-row"><b>앱 버전</b><span class="muted">${APP_VERSION}</span></div>
           <div class="set-row"><b>데이터 기준일</b><span class="muted">${esc(basis)} (매일 갱신)</span></div>
-          ${link("데이터 출처", "https://info.childcare.go.kr/", "어린이집정보공개포털 · 공공데이터포털")}
+          ${link("데이터 출처", "https://info.childcare.go.kr/", "어린이집정보공개포털(한국사회보장정보원) 어린이집 기본정보 · 공공데이터포털 15083298 · 연장보육 15140061(2024) · 위치 보완: 네이버 지도 주소 검색")}
           ${link("이용약관", "https://kts1103-cmd.github.io/woori-daycare/", "출시 전 공개 예정")}
           ${link("개인정보처리방침", "https://kts1103-cmd.github.io/woori-daycare/", "출시 전 공개 예정")}
           ${link("위치기반서비스 이용약관", "https://kts1103-cmd.github.io/woori-daycare/", "출시 전 공개 예정")}
