@@ -84,6 +84,7 @@
         <div class="set-group">
           ${toggle("showLocate", "현재 위치로 찾기 사용", "버튼을 누를 때만 위치를 쓰고, 기기 안에서만 계산해요. 서버로 보내지 않아요.")}
           <p class="set-note">위치 권한 자체는 휴대폰(브라우저) 설정에서 바꿀 수 있어요.</p>
+          <button type="button" class="set-row link" data-perm><span><b>권한 안내 다시 보기</b><small>위치·사진·카메라·알림을 언제 쓰는지 알려드려요</small></span><span aria-hidden="true">›</span></button>
         </div>
 
         <h3 class="set-h">알림 <span class="badge">앱 안 알림</span></h3>
@@ -129,6 +130,7 @@
       } else set(c.dataset.key, c.checked);
     }));
     el.querySelectorAll("select[data-key]").forEach((sel) => sel.addEventListener("change", () => set(sel.dataset.key, sel.value)));
+    el.querySelector("[data-perm]")?.addEventListener("click", () => window.PERMINTRO && PERMINTRO.open());
     const clr = el.querySelector("[data-clear]");
     clr.addEventListener("click", () => {
       if (clr.dataset.armed !== "1") { clr.dataset.armed = "1"; clr.textContent = "한 번 더 누르면 삭제"; return; }

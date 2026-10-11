@@ -719,6 +719,25 @@
   .fav-pill { height:44px; }
   .detail-name-row .fav-pill { margin:-6px 0 -6px; }
   .my-sec-head button { min-height:44px; padding:0 8px; }
+  /* 처음 실행 권한 안내 (permintro.js의 임시 CSS를 덮어씀) */
+  html #permIntro { background:var(--bg); }
+  html #permIntro .pi-body { padding:32px 20px 12px; gap:12px; }
+  html #permIntro h2 { font-size:26px; letter-spacing:-.3px; color:var(--text); }
+  html #permIntro h2::before { content:"🔔"; display:grid; place-items:center; width:56px; height:56px; margin-bottom:14px; border-radius:18px; background:var(--accent-soft); font-size:28px; }
+  html #permIntro .pi-lead { font-size:14px; line-height:1.65; }
+  html #permIntro .pi-lead b { color:var(--accent-strong); }
+  html #permIntro .pi-lead:last-child { font-size:13px; padding:12px 14px; border-radius:var(--r12); background:var(--accent-subtle); color:var(--accent-strong); }
+  html #permIntro .pi-row { align-items:flex-start; gap:14px; padding:16px; border-radius:var(--r20); }
+  html #permIntro .pi-ic { width:44px; height:44px; background:var(--accent-subtle); font-size:22px; }
+  html #permIntro .pi-row > span:last-child { min-width:0; flex:1; }
+  html #permIntro .pi-row b { color:var(--text); line-height:1.3; }
+  html #permIntro .pi-row em { padding:2px 9px; vertical-align:2px; font-weight:700; }
+  html #permIntro .pi-row p { font-size:14px; line-height:1.55; color:var(--text); margin-top:6px; }
+  html #permIntro .pi-row small { margin-top:6px; padding-top:6px; border-top:1px dashed var(--line); font-size:12px; }
+  html #permIntro .pi-foot { background:linear-gradient(transparent,var(--bg) 35%); }
+  html #permIntro .pi-go { min-height:56px; box-shadow:0 6px 16px rgba(36,92,82,.22); }
+  html #permIntro .pi-go:hover { background:var(--accent-strong); }
+  html #permIntro .pi-go:focus-visible { outline:3px solid #B69548; outline-offset:3px; }
   /* 알림 센터 (notify.js의 임시 CSS를 덮어씀) */
   .brand-row .alert-btn { color:var(--accent-strong); margin-left:auto; }
   .brand-row .alert-btn svg { width:22px; height:22px; }
@@ -923,6 +942,7 @@
 <script src="mypage.js"></script>
 <script src="timeline.js"></script>
 <script src="notify.js"></script>
+<script src="permintro.js"></script>
 <script src="applink.js"></script>
 <script src="community.js"></script>
 <script>

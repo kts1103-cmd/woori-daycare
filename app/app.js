@@ -723,7 +723,7 @@
     const z = map.getZoom();
     if (z < AREA_MIN_ZOOM) {
       if (area) return;  // 이미 영역 모드면 축소해도 마지막 영역 유지
-      toast("지도를 조금 더 확대하면 그 지역 어린이집을 자동으로 보여드려요.");
+      if ($("view-map").dataset.mode === "map") toast("지도를 조금 더 확대하면 그 지역 어린이집을 자동으로 보여드려요.");
       return;
     }
     const b = map.getBounds();
