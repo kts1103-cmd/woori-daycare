@@ -121,7 +121,7 @@
       <fieldset><legend>1. 어린이집</legend>
         <div class="join-picked" ${picked ? "" : "hidden"}>${picked ? `<b>${esc(picked.name)}</b><small>${esc(picked.area || "")}</small><button type="button" data-repick>바꾸기</button>` : ""}</div>
         <div class="join-search" ${picked ? "hidden" : ""}>
-          <label class="search-field"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input name="q" autocomplete="off" placeholder="지금 다니는 어린이집 이름"></label>
+          <label class="search-field"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input name="q" autocomplete="off" placeholder="어린이집 이름 또는 주소"></label>
           <div class="join-results"></div>
         </div>
       </fieldset>
@@ -163,7 +163,7 @@
     const setPicked = (s) => {
       picked = s;
       pickedBox.hidden = !s; searchBox.hidden = !!s;
-      pickedBox.innerHTML = s ? `<b>${esc(s.name)}</b><small>${esc(s.area || "")}</small><button type="button" data-repick>바꾸기</button>` : "";
+      pickedBox.innerHTML = s ? `<b>${esc(s.name)}</b><small>${esc(s.addr || s.area || "")}</small><button type="button" data-repick>바꾸기</button>` : "";
       pickedBox.querySelector("[data-repick]")?.addEventListener("click", () => { setPicked(null); f.q.focus(); });
       sync();
     };
@@ -171,13 +171,17 @@
     let t;
     f.q.addEventListener("input", () => {
       clearTimeout(t);
-      t = setTimeout(() => {
-        const list = window.APP && APP.search ? APP.search(f.q.value, 8) : [];
-        results.innerHTML = f.q.value.trim().length < 2 ? `<p class="note">두 글자 이상 입력해 주세요.</p>`
-          : list.length ? list.map((s, i) => `<button type="button" class="my-dc" data-i="${i}"><span><b>${esc(s.name)}</b><small>${esc(s.area)} · ${esc(s.type)}</small></span></button>`).join("")
-          : `<p class="note">찾는 어린이집이 없어요. 위쪽 지역 선택이 '전국'인지 확인해 주세요.</p>`;
+      t = setTimeout(async () => {
+        const q = f.q.value;
+        if (q.trim().length < 2) { results.innerHTML = `<p class="note">두 글자 이상 입력해 주세요. 어린이집 이름이나 주소로 찾을 수 있어요.</p>`; return; }
+        results.innerHTML = `<p class="note" role="status">전국에서 찾는 중…</p>`;
+        // 항상 전국 기준(이름·주소). 선택한 지역과 상관없음
+        const list = window.APP && APP.searchAll ? await APP.searchAll(q, 8) : (window.APP && APP.search ? APP.search(q, 8) : []);
+        if (f.q.value !== q) return; // 그 사이 입력이 바뀌었으면 버린다
+        results.innerHTML = list.length ? list.map((s, i) => `<button type="button" class="my-dc" data-i="${i}"><span><b>${esc(s.name)}</b><small>${esc(s.addr || s.area)} · ${esc(s.type)}</small></span></button>`).join("")
+          : `<p class="note">전국에서 찾아도 없어요. 이름이나 주소를 다르게 입력해 보세요 (예: 동 이름 + 어린이집 이름).</p>`;
         results.querySelectorAll("[data-i]").forEach((b) => b.addEventListener("click", () => setPicked(list[Number(b.dataset.i)])));
-      }, 150);
+      }, 250);
     });
     // 사진: 미리보기만 하고 저장하지 않는다
     const clearPreview = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; };

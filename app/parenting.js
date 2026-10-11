@@ -95,6 +95,10 @@
     if (!open && y && y[1] <= y[0]) open = now < y[1];
     return { today: h[day] ? `${hm(h[day].split("-")[0])}~${hm(h[day].split("-")[1])}` : "", open, has: !!t };
   }
+  // 지도 링크: 네이버 지도에서 병원·약국 이름으로만 검색한다 (이름+주소를 같이 넣으면 결과가 나오지 않음 — 사용자 확인).
+  // 같은 이름이 여러 곳 나올 수 있어서 목록에 도로명 주소를 보여 주고, 사용자가 주소를 보고 고른다.
+  const roadOf = (r) => String(r.a || "").replace(/\s*[,(].*$/, "").replace(/\s+/g, " ").trim();
+  const mapUrl = (r) => `https://map.naver.com/p/search/${encodeURIComponent(r.n)}`;
   function nearRows(kind) {
     if (!care || !base || !care[kind]) return [];
     return care[kind].map((r) => ({ ...r, dist: meters(base, r), oi: openInfo(r.h) })).filter((r) => r.dist <= 30000)
@@ -136,8 +140,8 @@
       <div class="pi-here-row"><button type="button" class="pi-here" data-locate>📍 현재 위치로 보기</button>${msg ? `<span class="pi-status" role="status">${esc(msg)}</span>` : ""}</div>`;
     if (!base) return `${search}${tabs}<p class="pi-lead">현재 위치를 쓰거나 주소를 검색하면 가까운 곳을 보여드려요. 위치는 기기 안에서만 계산해요. 주소 검색은 네이버 지도로 처리돼요.</p>`;
     const rows = nearRows(tab);
-    const rowHTML = (r) => `<div class="pi-near"><span><b>${esc(r.n)}</b><small>${tab === "er" ? `${kmText(r.dist)} · ${esc(r.k || "응급의료기관")} · <i>가기 전 전화 확인 필요</i>` : `${kmText(r.dist)} · ${r.oi.today ? `오늘 ${r.oi.today}` : "오늘 시간 정보 없음"} · <i class="${r.oi.open ? "on" : ""}">${r.oi.has ? (r.oi.open ? "운영시간 이내 · 전화 확인 필요" : "운영시간 외 · 전화 확인 필요") : "전화 확인 필요"}</i>`}</small></span>
-        <span class="pi-near-act">${r.t ? `<a class="btn" href="tel:${esc(r.t.replace(/[^0-9+]/g, ""))}" aria-label="${esc(r.n)} 전화">📞</a>` : ""}<a class="btn" href="https://map.naver.com/p/search/${encodeURIComponent(r.n)}" target="_blank" rel="noopener" aria-label="${esc(r.n)} 지도에서 보기">🗺️</a></span></div>`;
+    const rowHTML = (r) => `<div class="pi-near"><span><b>${esc(r.n)}</b><small class="pi-addr">${esc(roadOf(r))}</small><small>${tab === "er" ? `${kmText(r.dist)} · ${esc(r.k || "응급의료기관")} · <i>가기 전 전화 확인 필요</i>` : `${kmText(r.dist)} · ${r.oi.today ? `오늘 ${r.oi.today}` : "오늘 시간 정보 없음"} · <i class="${r.oi.open ? "on" : ""}">${r.oi.has ? (r.oi.open ? "운영시간 이내 · 전화 확인 필요" : "운영시간 외 · 전화 확인 필요") : "전화 확인 필요"}</i>`}</small></span>
+        <span class="pi-near-act">${r.t ? `<a class="btn" href="tel:${esc(r.t.replace(/[^0-9+]/g, ""))}" aria-label="${esc(r.n)} 전화">📞</a>` : ""}<a class="btn" href="${esc(mapUrl(r))}" target="_blank" rel="noopener" aria-label="${esc(r.n)} 지도에서 보기">🗺️</a></span></div>`;
     const shut = rows.filter((r) => r.oi.has && !r.oi.open), live = rows.filter((r) => !(r.oi.has && !r.oi.open)); // 운영시간 외인 곳은 아래로 접는다
     return `${search}${tabs}<p class="pi-lead">${esc(base.label)} 기준 가까운 곳이에요. 운영시간 이내인 곳을 먼저 보여드려요.</p>
       ${rows.length ? live.map(rowHTML).join("") : `<p class="pi-lead">가까운 곳을 찾지 못했어요. 아래 공식 사이트에서 찾아보세요.</p>`}

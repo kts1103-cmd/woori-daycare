@@ -276,6 +276,24 @@
       if (w.length < 2) return [];
       return data.filter((d) => String(d.name).replace(/\s+/g, "").includes(w)).slice(0, n).map(snapOf);
     },
+    // 학부모 인증 등에서 어린이집 찾기: 선택한 지역과 상관없이 항상 전국, 이름·주소 모두 가능.
+    // 공백으로 나눈 낱말이 이름+주소에 모두 들어 있어야 한다(예: "강남 햇살"). 이름에 들어맞는 곳을 먼저 보여준다.
+    async searchAll(q, n = 8) {
+      const toks = String(q || "").trim().split(/\s+/).map((t) => t.replace(/\s+/g, "")).filter(Boolean);
+      const w = toks.join("");
+      if (w.length < 2) return [];
+      let rows; try { rows = (await loadAll()).rows; } catch { return []; }
+      const hit = [];
+      for (const d of rows) {
+        const name = String(d.name).replace(/\s+/g, ""), hay = name + String(d.addr || "").replace(/\s+/g, "");
+        if (!toks.every((t) => hay.includes(t))) continue;
+        const rank = name === w ? 0 : name.startsWith(w) ? 1 : name.includes(w) ? 2 : toks.every((t) => name.includes(t)) ? 3 : 4;
+        hit.push([rank, d]);
+        if (hit.length > 4000) break;
+      }
+      hit.sort((a, b) => a[0] - b[0] || String(a[1].name).localeCompare(String(b[1].name), "ko"));
+      return hit.slice(0, n).map(([, d]) => ({ ...snapOf(d), addr: d.addr || "" }));
+    },
     // 시작 흐름(onboarding.js)의 동네 선택: 시·도 목록, 시·군·구 목록, 바로 적용
     sidos: () => (index ? index.sidos.map((s) => s.sido) : []),
     async cities(sido) { const rows = await loadSido(sido); return [...new Set(rows.map((d) => d.city))].filter(Boolean).sort((a, b) => a.localeCompare(b, "ko")); },
