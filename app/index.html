@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
-<title>우리동네 어린이집</title>
+<title>새싹이네</title>
+<link rel="icon" type="image/png" href="img/app-icon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -39,7 +41,7 @@
   body { background:var(--bg); color:var(--text); font-family:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif; font-size:14px; display:flex; flex-direction:column; word-break:keep-all; -webkit-font-smoothing:antialiased; }
   button, input, select, textarea { font:inherit; }
   :focus-visible { outline:3px solid #B69548; outline-offset:2px; }
-  svg.i { width:20px; height:20px; stroke:currentColor; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  svg.i { width:20px; height:20px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none; filter:url(#sketchy); }
 
   header.app-header { padding:14px 20px 12px; background:var(--surface); }
   .brand-row { display:flex; align-items:center; gap:10px; }
@@ -172,6 +174,11 @@
   /* My page */
   .my-btn { margin-left:auto; display:inline-flex; align-items:center; gap:4px; height:36px; padding:0 12px 0 9px; border:1px solid var(--accent-soft); border-radius:99px; background:var(--accent-subtle); color:var(--accent-strong); font-family:var(--font-cute, inherit); font-size:14px; cursor:pointer; }
   .my-btn svg { width:18px; height:18px; }
+  /* 닉네임이 있으면 "My" 글자 대신 닉네임을 보여 줘 375px에서 헤더 폭을 지킨다 (aria-label에는 My 페이지가 남음) */
+  .my-btn.has-nick > span:not(.my-nick) { display:none; }
+  .my-btn.has-nick { gap:3px; padding:0 8px 0 8px; }
+  .brand-row:has(.my-btn.has-nick) .brand-mark { width:34px; height:34px; }
+  .my-nick { max-width:38px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:700; color:var(--accent-strong); }
   .brand-row .my-btn + .gear { margin-left:4px; }
   .fav-btn { margin-left:auto; color:var(--muted); }
   .fav-btn.on { color:#C2453A; } .fav-btn.on svg { fill:currentColor; }
@@ -473,6 +480,8 @@
   .seat.ok { background:var(--accent-subtle); color:var(--accent-strong); }
   .seat.few { background:var(--warn-soft); color:var(--warn); }
   .seat.full { background:var(--danger-soft); color:var(--danger); }
+  ol.rank .seat:has(small) { border-radius:14px; text-align:center; line-height:1.3; }
+  ol.rank .seat small { display:block; font-size:10px; font-weight:500; opacity:.8; }
   .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .tag { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:500; padding:4px 11px 4px 8px; border-radius:999px; background:var(--accent-subtle); color:var(--accent-strong); line-height:1.4; }
   .tag i { font-style:normal; font-size:16px; line-height:1; }
@@ -837,6 +846,85 @@
   html :is(#view-parenting,#view-hospital) .pi-cta { padding:0 4px; font-size:14px; font-weight:700; }
   /* 육아 정보: 가까운 병원·약국 (#piNear) */
   html :is(#view-parenting,#view-hospital) .pi-near-box { gap:10px; padding-bottom:14px; border-bottom:1px dashed var(--line); margin-bottom:2px; }
+  /* 목록 카드: 이름은 남는 폭을 채우고 하트는 같은 세로선(이름 칸 오른쪽 끝)에 맞춘다 */
+  ol.rank .t .name-row b { flex:1 1 auto; }
+  ol.rank .head { grid-template-columns:48px minmax(0,1fr) 124px; } /* 오른쪽 배지 칸을 고정해 하트가 모든 카드에서 같은 세로선에 서게 */
+  ol.rank .head > .side { justify-self:end; }
+  /* 목록 카드: 이름은 한 줄(넘치면 …), "관심" 버튼은 이름 바로 옆. 누르는 칸은 위아래로 넓혀 44px 이상 */
+  ol.rank .head { grid-template-columns:48px minmax(0,1fr) auto; column-gap:8px; } /* 오른쪽 현원/정원 칸은 내용만큼만 → 이름이 넓게 */
+  ol.rank .t .name-row { align-items:center; }
+  ol.rank .t .name-row b { flex:0 1 auto; display:block; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; -webkit-line-clamp:unset; -webkit-box-orient:unset; line-height:1.4; }
+  ol.rank .t .name-row .fav-mini { flex:none; position:relative; width:auto; height:28px; margin:0 0 0 6px; padding:0 9px 0 6px; display:inline-flex; align-items:center; gap:3px; border:1px solid var(--line); border-radius:99px; background:var(--surface); color:var(--muted); font-size:12px; font-weight:700; }
+  ol.rank .t .name-row .fav-mini::before { content:""; position:absolute; inset:-9px -3px; }
+  ol.rank .t .name-row .fav-mini svg { width:15px; height:15px; }
+  ol.rank .t .name-row .fav-mini.on { border-color:#F3C4C1; background:#FDECEA; color:#B3261E; }
+  ol.rank .t .name-row .fav-mini:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  /* 새싹 마스코트(크레용 그림) — 흰 종이 배경은 multiply로 앱 배경색에 섞는다. 큰 자리에만 쓴다 */
+  .brand-mark { border-radius:22%; object-fit:cover; }
+  html #onboard .ob-art { display:block; width:220px; height:220px; max-width:70%; object-fit:contain; mix-blend-mode:multiply; margin:0 auto; }
+  html #onboard .ob-art.sm { width:96px; height:96px; margin:4px 0 0; }
+  html #onboard .ob-hero .ob-art { position:relative; z-index:0; }
+  html #onboard .ob-hero::before { display:none; }
+  html #onboard .ob-art { border-radius:24px; }
+  html #onboard .ob-card .ob-ic, html #onboard .ob-card[data-stage] .ob-ic { width:72px !important; height:72px !important; background:none !important; border-radius:0 !important; font-size:0; }
+  html #onboard .ob-card .ob-ic img { display:block; width:72px; height:72px; object-fit:contain; mix-blend-mode:multiply; }
+  html #permIntro h2::before { content:""; width:88px; height:88px; margin-bottom:10px; border-radius:0; background:url("img/ob-notify.png") center/contain no-repeat; mix-blend-mode:multiply; }
+  html #alerts .al-empty::before, html #parentroom .pr-empty::before { content:""; display:block; width:96px; height:96px; margin:0 auto 10px; background:url("img/mascot-base.png") center/contain no-repeat; mix-blend-mode:multiply; }
+  /* 스케치 느낌 아이콘: 손으로 그린 듯한 흔들림(#sketchy) + 도톰한 선 + 은은한 색 채움 */
+  nav.tabs button svg { width:28px; height:28px; stroke-width:2; }
+  nav.tabs svg .f { fill:#E9F3EE; }
+  nav.tabs button[aria-selected="true"] svg .f { fill:#BFE3D5; stroke:var(--accent-strong); }
+  nav.tabs button[aria-selected="true"] svg { stroke-width:2.3; }
+  nav.tabs button:nth-child(1) svg .f { fill:#FBE4EE; } nav.tabs button:nth-child(2) svg .f { fill:#FBF1D6; } nav.tabs button:nth-child(3) svg .f { fill:#DDF3F1; }
+  nav.tabs button:nth-child(4) svg .f { fill:#ECE6F8; } nav.tabs button:nth-last-child(1) svg .f { fill:#E2F3D8; }
+  nav.tabs button[aria-selected="true"]:nth-child(1) svg .f { fill:#F5B8D0; } nav.tabs button[aria-selected="true"]:nth-child(2) svg .f { fill:#F5DEA0; } nav.tabs button[aria-selected="true"]:nth-child(3) svg .f { fill:#9FDAD3; }
+  nav.tabs button[aria-selected="true"]:nth-child(4) svg .f { fill:#C9BBEB; } nav.tabs button[aria-selected="true"]:nth-last-child(1) svg .f { fill:#B9E0A3; }
+  /* 이모지 칩: 손으로 오려 붙인 스티커처럼 살짝 비뚤어진 모양 */
+  .menu-ic, .mi-ic, .pi-ic, .al-ic, .ob-perks li > span:first-child { border-radius:58% 42% 55% 45% / 48% 56% 44% 52% !important; box-shadow:inset 0 0 0 1.5px rgba(36,92,82,.16); transform:rotate(-3deg); }
+  .menu-item:nth-child(even) .menu-ic, .mine-item:nth-child(even) .mi-ic, .pi-link:nth-child(even) .pi-ic { border-radius:44% 56% 46% 54% / 55% 45% 56% 44% !important; transform:rotate(2.5deg); }
+  /* 커뮤니티 주제 칩: 잘리지 않게 줄바꿈 */
+  /* 상세 필터 칩은 가로 스크롤 대신 여러 줄로 감싸 오른쪽이 잘리지 않게 */
+  .more-filters .chips { flex-wrap:wrap; overflow:visible; -webkit-mask-image:none; mask-image:none; }
+  .more-filters .chips { gap:8px; }
+  .more-filters .chips .chip { flex:1 1 calc(50% - 4px); min-width:0; max-width:100%; padding:0 10px; white-space:normal; line-height:1.25; justify-content:flex-start; } /* 두 칸씩 꽉 채우고, 마지막 줄이 홀수면 그 칸이 넓어짐 */
+  .more-filters select.chip { padding-right:30px; text-overflow:ellipsis; }
+  .more-filters .toolbar.tight { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } /* 선택 상자 4개는 2×2로 꽉 채움 */
+  .filter-reset { width:100%; min-height:44px; margin:10px 0 4px; border:1px solid var(--line); border-radius:99px; background:var(--surface); color:var(--accent-strong); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .filter-reset:disabled { opacity:.45; cursor:default; }
+  .filter-reset:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  .more-filters .toolbar.tight > select { width:100%; min-width:0; text-overflow:ellipsis; }
+  .chips.cm-cats { flex-wrap:wrap; overflow:visible; -webkit-mask-image:none; mask-image:none; }
+  /* ===== 전체 스케치 레이어: 앱 전체를 같은 손그림·스티커 느낌으로 ===== */
+  :root { --blob-a:58% 42% 55% 45% / 48% 56% 44% 52%; --blob-b:44% 56% 46% 54% / 55% 45% 56% 44%; --hand-1:18px 22px 17px 21px / 21px 17px 22px 18px; --hand-2:22px 17px 21px 18px / 17px 22px 18px 21px; }
+  /* 1) 아이콘 칩(이모지·마스코트): 비뚤어진 스티커 */
+  ol.rank .no.emo, .my-ic, .ob-ic, .tl-ic, .cm-avatar, .my-avatar, .photo-ic, .house-art { border-radius:var(--blob-a) !important; box-shadow:inset 0 0 0 1.5px rgba(36,92,82,.16); }
+  ol.rank > li:nth-child(even) .no.emo, .my-row:nth-child(even) .my-ic { border-radius:var(--blob-b) !important; }
+  ol.rank .no.emo { transform:rotate(-3deg); } ol.rank > li:nth-child(even) .no.emo { transform:rotate(2.5deg); }
+  /* 2) 카드·상자: 손으로 그린 듯한 살짝 다른 모서리 + 아래쪽이 도톰한 크레용 선 */
+  ol.rank > li, .card, .pi-card, .cm-card, .mine-item, .menu-group, .my-dc, .my-sec, .rating-summary, .facts, .tl-card, .cm-post, .pr-post, .al-item, .my-child, .my-compare-cta { border-radius:var(--hand-1); }
+  ol.rank > li:nth-child(even), .cm-list > li:nth-child(even) .cm-card, .mine-list > :nth-child(even), .al-item:nth-of-type(even) { border-radius:var(--hand-2); }
+  ol.rank > li, .card, .pi-card, .cm-card, .mine-item, .pr-post, .al-item { border-bottom-width:3px; border-bottom-color:rgba(36,92,82,.18); }
+  /* 3) 칩·배지·버튼: 살짝 눌러 만든 스티커 느낌 */
+  .tag, .badge, .seat, .verified-badge { box-shadow:inset 0 0 0 1px rgba(36,92,82,.14); }
+  .chip { border-width:1.5px; }
+  .btn.primary, .cm-fab, .pi-go, .jp-go, .ob-main { box-shadow:0 3px 0 rgba(36,92,82,.35), 0 6px 14px rgba(36,92,82,.18); }
+  .btn.primary:active, .cm-fab:active, .ob-main:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(36,92,82,.35); }
+  /* 글줄 속 새싹이(👶·🤰 대체) */
+  img.sp { display:inline-block; width:1.5em; height:1.5em; vertical-align:-.4em; object-fit:contain; mix-blend-mode:multiply; }
+  .menu-ic img.sp, .mi-ic img.sp { width:38px; height:38px; vertical-align:0; }
+  .cm-same img.sp { width:22px; height:22px; vertical-align:-6px; margin-right:2px; }
+  .tl-age img.sp { width:24px; height:24px; vertical-align:-7px; }
+  .pi-card h3 img.sp { width:34px; height:34px; vertical-align:-10px; margin-right:2px; }
+  .pi-sup b img.sp { width:34px; height:34px; vertical-align:-10px; margin-right:2px; }
+  /* 할 일 배너: 이모지 대신 새싹이 */
+  .todo-banner .tb-ic { flex:none; width:52px; height:52px; display:grid; place-items:center; }
+  .todo-banner .tb-ic img { display:block; width:52px; height:52px; object-fit:contain; mix-blend-mode:multiply; }
+  /* 설정 하위 화면: 터치 영역 44px 이상 */
+  html #settings .danger-btn, html #settings .btn { min-height:44px; }
+  html #settings .segments button, html #settings .set-row .segments button { min-height:44px; height:44px; }
+  html #settings .set-seg button { min-height:44px; height:44px; }
+  html #settings .set-row.off { opacity:.55; }
+  html #settings button:focus-visible, html #settings select:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
   /* 병원 찾기 탭 칩: 잘리지 않게 2열 격자 */
   html :is(#view-parenting,#view-hospital) .pi-chips { display:grid; grid-template-columns:1fr 1fr; gap:8px; overflow:visible; padding:0; margin:0; }
   html :is(#view-parenting,#view-hospital) .pi-chips button { width:100%; justify-content:center; padding:0 8px; font-size:14px; white-space:nowrap; transition:border-color .15s; }
@@ -937,7 +1025,8 @@
   html #onboard .ob-hero::before { content:""; position:absolute; z-index:-1; top:50%; left:50%; width:300px; height:300px; transform:translate(-50%,-62%); border-radius:50%; background:radial-gradient(circle,var(--accent-soft) 0%,var(--accent-subtle) 55%,transparent 72%); }
   html #onboard .ob-hero .brand-mark { width:104px; height:104px; border-radius:30px; filter:drop-shadow(0 10px 20px rgba(36,92,82,.28)); }
   html #onboard .ob-hero h1 { font-size:34px; letter-spacing:-.5px; line-height:1.2; }
-  html #onboard .ob-hero .ob-lead { max-width:300px; font-size:15px; }
+  html #onboard .ob-hero .ob-lead { max-width:300px; font-size:17px; font-weight:500; line-height:1.7; color:var(--text); }
+  html #onboard .ob-em { color:var(--accent-strong); font-weight:700; padding:0 2px; background:linear-gradient(transparent 58%, #DDF1EA 58%); }
   html #onboard .ob-main { min-height:56px; box-shadow:0 6px 16px rgba(36,92,82,.22); }
   html #onboard .ob-main:hover:not(:disabled) { background:var(--accent-strong); }
   html #onboard .ob-main:disabled { box-shadow:none; }
@@ -980,7 +1069,8 @@
   html #permIntro .pi-go:hover { background:var(--accent-strong); }
   html #permIntro .pi-go:focus-visible { outline:3px solid #B69548; outline-offset:3px; }
   /* 알림 센터 (notify.js의 임시 CSS를 덮어씀) */
-  .brand-row .alert-btn { color:var(--accent-strong); margin-left:auto; }
+  .brand-row .alert-btn { color:var(--accent-strong); margin-left:4px; }
+  .brand-row .alert-btn + .gear { margin-left:4px; }
   .brand-row .alert-btn svg { width:22px; height:22px; }
   .brand-row .alert-btn .dot { top:-1px; right:-6px; min-width:18px; height:18px; padding:0 5px; font:700 12px/18px var(--font,inherit); border:2px solid var(--bg); box-sizing:content-box; background:var(--danger); }
   html #alerts .my-body { gap:0; }
@@ -1004,9 +1094,10 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="sketchy" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.8" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <header class="app-header">
-  <div class="brand-row"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#245C52"/><circle cx="29.5" cy="11" r="3.2" fill="#F5DEA0"/><path d="M8.5 20.5 20 11l11.5 9.5" fill="none" stroke="#DDF1EA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 31v-7.5" stroke="#DDF1EA" stroke-width="2.6" stroke-linecap="round"/><path d="M20 25.5c-4.6.3-6.6-2.2-6.6-5.2 4.3-.2 6.6 2 6.6 5.2Z" fill="#8FD6C4"/><path d="M20 24c.1-3.6 2.4-5.6 6.4-5.4-.1 3.4-2.4 5.6-6.4 5.4Z" fill="#DDF1EA"/></svg><h1 class="wordmark"><span class="wm-sub">우리동네</span><span class="wm-main">어린이집</span></h1><span class="badge">시제품</span>
-    <button type="button" class="my-btn" id="openMy" aria-label="My page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>My</span></button><button type="button" class="icon-button gear" id="openSettings" aria-label="설정"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
+  <div class="brand-row"><img class="brand-mark" src="img/app-icon.png" width="40" height="40" alt=""><h1 class="wordmark"><span class="wm-sub">어린이집·병원·육아</span><span class="wm-main">새싹이네</span></h1><span class="badge">시제품</span>
+    <button type="button" class="my-btn" id="openMy" aria-label="My page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>My</span><span class="my-nick" id="myNick" hidden></span></button><button type="button" class="icon-button gear" id="openSettings" aria-label="설정"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
   <p>민간 개발 앱이며 정부기관과 관련이 없습니다.</p>
 </header>
 <main>
@@ -1067,6 +1158,7 @@
           <option value="ratio">교직원당 아이 적은 순</option><option value="space">아이 1명당 공간 넓은 순</option><option value="name">이름 순</option><option value="wait" data-needs="waitTotal" hidden>등록대기 적은 순</option>
         </select>
       </div>
+      <button type="button" class="filter-reset" id="moreReset" disabled>↺ 상세 필터 초기화</button>
       </details>
     </div>
     <div class="view-row">
@@ -1150,7 +1242,7 @@
       <p class="note" style="margin:0">공식 기관의 안내로 연결돼요. 이 앱은 내용을 옮겨 싣지 않아요.</p>
       <div class="card">
         <div class="link-grid">
-          <a class="btn" href="https://www.childcare.go.kr/?menuno=293" target="_blank" rel="noopener">👶 월령별 성장·돌보기</a>
+          <a class="btn" href="https://www.childcare.go.kr/?menuno=293" target="_blank" rel="noopener"><img class="sp" src="img/sp-growth.png" alt=""> 월령별 성장·돌보기</a>
           <a class="btn" href="https://sooyusil.com/" target="_blank" rel="noopener">🍼 수유실 찾기</a>
           <a class="btn" href="https://www.childcare.go.kr/?menuno=215" target="_blank" rel="noopener">📢 어린이집 이용 불편신고</a>
         </div>
@@ -1182,13 +1274,13 @@
   </section>
 </main>
 <nav class="tabs" role="tablist" style="grid-template-columns:repeat(5,1fr)">
-  <button role="tab" aria-selected="true" data-view="view-map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>어린이집 찾기</span></button>
-  <button role="tab" aria-selected="false" data-view="view-mine"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9H4Z"/><path d="M12 20v-5M9.5 15.5c0-1.5 1-2.5 2.5-2.5s2.5 1 2.5 2.5"/></svg><span>나의 어린이집</span></button>
-  <button role="tab" aria-selected="false" data-view="view-hospital"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg><span>병원 찾기</span></button>
-  <button role="tab" aria-selected="false" data-view="view-community"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h13v9H8l-5 4Z"/><path d="M19 9h2v10l-3-2.5h-8V15"/></svg><span>커뮤니티</span></button>
+  <button role="tab" aria-selected="true" data-view="view-map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 21.5s-6.8-5.8-6.8-11.2a6.8 6.8 0 0 1 13.6 0c0 5.400-6.800 11.200-6.800 11.200z"/><circle cx="12" cy="10.2" r="2.6" fill="var(--surface)"/></svg><span>어린이집 찾기</span></button>
+  <button role="tab" aria-selected="false" data-view="view-mine"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M3.8 11.6 12 4.2l8.200 7.400V20H3.800z"/><path d="M12 20v-4.200"/><path d="M12 15.800c-2.400 0-3.400-1.400-3.400-3 2.400 0 3.400 1.200 3.400 3zM12 15.800c2.200 0 3.200-1.200 3.200-2.800-2.200 0-3.200 1-3.200 2.800z" fill="var(--surface)"/></svg><span>나의 어린이집</span></button>
+  <button role="tab" aria-selected="false" data-view="view-hospital"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect class="f" x="3.800" y="3.800" width="16.400" height="16.400" rx="5"/><path d="M12 8v8M8 12h8" stroke-width="2.800"/></svg><span>병원 찾기</span></button>
+  <button role="tab" aria-selected="false" data-view="view-community"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 4.800h13a1.200 1.200 0 0 1 1.200 1.200v7.200a1.200 1.200 0 0 1-1.200 1.200H9.600L5.200 18v-3.600H4A1.200 1.200 0 0 1 2.800 13.200V6A1.200 1.200 0 0 1 4 4.800z"/><path d="M19.400 9.400h.8a1 1 0 0 1 1 1v8.400l-2.800-2.200h-6.600a1 1 0 0 1-1-1v-.6"/><path d="M7 9.600h.01M10.500 9.600h.01M14 9.600h.01" stroke-width="2.600"/></svg><span>커뮤니티</span></button>
   <button role="tab" hidden aria-selected="false" data-view="view-guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg><span>입소 가이드</span></button>
   <button role="tab" hidden aria-selected="false" data-view="view-violation"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="M12 8v5M12 17h.01"/></svg><span>위반시설·<wbr>행위자</span></button>
-  <button role="tab" aria-selected="false" data-view="view-menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg><span>전체메뉴</span></button>
+  <button role="tab" aria-selected="false" data-view="view-menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect class="f" x="3.800" y="3.800" width="7" height="7" rx="2.400"/><rect class="f" x="13.200" y="3.800" width="7" height="7" rx="2.400"/><rect class="f" x="3.800" y="13.200" width="7" height="7" rx="2.400"/><rect class="f" x="13.200" y="13.200" width="7" height="7" rx="2.400"/></svg><span>전체메뉴</span></button>
 </nav>
 <section id="settings" aria-label="설정" hidden></section>
 <dialog id="sheet" aria-label="길찾기 방법 선택"></dialog>
@@ -1214,8 +1306,10 @@
 <script>
 /* 상세 필터 개수 표시 (접힌 상태에서도 켜진 필터를 알 수 있게) */
 (function(){var d=document.getElementById('moreFilters'),c=document.getElementById('moreCount');if(!d||!c)return;
-function u(){var n=d.querySelectorAll('input:checked').length;d.querySelectorAll('select').forEach(function(s){if(s.value&&s.id!=='sort')n++});c.textContent=n;c.hidden=!n}
-d.addEventListener('input',u);d.addEventListener('change',u);setTimeout(u,0)})();
+function u(){var n=d.querySelectorAll('input:checked').length;d.querySelectorAll('select').forEach(function(s){if(s.value&&s.id!=='sort')n++});c.textContent=n;c.hidden=!n;var r=document.getElementById('moreReset');if(r)r.disabled=!n}
+d.addEventListener('input',u);d.addEventListener('change',u);setTimeout(u,0);
+/* 상세 필터 초기화: 체크·선택을 모두 비운다(정렬은 필터가 아니라 그대로). 목록은 첫 칸의 change 한 번으로 다시 그린다 */
+var rb=document.getElementById('moreReset');if(rb)rb.addEventListener('click',function(){d.querySelectorAll('input:checked').forEach(function(i){i.checked=false});d.querySelectorAll('select').forEach(function(s){if(s.id!=='sort')s.value=''});var f=document.getElementById('fSeat');if(f)f.dispatchEvent(new Event('change',{bubbles:true}));rb.focus()})})();
 </script>
 </body>
 </html>

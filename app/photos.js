@@ -59,5 +59,8 @@
       return rows.length;
     },
     async remove(id) { await tx("readwrite", (s) => s.delete(id)); },
+    // 설정(settings.js): 이 기기에 저장된 사진 수 / 모두 지우기
+    async count() { try { const n = await tx("readonly", (s) => s.count()); return typeof n === "number" ? n : 0; } catch { return 0; } },
+    async clearAll() { try { await tx("readwrite", (s) => s.clear()); return true; } catch { return false; } },
   };
 })();

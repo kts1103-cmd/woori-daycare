@@ -1,5 +1,5 @@
 // 알림 센터 + 규칙 엔진 (앱개발). 모든 계산은 이 기기 안에서만 하고 서버로 보내지 않는다.
-// 종류: schedule(입소·지원 일정, 공식 안내 날짜만) · capacity(정원 여유) · wait(등록대기, 데이터 생기면) · activity(서버 필요, 준비 중)
+// 종류: schedule(입소·지원 일정, 공식 안내 날짜만) · checkup(영유아 건강검진) · note(내가 적어 둔 일정) · capacity(정원 여유) · wait(등록대기, 데이터 생기면) · activity(서버 필요, 준비 중)
 // 저장: localStorage "notify:v1" {read:{id:ts}, seen:{id:ts}, events:[], favBase:{key:{left,wait}}, lastFav:"YYYYMMDD"}
 (function () {
   const KEY = "notify:v1";
@@ -10,7 +10,7 @@
   const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch {} };
   const my = () => { try { return Object.assign({ favs: [], child: null, tasks: {} }, JSON.parse(localStorage.getItem("my:v1") || "{}")); } catch { return { favs: [], child: null, tasks: {} }; } };
   const cfg = () => (window.APP_SETTINGS ? APP_SETTINGS.get() : {});
-  const ON = { schedule: "notifySchedule", capacity: "notifyCapacity", wait: "notifyWait", mine: "notifyMine" };
+  const ON = { schedule: "notifySchedule", checkup: "notifyCheckup", capacity: "notifyCapacity", wait: "notifyWait", mine: "notifyMine", note: "notifyNotes" };
   const LINK = { wait: "https://www.childcare.go.kr/?menuno=175", waitStatus: "https://www.childcare.go.kr/?menuno=178", bokjiro: "https://www.bokjiro.go.kr/" };
   const SRC_LINE = "아이사랑·복지로·국민건강보험공단 안내 기준(2026.10)";
 
@@ -43,8 +43,8 @@
       out.push({ id: `benefit-${c.child.year}${c.child.month}-${c.months}`, kind: "schedule", ic: "📝", title: c.months === 0 ? "출생 후 60일 안에 신청해요" : "신청 기한(출생 후 60일)이 가까워요", body: "부모급여·아동수당은 출생 후 60일 이내에 신청하면 출생한 달부터 받을 수 있어요. 복지로·주민센터에서 신청해요.", link: LINK.bokjiro });
     // 5) 영유아 건강검진 시기 (시작 달 · 마지막 달)
     CHECKUP.forEach(([n, a, b, label]) => {
-      if (c.months === a) out.push({ id: `checkup-${n}-start-${c.child.year}${c.child.month}`, kind: "schedule", ic: "🩺", title: `${n}차 영유아 건강검진 시기예요`, body: `${label}. 지정 검진기관에서 받을 수 있어요. 대상 여부는 국민건강보험공단(1577-1000)에서 확인해요.`, link: "https://www.nhis.or.kr/" });
-      else if (b != null && b > a && c.months === b) out.push({ id: `checkup-${n}-end-${c.child.year}${c.child.month}`, kind: "schedule", ic: "🩺", title: `${n}차 영유아 건강검진, 이번 달이 마지막이에요`, body: `${label} 시기예요. 아직이라면 지정 검진기관을 확인해요.`, link: "https://www.nhis.or.kr/" });
+      if (c.months === a) out.push({ id: `checkup-${n}-start-${c.child.year}${c.child.month}`, kind: "checkup", ic: "🩺", title: `${n}차 영유아 건강검진 시기예요`, body: `${label}. 지정 검진기관에서 받을 수 있어요. 대상 여부는 국민건강보험공단(1577-1000)에서 확인해요.`, link: "https://www.nhis.or.kr/" });
+      else if (b != null && b > a && c.months === b) out.push({ id: `checkup-${n}-end-${c.child.year}${c.child.month}`, kind: "checkup", ic: "🩺", title: `${n}차 영유아 건강검진, 이번 달이 마지막이에요`, body: `${label} 시기예요. 아직이라면 지정 검진기관을 확인해요.`, link: "https://www.nhis.or.kr/" });
     });
     return out;
   }
@@ -103,7 +103,7 @@
       if (e.done || !/^\d{4}-\d\d-\d\d$/.test(e.date || "")) return;
       const [y, mo, d] = e.date.split("-").map(Number), diff = Math.round((new Date(y, mo - 1, d).getTime() - day0) / DAY);
       if (diff !== 0 && diff !== 1) return;
-      out.push({ id: `mev-${e.id}-${diff}`, kind: "mine", ic: "🗓️", title: `${diff ? "내일" : "오늘"}: ${esc(e.title)}`, body: e.items ? `준비물: ${esc(e.items)}` : "나의 어린이집에 적어 둔 일정이에요.", open: "mine" });
+      out.push({ id: `mev-${e.id}-${diff}`, kind: "note", ic: "🗓️", title: `${diff ? "내일" : "오늘"}: ${esc(e.title)}`, body: e.items ? `준비물: ${esc(e.items)}` : "나의 어린이집에 적어 둔 일정이에요.", open: "mine" });
     });
     return out;
   }
@@ -127,7 +127,7 @@
   function ensureUI() {
     if (!document.getElementById("alertsCss")) {
       const css = document.createElement("style"); css.id = "alertsCss";
-      css.textContent = `.alert-btn{position:relative;margin-left:auto}.alert-btn + .my-btn{margin-left:4px}.alert-btn .dot{position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--danger);color:#fff;font:700 10px/16px var(--font,inherit);text-align:center}
+      css.textContent = `.alert-btn{position:relative;margin-left:4px}.alert-btn .dot{position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--danger);color:#fff;font:700 10px/16px var(--font,inherit);text-align:center}
 #alerts .al-item{display:flex;gap:12px;align-items:flex-start;width:100%;min-height:44px;padding:12px 14px;margin:0 0 8px;border:1px solid var(--line);border-radius:var(--r16,16px);background:var(--surface);color:var(--text);text-align:left;cursor:pointer;font:inherit}
 #alerts .al-item.unread{background:var(--accent-subtle);border-color:var(--accent-soft)}#alerts .al-ic{font-size:22px;line-height:1.2}#alerts .al-item b{display:block;font-size:15px}#alerts .al-item small{display:block;margin-top:2px;color:var(--muted);font-size:13px;line-height:1.45}
 #alerts .al-empty{padding:32px 12px;text-align:center;color:var(--muted)}#alerts .al-set{margin:4px 0 12px;border:0;background:none;color:var(--accent-strong);text-decoration:underline;font:inherit;cursor:pointer;min-height:44px}`;
@@ -138,8 +138,8 @@
       if (row && my) {
         const b = document.createElement("button"); b.type = "button"; b.id = "openAlerts"; b.className = "icon-button alert-btn";
         b.innerHTML = `${svg('<path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/>')}<span class="dot" hidden></span>`;
-        b.addEventListener("click", open); row.insertBefore(b, my);
-        my.style.marginLeft = "4px";
+        b.addEventListener("click", open); row.insertBefore(b, my.nextSibling); // My 버튼 오른쪽(설정 아이콘 앞)
+        my.style.marginLeft = "auto";
       }
     }
     if (!root) {
@@ -150,8 +150,10 @@
   }
   function badge() {
     const b = $("openAlerts"); if (!b) return;
-    const n = unread(), dot = b.querySelector(".dot");
-    dot.hidden = !n; dot.textContent = n > 9 ? "9+" : n;
+    const s = cfg(), n = unread(), dot = b.querySelector(".dot");
+    const h = new Date().getHours(), qf = Number(s.quietFrom ?? 21), qt = Number(s.quietTo ?? 8);
+    const quiet = !!s.quietOn && (qf === qt ? false : qf < qt ? h >= qf && h < qt : h >= qf || h < qt); // 조용한 시간: 배지 숫자만 숨기고 목록에는 그대로 쌓인다
+    dot.hidden = !n || s.badgeOn === false || quiet; dot.textContent = n > 9 ? "9+" : n;
     b.setAttribute("aria-label", n ? `알림 ${n}개 새로 왔어요` : "알림");
   }
   function render() {
@@ -196,5 +198,5 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
   window.addEventListener("my:changed", refresh);
   window.addEventListener("storage", refresh);
-  if (window.APP_SETTINGS) APP_SETTINGS.onChange((k) => { if (/^notify/.test(k)) refresh(); });
+  if (window.APP_SETTINGS) APP_SETTINGS.onChange((k) => { if (/^(notify|badgeOn|quiet)/.test(k)) refresh(); });
 })();

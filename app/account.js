@@ -46,7 +46,7 @@
   }
   function step1() {
     root.innerHTML = `${header("회원가입")}<div class="my-body">${steps(1)}
-      <section class="join-hero"><b>우리동네 어린이집에 오신 걸 환영해요</b><p>가입하면 <b>인증 학부모 평가</b>를 남기고, 관심 어린이집과 아이 정보를 다른 기기에서도 이어서 볼 수 있어요.</p></section>
+      <section class="join-hero"><b>새싹이네에 오신 걸 환영해요</b><p>가입하면 <b>인증 학부모 평가</b>를 남기고, 관심 어린이집과 아이 정보를 다른 기기에서도 이어서 볼 수 있어요.</p></section>
       <button class="join-btn kakao" data-soon>카카오로 시작하기</button>
       <button class="join-btn naver" data-soon>네이버로 시작하기</button>
       <button class="join-btn apple" data-soon>Apple로 시작하기</button>
@@ -261,5 +261,19 @@
   function logout() { write(null); toast("로그아웃했어요. (시제품: 이 기기의 가입 정보를 지웠어요)"); }
 
   const METHOD_LABEL = { isarang_pay: "아이사랑 결제현황", kidsnote: "키즈노트" };
-  window.ACCOUNT = { get, isMember, verifiedFor, pendingFor, approve, openSignup, openVerify, removeVerification, logout, METHOD_LABEL };
+  // 설정(settings.js): 닉네임 바꾸기(2~12자) · 탈퇴(가입·인증·평가 삭제). 시제품이라 이 기기 데이터만 지운다
+  function update(patch) {
+    const a = read(); if (!a) return false;
+    if (patch && typeof patch.nick === "string") {
+      const n = patch.nick.trim(); if (n.length < 2 || n.length > 12) return false;
+      a.nick = n;
+    }
+    write(a); return true;
+  }
+  function withdraw() {
+    try { localStorage.removeItem("ratings:v1"); } catch {}
+    write(null); // account:v1 삭제 + account:changed
+    window.dispatchEvent(new Event("ratings:changed"));
+  }
+  window.ACCOUNT = { update, withdraw, get, isMember, verifiedFor, pendingFor, approve, openSignup, openVerify, removeVerification, logout, METHOD_LABEL };
 })();

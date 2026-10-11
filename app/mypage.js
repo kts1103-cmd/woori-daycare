@@ -37,7 +37,7 @@
     return !on;
   }
   function bindFav(btn, snap) {
-    const paint = (on) => { btn.classList.toggle("on", on); btn.setAttribute("aria-pressed", on); btn.setAttribute("aria-label", on ? "관심 어린이집에서 빼기" : "관심 어린이집에 담기"); };
+    const paint = (on) => { btn.classList.toggle("on", on); btn.setAttribute("aria-pressed", on); btn.setAttribute("aria-label", on ? "관심 어린이집에서 빼기" : "관심 어린이집에 담기"); const l = btn.querySelector(".fav-lbl"); if (l) l.textContent = on ? "관심 중" : "관심"; };
     paint(isFav(snap.key));
     btn.addEventListener("click", () => paint(toggleFav(snap)));
   }
@@ -109,7 +109,7 @@
           <span class="my-avatar">${svg(I.user)}</span>
           ${acc ? `<div><b>${esc(acc.nick)}</b><small>${(acc.verifications || []).length ? `<span class="verified-badge">✔ 인증 어린이집 ${(acc.verifications || []).length}곳</span>` : "학부모 인증 전 · 평가하려면 인증이 필요해요"}</small></div>
           <button class="btn my-login" type="button" data-go="verify">인증 관리</button>`
-          : `<div><b>${esc(cm.nick || "우리동네 부모님")}</b><small>가입 전 · 이 기기에 저장된 정보만 보여요</small></div>
+          : `<div><b>${esc(cm.nick || "새싹이네 부모님")}</b><small>가입 전 · 이 기기에 저장된 정보만 보여요</small></div>
           <button class="btn my-login primary" type="button" data-join>회원가입</button>`}
         </section>
         <button class="my-child" data-go="child">
@@ -145,11 +145,20 @@
         <p class="src">시제품: My 정보는 이 기기에만 저장돼요. 로그인은 서버 연결 후 제공돼요.</p>
       </div>`;
     bindCommon();
+    { // 프로필(아바타·닉네임)을 누르면 설정의 프로필 화면
+      const pf = root.querySelector(".my-profile"), who = pf && pf.querySelector("div");
+      if (who && window.APP_SETTINGS && APP_SETTINGS.open) {
+        who.setAttribute("role", "button"); who.setAttribute("tabindex", "0"); who.setAttribute("aria-label", "프로필 보기");
+        const go = () => { close(); history.replaceState(null, "", location.pathname); APP_SETTINGS.open("profile"); };
+        [pf.querySelector(".my-avatar"), who].forEach((el) => { if (el) { el.style.cursor = "pointer"; el.addEventListener("click", go); } });
+        who.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      }
+    }
     root.querySelector("[data-timeline]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); window.TIMELINE && TIMELINE.open(); });
     root.querySelector("[data-join]")?.addEventListener("click", () => window.ACCOUNT && ACCOUNT.openSignup({ onDone: () => render() }));
     root.querySelector("[data-logout]")?.addEventListener("click", () => { if (!confirm("로그아웃할까요? (시제품: 이 기기의 가입·인증 정보가 지워져요)")) return; ACCOUNT.logout(); render(); });
     root.querySelector("[data-parenting]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); window.openParenting && window.openParenting(); });
-    root.querySelector("[data-settings]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); $("openSettings")?.click(); });
+    root.querySelector("[data-settings]").addEventListener("click", () => { close(); history.replaceState(null, "", location.pathname); window.APP_SETTINGS && APP_SETTINGS.open ? APP_SETTINGS.open() : $("openSettings")?.click(); });
     root.querySelector("[data-policy-link]").addEventListener("click", (e) => {
       e.preventDefault(); close(); history.replaceState(null, "", location.pathname);
       document.querySelector('nav.tabs [data-view="view-community"]')?.click();

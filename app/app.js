@@ -193,6 +193,11 @@
     const level = (n ?? d.waitTotal) === 0 ? "ok" : (n ?? d.waitTotal) >= 10 ? "many" : "";
     return `<span class="tag wait ${level}${n != null ? " mine" : ""}" title="아이사랑 등록대기 아동 수 (정보공개포털 기준)"><i aria-hidden="true">⏳</i>${text}</span>`;
   }
+  // 목록 카드 오른쪽 칸: 현원/정원 (공시 원문 숫자). 색은 꽉 참·거의 참 기준(seat)을 그대로 쓴다. 등록대기는 아래 줄 배지(waitBadge)로 데이터가 오면 따로 나온다
+  function countSide(d) {
+    if (!d.capacity || d.current == null) return { cls: "", text: "정보 없음", title: "현원·정원 정보가 없어요" };
+    return { cls: seat(d).cls, text: `<small>현원/정원</small>${d.current}/${d.capacity}명`, title: "현원/정원 (어린이집정보공개포털 기준, 실시간 빈자리가 아니에요)" };
+  }
   const seatsLeft = (d) => (d.capacity && d.current != null ? d.capacity - d.current : null);
   const ratioOf = (d) => (d.staff && d.current ? d.current / d.staff : null);
   const spaceOf = (d) => (d.area && d.current ? d.area / d.current : null);
@@ -247,6 +252,12 @@
 
 
   // 목록용 지역: 주소 앞부분에서 시·도 + 시·군·구(+ 일반구)까지. 예) 경상북도 포항시 북구, 부산광역시 남구
+  // 목록 카드용 주소: 시·도는 빼고 도로명 번호까지 (동·호수·괄호는 상세에서). 도로명 형식을 못 찾으면 시·도 뺀 주소 앞부분
+  const roadOf = (d) => {
+    let t = String(d.addr || "").trim().replace(/^\S+\s+/, "").replace(/\s*[,(].*$/, "").trim(); // 시·도 제거, 쉼표·괄호 이하 제거
+    const m = t.match(/^(.*?\S(?:로|길)(?:\d+번?길)?\s*\d+(?:-\d+)?)(?=\s|$)/);
+    return (m ? m[1] : t) || areaOf(d);
+  };
   const areaOf = (d) => {
     const parts = String(d.addr || "").trim().split(/\s+/);
     const out = parts.length ? [parts[0]] : [];
@@ -601,14 +612,14 @@
     $("count").textContent = area ? `지도 화면 안 어린이집 ${all.length.toLocaleString()}곳 (지도 가운데에서 가까운 순)` : `조건에 맞는 어린이집 ${all.length.toLocaleString()}곳`;
     renderPager(pages);
     $("list").innerHTML = list.length ? list.map((d, i) => {
-      const s = seat(d);
+      const s = countSide(d);
       return `
       <li data-id="${d.id}">
         <div class="head" role="button" tabindex="0" aria-label="${esc(d.name)} 상세 보기">
           <span class="no-col"><span class="no emo" data-t="${typeKey(d)}" aria-hidden="true">${emojiOf(d)}</span><span class="no-type" data-t="${typeKey(d)}">${esc(typeShort(d))}</span></span>
-          <span class="t"><span class="name-row"><b>${esc(d.name)}</b>${window.MYPAGE ? `<button type="button" class="fav-mini" data-fav aria-pressed="false" aria-label="${esc(d.name)} 관심 담기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg></button>` : ""}</span><small class="area">${esc(areaOf(d))}</small>${d.dist != null || d.geocoded ? `<small>${[d.dist != null ? `${d.geocoded ? "약 " : ""}${fmt(d.dist)}` : "", d.geocoded ? '<span class="geo-mini" title="주소로 찾은 위치">주소 기준 위치</span>' : ""].filter(Boolean).join(" · ")}</small>` : ""}${waitBadge(d) ? `<span class="wait-line">${waitBadge(d)}</span>` : ""}
+          <span class="t"><span class="name-row"><b>${esc(d.name)}</b>${window.MYPAGE ? `<button type="button" class="fav-mini" data-fav aria-pressed="false" aria-label="${esc(d.name)} 관심 담기"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg><span class="fav-lbl" aria-hidden="true">관심</span></button>` : ""}</span><small class="area" title="${esc(d.addr || "")}">${esc(roadOf(d))}</small>${d.dist != null || d.geocoded ? `<small>${[d.dist != null ? `${d.geocoded ? "약 " : ""}${fmt(d.dist)}` : "", d.geocoded ? '<span class="geo-mini" title="주소로 찾은 위치">주소 기준 위치</span>' : ""].filter(Boolean).join(" · ")}</small>` : ""}${waitBadge(d) ? `<span class="wait-line">${waitBadge(d)}</span>` : ""}
 </span>
-          <span class="side"><span class="seat ${s.cls}">${s.text}</span></span>
+          <span class="side"><span class="seat ${s.cls}" title="${esc(s.title)}">${s.text}</span></span>
           ${rbOf(d) || ratioOf(d) || tenureOf(d) != null || tagsOf(d) ? `<span class="tags">${rbOf(d)}${ratioOf(d) ? `<span class="tag stat"><i aria-hidden="true">🧑‍🏫</i>교직원당 아이 <em>${ratioOf(d).toFixed(1)}명</em></span>` : ""}${tenureTag(d)}${tagsOf(d)}</span>` : ""}
         </div>
       </li>`;
@@ -949,6 +960,7 @@
   }
   document.querySelectorAll(".segments [data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   // 첫 화면은 목록 (지도는 버튼으로 전환)
+  if (window.APP_SETTINGS && APP_SETTINGS.get().listMode === "map") setMode("map"); // 설정: 어린이집 목록 기본 보기
 
   if (location.hash === "#detail") history.replaceState(null, "", location.pathname + location.search);
 
@@ -977,5 +989,8 @@
     await selectSido(start);
     if (start && pref.defaultCity && data.some((d) => d.city === pref.defaultCity)) { $("sigungu").value = pref.defaultCity; render(); }
     updateRegionLabel();
+    // 설정: 처음 열 탭 (주소에 #해시가 있으면 그쪽이 우선)
+    const stab = pref.startTab;
+    if (stab && stab !== "view-map" && !location.hash) document.querySelector(`nav.tabs [data-view="${stab}"]`)?.click();
   })();
 })();

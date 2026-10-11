@@ -13,14 +13,14 @@
   const km = (m) => (m == null ? "" : m < 1000 ? `${Math.round(m / 10) * 10}m` : `${(m / 1000).toFixed(1)}km`);
   const LINK = { info: "https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp", isarang: "https://www.childcare.go.kr/", hourly: "https://www.childcare.go.kr/?menuno=242", iseoulSvc: "https://iseoul.seoul.go.kr/portal/reservation/guide.do" };
   const view = () => $("view-mine");
-  let picking = false, nearCache = null;
+  let picking = false, nearCache = null, nearBase = null; // nearBase: 내가 고른 기준 위치 {lat,lng,label}, 없으면 나의 어린이집
 
   // ---- 광고 1개 ("급할 때 맡길 곳" 위). 광고임을 항상 표시(표시·광고법). 실제 광고는 window.MINE_ADS = [{brand,title,body,url}]로 채우고, 없으면 자리표시.
   // 커뮤니티 광고(community.js)와 같은 모양(.cm-ad)을 쓴다. 지역·어린이집 정보로 타기팅하지 않는다(개인정보 최소).
-  const ADS = [{ brand: "광고 자리", title: "여기에 광고가 들어가요", body: "나의 어린이집 화면에 하나만 보여요. 시제품 자리표시예요.", url: "" }];
-  function adHTML() {
+  const ADS = [{ brand: "광고 자리", title: "여기에 광고가 들어가요", body: "나의 어린이집 화면에 들어가는 광고 자리예요. 시제품 자리표시예요.", url: "" }];
+  function adHTML(n = 0) { // n: 같은 화면에서 여러 번 나올 때 다음 광고로 넘어가는 순서
     const list = Array.isArray(window.MINE_ADS) && window.MINE_ADS.length ? window.MINE_ADS : ADS;
-    const a = list[Math.floor(Date.now() / 864e5) % list.length]; // 하루에 하나씩 돌아가며
+    const a = list[(Math.floor(Date.now() / 864e5) + n) % list.length]; // 하루에 하나씩 돌아가며
     const ok = /^https?:\/\//i.test(a.url || "");
     const inner = `<span class="cm-ad-tag">광고</span><span class="cm-ad-brand">${esc(a.brand || "")}</span><b class="cm-ad-title">${esc(a.title)}</b><span class="cm-ad-body">${esc(a.body || "")}</span>`;
     return ok ? `<a class="cm-ad mine-ad" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer sponsored" aria-label="광고: ${esc(a.title)}">${inner}</a>` : `<div class="cm-ad mine-ad" role="note" aria-label="광고: ${esc(a.title)}">${inner}</div>`;
@@ -69,7 +69,7 @@
 
   function setMine(s) {
     const v = read(); v.mine = s ? { key: s.key, sido: s.sido, name: s.name, type: s.type, area: s.area } : null; write(v);
-    picking = false; nearCache = null; render();
+    picking = false; nearCache = null; nearBase = null; render();
   }
 
   function pickHTML(v) {
@@ -137,17 +137,19 @@
         <button type="button" class="mine-item" data-alerts><span class="mi-ic" aria-hidden="true">🔔</span><span><b>알림${todo ? ` <em>${todo}개 새로 왔어요</em>` : ""}</b><small>입소 일정·관심 어린이집 변화</small></span><span aria-hidden="true">›</span></button>
       </div>
 
-      ${notesHTML()}
-
       ${adHTML()}
+
+      ${notesHTML()}
 
       ${seoul ? `<h3 class="mine-h">급할 때 맡길 곳</h3>
       <div id="mineNear"><p class="mine-lead">가까운 곳을 찾는 중…</p></div>` : `<h3 class="mine-h">급할 때 맡길 곳</h3>
       <p class="mine-lead">서울시 특화 보육 정보는 서울만 있어요. 다른 지역은 아이사랑 웹이나 앱에서 시간제 보육을 신청할 수 있어요.</p>
       <a class="mine-item" href="${LINK.hourly}" target="_blank" rel="noopener"><span class="mi-ic" aria-hidden="true">⏱️</span><span><b>아이사랑 시간제 보육 신청</b><small>필요한 시간만 맡기는 시간제 보육은 아이사랑 웹이나 앱에서 신청해요. 휴대폰에서는 웹·앱을 골라 열 수 있어요. 지역·기관마다 조건이 달라요.</small></span><span aria-hidden="true">↗</span></a>`}
 
-      <p class="src-line">출처: 어린이집정보공개포털(한국사회보장정보원)${seoul ? ` · 서울시 특화 보육: 서울 열린데이터광장(공공누리 1유형) · 기준일 <span id="mineBasis"></span>` : ""}</p>
-      ${seoul ? `<p class="src">이용 조건은 서울시 보육포털 안내 기준(2026.10)이에요. 예약 전 보육포털에서 다시 확인하세요.</p>` : ""}
+      <footer class="mine-foot">
+        ${seoul ? `<ul><li>이용 조건은 서울시 보육포털 안내 기준(2026.10)이에요. 예약 전 보육포털에서 다시 확인하세요.</li><li>당일 취소·노쇼가 4회 쌓이면 그달 예약이 막혀요.</li></ul>` : ""}
+        <p class="src-line">출처: 어린이집정보공개포털(한국사회보장정보원)${seoul ? ` · 서울시 특화 보육: 서울 열린데이터광장(공공누리 1유형) · 기준일 <span id="mineBasis"></span>` : ""}</p>
+      </footer>
     </div>`;
     el.querySelector("[data-change]").addEventListener("click", () => { picking = true; render(); });
     el.querySelector("[data-detail]").addEventListener("click", () => APP.openByKey(m.sido, m.key));
@@ -161,30 +163,71 @@
 
   async function renderNear(d) {
     const box = $("mineNear"); if (!box) return;
-    if (!d.lat || !d.lng) { box.innerHTML = `<p class="mine-lead">위치 정보가 없어 가까운 곳을 찾지 못했어요.</p>`; return; }
-    let list = nearCache;
-    try { if (!list) list = nearCache = await APP.seoulSvcNear(d.lat, d.lng, 8); } catch { list = []; }
+    const mineBase = d.lat && d.lng ? { lat: d.lat, lng: d.lng, label: `${d.name} 근처` } : null;
+    const baseNow = nearBase || mineBase;
+    if (!baseNow) { box.innerHTML = `<p class="mine-lead">위치 정보가 없어 가까운 곳을 찾지 못했어요. 아래에서 위치를 검색해 보세요.</p>${searchHTML(null)}`; bindSearch(d); return; }
+    const key = `${baseNow.lat.toFixed(4)},${baseNow.lng.toFixed(4)}`;
+    let list = nearCache && nearCache.key === key ? nearCache.list : null;
+    try { if (!list) { list = await APP.seoulSvcNear(baseNow.lat, baseNow.lng, 8); nearCache = { key, list }; } } catch { list = []; }
     const basis = $("mineBasis"); if (basis) basis.textContent = APP.seoulSvcBasis() || "-";
     const S = APP.SEOUL_SVC || {};
-    if (!list.length) { box.innerHTML = `<p class="mine-lead">서울시 특화 보육 정보를 불러오지 못했어요.</p><a class="mine-item" href="${LINK.iseoulSvc}" target="_blank" rel="noopener"><span class="mi-ic">🔎</span><span><b>서울시 보육포털에서 찾기</b></span><span aria-hidden="true">↗</span></a>`; return; }
+    if (!list.length) { box.innerHTML = `${searchHTML(baseNow)}<p class="mine-lead">서울시 특화 보육 정보를 불러오지 못했어요.</p><a class="mine-item" href="${LINK.iseoulSvc}" target="_blank" rel="noopener"><span class="mi-ic">🔎</span><span><b>서울시 보육포털에서 찾기</b></span><span aria-hidden="true">↗</span></a>`; bindSearch(d); return; }
+    const far = list[0] && list[0].dist != null && list[0].dist > 15000;
     box.innerHTML = `
+      ${searchHTML(baseNow)}
       <div class="mine-kinds">${Object.entries(S).map(([k, s]) => `<details class="mine-kind"><summary><span aria-hidden="true">${s.ic}</span> ${s.label}</summary>
         <dl><dt>운영</dt><dd>${esc(s.when)}</dd><dt>요금</dt><dd>${esc(s.fee)}</dd><dt>신청</dt><dd>${esc(s.how)}</dd></dl>
         <a href="${s.url}" target="_blank" rel="noopener">보육포털에서 예약·안내 ↗</a></details>`).join("")}</div>
-      <p class="mine-note">당일 취소·노쇼가 4회 쌓이면 그달 예약이 막혀요 (서울시 보육포털 안내).</p>
-      <div class="mine-list">${list.map((x) => `<div class="mine-near">
+      ${far ? `<p class="mine-note">서울시 특화 보육은 서울 안 어린이집만 있어요. 이 위치에서는 가장 가까운 곳도 멀어요.</p>` : ""}
+      <div class="mine-list">${list.map((x, i) => `<div class="mine-near">
         <span><b>${esc(x.name)}</b><small>${km(x.dist)} · ${x.kinds.map((k) => `${S[k]?.ic || ""} ${S[k]?.label || k}`).join(" · ")}</small></span>
-        <span class="mine-near-act">${x.tel ? `<a class="btn" href="tel:${esc(String(x.tel).replace(/[^0-9+]/g, ""))}" aria-label="${esc(x.name)} 전화">📞</a>` : ""}<a class="btn" href="${esc(S[x.kinds[0]]?.url || x.iseoul)}" target="_blank" rel="noopener">예약</a></span></div>`).join("")}</div>
-      <p class="mine-note">나의 어린이집에서 가까운 순(직선거리, 계산)이에요.</p>`;
+        <span class="mine-near-act">${x.tel ? `<a class="btn" href="tel:${esc(String(x.tel).replace(/[^0-9+]/g, ""))}" aria-label="${esc(x.name)} 전화">📞</a>` : ""}<a class="btn" href="${esc(S[x.kinds[0]]?.url || x.iseoul)}" target="_blank" rel="noopener">예약</a></span></div>${(i + 1) % 4 === 0 ? adHTML((i + 1) / 4) : ""}`).join("")}</div>`;
+    bindSearch(d);
     // 하나를 열면 나머지는 접는다
     const kinds = box.querySelectorAll("details.mine-kind");
     kinds.forEach((el) => el.addEventListener("toggle", () => { if (el.open) kinds.forEach((o) => { if (o !== el) o.open = false; }); }));
+    // 열어 둔 칸 밖(다른 곳)을 누르면 접는다. 문서 클릭은 한 번만 등록
+    if (!window.__mineKindOutside) {
+      window.__mineKindOutside = true;
+      document.addEventListener("click", (e) => { document.querySelectorAll("#mineNear details.mine-kind[open]").forEach((o) => { if (!o.contains(e.target)) o.open = false; }); });
+    }
+  }
+  // ---- 위치 바꾸기: 주소·동네 검색 / 현재 위치(버튼을 누를 때만, 기기 안에서만 계산) / 나의 어린이집 근처로 되돌리기 ----
+  function searchHTML(b) {
+    if (!document.getElementById("mineSearchCss")) {
+      const st = document.createElement("style"); st.id = "mineSearchCss";
+      st.textContent = `#view-mine .mine-search{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:var(--r16,16px);background:var(--surface)}#view-mine .mine-search form{display:flex;gap:8px}#view-mine .mine-search input{flex:1;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r12,12px);background:var(--bg);color:var(--text);font:inherit;font-size:16px}#view-mine .mine-search .btn{min-height:44px}#view-mine .mine-search-row{display:flex;gap:8px;flex-wrap:wrap}#view-mine .mine-search-row .btn{flex:1 1 auto}#view-mine .mine-search small{color:var(--muted);font-size:12px;line-height:1.5}#view-mine .mine-search b{font-size:14px}`;
+      document.head.appendChild(st);
+    }
+    return `<div class="mine-search"><b>${b ? `📍 ${esc(b.label)} 기준` : "📍 위치를 정해 주세요"}</b>
+      <form data-nsearch role="search"><input type="search" name="q" maxlength="60" autocomplete="off" placeholder="주소·동네로 찾기 (예: 서울 강남구 역삼동)" aria-label="맡길 곳을 찾을 위치 검색"><button type="submit" class="btn">검색</button></form>
+      <div class="mine-search-row"><button type="button" class="btn" data-nhere>📍 현재 위치로 보기</button>${nearBase ? `<button type="button" class="btn" data-nmine>나의 어린이집 근처로</button>` : ""}</div>
+      <small data-nmsg role="status" aria-live="polite">현재 위치는 버튼을 누를 때만 쓰고 기기 안에서만 계산해요. 서버로 보내지 않아요.</small></div>`;
+  }
+  function bindSearch(d) {
+    const box = $("mineNear"); if (!box) return;
+    const msg = (t) => { const e = box.querySelector("[data-nmsg]"); if (e) e.textContent = t; };
+    const apply = (b) => { nearBase = b; nearCache = null; renderNear(d); };
+    box.querySelector("[data-nsearch]")?.addEventListener("submit", async (e) => {
+      e.preventDefault(); const q = e.target.q.value.trim();
+      if (q.length < 2) return msg("두 글자 이상 적어 주세요.");
+      msg("찾는 중…");
+      let r = null; try { r = window.APP_GEOCODE ? await APP_GEOCODE(q) : null; } catch {}
+      if (!r) return msg("위치를 찾지 못했어요. 시·구까지 적어 보세요 (예: 서울 강남구 역삼동).");
+      apply({ lat: r.la, lng: r.lo, label: r.label || q });
+    });
+    box.querySelector("[data-nhere]")?.addEventListener("click", () => {
+      if (!navigator.geolocation) return msg("이 기기에서는 위치를 쓸 수 없어요.");
+      msg("위치를 가져오는 중…");
+      navigator.geolocation.getCurrentPosition((p) => apply({ lat: p.coords.latitude, lng: p.coords.longitude, label: "내 위치" }), () => msg("위치를 가져오지 못했어요. 휴대폰 설정에서 위치 권한을 확인해 주세요."), { timeout: 10000, maximumAge: 300000 });
+    });
+    box.querySelector("[data-nmine]")?.addEventListener("click", () => apply(null));
   }
 
   function css() {
     if ($("mineCss")) return;
     const s = document.createElement("style"); s.id = "mineCss";
-    s.textContent = `#view-mine .mine{padding:16px 20px 24px;display:grid;gap:12px}#view-mine h2{margin:0;font-family:var(--font-cute,inherit);font-weight:400;font-size:22px;color:var(--text)}
+    s.textContent = `#view-mine .mine{padding:16px 20px 24px;display:grid;gap:12px}#view-mine #mineNear{display:grid;gap:12px}#view-mine #mineNear .mine-kinds{gap:12px}#view-mine .mine-foot{margin-top:8px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:8px}#view-mine .mine-foot ul{margin:0;padding:0;list-style:none;display:grid;gap:4px}#view-mine .mine-foot li{position:relative;padding-left:12px;font-size:12px;line-height:1.6;color:var(--muted)}#view-mine .mine-foot li::before{content:"·";position:absolute;left:2px;font-weight:700}#view-mine .mine-foot .src-line{margin:0;font-size:12px;line-height:1.6;color:var(--muted)}#view-mine .mine>.mine-note{margin:-4px 0 0}#view-mine h2{margin:0;font-family:var(--font-cute,inherit);font-weight:400;font-size:22px;color:var(--text)}
 #view-mine .mine-lead,#view-mine .mine-note{margin:0;color:var(--muted);font-size:13px;line-height:1.55}#view-mine .mine-cands,#view-mine .mine-results,#view-mine .mine-list{display:grid;gap:8px}
 #view-mine .mine-pick{display:grid;gap:12px}#view-mine .mine-card{padding:18px;border-radius:var(--r20,20px);background:var(--accent-subtle);border:1px solid var(--accent-soft);display:grid;gap:6px}
 #view-mine .mine-badge{justify-self:start;padding:2px 10px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px}#view-mine .mine-sub{margin:0;color:var(--muted);font-size:13px}

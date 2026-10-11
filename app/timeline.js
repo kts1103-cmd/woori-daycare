@@ -51,11 +51,11 @@
     if (!b) { b = document.createElement("button"); b.id = "todoBanner"; b.type = "button"; b.className = "todo-banner"; host.insertBefore(b, host.firstChild); b.addEventListener("click", open); }
     const v = read(), c = ctxOf(v.child);
     if (!c) {
-      b.innerHTML = `<span class="tb-ic">👶</span><span><b>우리 아이를 등록해 보세요</b><small>출생·출산 예정 월을 넣으면 지금 할 일을 알려드려요</small></span>${svg('<path d="m9 5 7 7-7 7"/>')}`;
+      b.innerHTML = `<span class="tb-ic"><img src="img/mascot-base.png" width="48" height="48" alt=""></span><span><b>우리 아이를 등록해 보세요</b><small>출생·출산 예정 월을 넣으면 지금 할 일을 알려드려요</small></span>${svg('<path d="m9 5 7 7-7 7"/>')}`;
       return;
     }
     const list = listFor(v, c), left = list.filter((t) => !t.done).length;
-    b.innerHTML = `<span class="tb-ic">${c.expecting ? "🤰" : "👶"}</span><span><b>${esc(c.child.name || "우리 아이")} · ${c.expecting ? ageText(c) : c.cls}</b><small>${left ? `지금 할 일 <em>${left}개</em>가 남았어요` : "지금 할 일을 모두 마쳤어요 🎉"}</small></span>${svg('<path d="m9 5 7 7-7 7"/>')}`;
+    b.innerHTML = `<span class="tb-ic"><img src="img/${c.expecting ? "ob-expecting" : "ob-born"}.png" width="48" height="48" alt=""></span><span><b>${esc(c.child.name || "우리 아이")} · ${c.expecting ? ageText(c) : c.cls}</b><small>${left ? `지금 할 일 <em>${left}개</em>가 남았어요` : "지금 할 일을 모두 마쳤어요 🎉"}</small></span>${svg('<path d="m9 5 7 7-7 7"/>')}`;
   }
 
   // ---- 타임라인 화면 ----
@@ -113,7 +113,7 @@
       <header class="detail-header"><button class="icon-button" data-close aria-label="닫기">${svg('<path d="m15 5-7 7 7 7"/>')}</button><h2>우리 아이 입소 타임라인</h2></header>
       <div class="my-body">
         <section class="tl-hero">
-          <span class="tl-age">${c.expecting ? "🤰" : "👶"} ${esc(ageText(c))}</span>
+          <span class="tl-age"><img class="sp" src="img/${c.expecting ? "ob-expecting" : "ob-born"}.png" alt=""> ${esc(ageText(c))}</span>
           <h3>${esc(c.child.name || "우리 아이")}는 ${c.expecting ? "곧 태어나요" : `지금 <b>${c.cls}</b>`}</h3>
           <p>${c.expecting ? "" : `${esc(ageText(c))}이지만 반은 출생연도 기준이라 이번 학년도(${c.sy}.3~)는 <b>${c.cls}</b>이에요. `}${c.sy + 1}학년도(내년 3월~)에는 <b>${c.next}</b>이에요.</p>
           <ol class="tl-stages">${STAGES.map(([l, f]) => `<li class="${f(c) ? "now" : ""}">${l}</li>`).join("")}</ol>

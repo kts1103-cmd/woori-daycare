@@ -60,8 +60,8 @@
     if (step === "welcome") {
       const mark = document.querySelector(".app-header .brand-mark")?.outerHTML || "";
       r.innerHTML = `<div class="ob-wrap">
-        <div class="ob-hero">${mark}<h1>우리동네 어린이집</h1>
-          <p class="ob-lead">전국 어린이집을 지도에서 찾고, 정원·연장보육·통학차량을 한눈에 비교해요.<br>우리 아이 입소 일정도 챙겨 드려요.</p></div>
+        <div class="ob-hero"><img class="ob-art" src="img/ob-welcome-scene.png" width="220" height="220" alt=""><h1>새싹이네</h1>
+          <p class="ob-lead"><b class="ob-em">어린이집 찾기</b>부터 입소 준비,<br>아플 땐 <b class="ob-em">병원·약국</b>까지 함께해요.</p></div>
         <button type="button" class="ob-main" data-go="stage">시작하기</button>
         <p class="ob-note">로그인 없이 바로 쓸 수 있어요. 평가·커뮤니티를 쓸 때만 가입해요.<br>민간 개발 앱이며 정부기관과 관련이 없습니다.</p></div>`;
     } else if (step === "stage") {
@@ -69,8 +69,8 @@
         <h2>우리 아이는 지금<br>어떤 시기인가요?</h2>
         <p class="ob-lead">연령반과 입소 일정을 계산하는 데만 써요.</p>
         <div class="ob-pick">
-          <button type="button" class="ob-card" data-stage="expecting"><span class="ob-ic" aria-hidden="true">🤰</span><span><b>아직 뱃속에 있어요</b><small>출산 예정 월로 등록해요</small></span></button>
-          <button type="button" class="ob-card" data-stage="born"><span class="ob-ic" aria-hidden="true">👶</span><span><b>태어났어요</b><small>태어난 해와 달로 등록해요</small></span></button>
+          <button type="button" class="ob-card" data-stage="expecting"><span class="ob-ic" aria-hidden="true"><img src="img/ob-expecting.png" width="64" height="64" alt=""></span><span><b>아직 뱃속에 있어요</b><small>출산 예정 월로 등록해요</small></span></button>
+          <button type="button" class="ob-card" data-stage="born"><span class="ob-ic" aria-hidden="true"><img src="img/ob-born.png" width="64" height="64" alt=""></span><span><b>태어났어요</b><small>태어난 해와 달로 등록해요</small></span></button>
         </div>
         <div class="ob-spacer"></div>
         <button type="button" class="ob-sub" data-go="region" data-skip>나중에 할게요</button></div>`;
@@ -104,6 +104,7 @@
         r.innerHTML = `<div class="ob-wrap"><p class="ob-lead">지역 목록을 불러오는 중…</p><div class="ob-spacer"></div><button type="button" class="ob-sub" data-go="perm">전국으로 볼게요</button></div>`;
         setTimeout(() => { if (step === "region" && !r.hidden) render(); }, 600);
       } else r.innerHTML = `<div class="ob-wrap">${back(stage ? "child" : "stage")}
+        <img class="ob-art sm" src="img/ob-region.png" width="96" height="96" alt="">
         <h2>주로 어느 동네에서<br>찾으세요?</h2>
         <p class="ob-lead">앱을 열면 이 동네부터 보여드려요. 설정에서 언제든 바꿀 수 있어요.</p>
         <label class="ob-f">시·도
@@ -139,6 +140,7 @@
     } else if (step === "join") {
       // 가입 권유 (강제 아님): 가입하면 좋은 점 + 간편 로그인 + 나중에
       r.innerHTML = `<div class="ob-wrap">
+        <img class="ob-art sm" src="img/ob-join.png" width="96" height="96" alt="">
         <h2>가입하면 이런 게<br>더 좋아요</h2>
         <ul class="ob-perks">
           <li><span aria-hidden="true">🔔</span><span><b>자리가 생기면 바로 알림</b><small>관심 어린이집 정원 여유·입소 일정을 앱 밖에서도 알려드려요 (출시 후)</small></span></li>

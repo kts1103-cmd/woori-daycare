@@ -129,7 +129,7 @@
         <button class="chip ${cat === "all" ? "on" : ""}" data-cat="all">전체</button>
         ${CATS.map(([k, l, e]) => `<button class="chip ${cat === k ? "on" : ""}" data-cat="${k}">${e} ${l}</button>`).join("")}
       </div>
-      <div class="cm-sort"><span>글 ${posts.length}개</span>${myCls() ? `<button type="button" class="cm-same ${sameCls ? "on" : ""}" data-same aria-pressed="${sameCls}">👶 ${esc(clsLabel(myCls()))}만</button>` : ""}<div class="segments" role="group" aria-label="정렬">
+      <div class="cm-sort"><span>글 ${posts.length}개</span>${myCls() ? `<button type="button" class="cm-same ${sameCls ? "on" : ""}" data-same aria-pressed="${sameCls}"><img class="sp" src="img/ob-born.png" alt=""> ${esc(clsLabel(myCls()))}만</button>` : ""}<div class="segments" role="group" aria-label="정렬">
         <button type="button" data-sort="new" aria-pressed="${sort === "new"}">최신순</button><button type="button" data-sort="hot" aria-pressed="${sort === "hot"}">인기순</button></div></div>
       <ul class="cm-list">${posts.length ? withAds(posts) : adHTML(0) + `<li class="cm-empty">아직 글이 없어요. 첫 글을 남겨 보세요.</li>`}</ul>
       <p class="src-line">개인 의견이며 앱이 보증하지 않아요</p>
@@ -398,6 +398,13 @@
     });
   }
 
+  // 설정(settings.js)용: 닉네임 · 신고해서 숨긴 글 다시 보기
+  window.COMMUNITY = {
+    nick: () => nick(),
+    setNick(v) { const n = String(v || "").trim(); if (n.length < 2 || n.length > 12) return false; db.nick = n; commit(); return true; },
+    hidden: () => db.reported.map((id) => db.posts.find((p) => p.id === id)).filter(Boolean).map((p) => ({ id: p.id, title: p.title })),
+    unhide(id) { const i = db.reported.indexOf(id); if (i < 0) return false; db.reported.splice(i, 1); commit(); if (root.classList.contains("active")) { try { renderFeed(); } catch {} } return true; },
+  };
   renderFeed();
   // 탭을 열 때마다 현재 지역 이름으로 다시 그림
   document.querySelector('nav.tabs [data-view="view-community"]')?.addEventListener("click", () => { if (mode === "feed") renderFeed(); });

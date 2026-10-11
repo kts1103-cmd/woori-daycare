@@ -54,12 +54,12 @@
   // ---- 지원금: 아이 연월로 "확인해 볼 지원"을 표시. 금액은 적지 않는다 ----
   // match(months, expecting): 지금 아이에게 확인해 볼 만한지 (보장이 아니라 안내)
   const SUPPORTS = [
-    { id: "preg", ic: "🤰", name: "임신·출산 진료비 지원", who: "임신·출산 중인 가정", how: "국민행복카드로 병원비를 지원받을 수 있는지 확인해요.", match: (m, e) => e },
-    { id: "first", ic: "🎁", name: "첫만남이용권", who: "출생한 아이 (사용 기한은 출생일부터 1년)", how: "출생신고 뒤 복지로·주민센터에서 신청해요. 국민행복카드로 사용해요.", match: (m, e) => e || (m >= 0 && m <= 12) },
-    { id: "parent", ic: "👶", name: "부모급여", who: "만 0~1세 영아를 키우는 가정", how: "출생 후 60일 이내에 신청하면 출생한 달부터 받을 수 있어요. 어린이집을 이용하면 보육료 바우처로 지원돼요.", match: (m, e) => e || (m >= 0 && m < 24) },
-    { id: "allow", ic: "🧒", name: "아동수당", who: "해당 연령의 아동을 키우는 가정 (대상 연령은 확대 중이에요)", how: "복지로·주민센터에서 신청해요. 소득·재산과 상관없이 받는 지원이에요.", match: (m, e) => e || m >= 0 },
-    { id: "care", ic: "🏫", name: "보육료 지원", who: "어린이집을 이용하는 아이", how: "국민행복카드로 보육료를 결제해요. 입소 전에 지원 신청을 해 두세요.", match: (m, e) => e || m >= 0 },
-    { id: "home", ic: "🏠", name: "양육수당", who: "어린이집·유치원을 이용하지 않고 가정에서 키우는 아이", how: "어린이집이나 유치원을 이용하면 보육료·유아학비로 바꿔요. 대상 연령은 복지로에서 확인해요.", match: (m, e) => !e && m >= 12 && m < 84 },
+    { id: "preg", ic: '<img class="sp" src="img/ob-expecting.png" alt="">', name: "임신·출산 진료비 지원", who: "임신·출산 중인 가정", how: "국민행복카드로 병원비를 지원받을 수 있는지 확인해요.", match: (m, e) => e },
+    { id: "first", ic: '<img class="sp" src="img/sp-gift.png" alt="">', name: "첫만남이용권", who: "출생한 아이 (사용 기한은 출생일부터 1년)", how: "출생신고 뒤 복지로·주민센터에서 신청해요. 국민행복카드로 사용해요.", match: (m, e) => e || (m >= 0 && m <= 12) },
+    { id: "parent", ic: '<img class="sp" src="img/ob-born.png" alt="">', name: "부모급여", who: "만 0~1세 영아를 키우는 가정", how: "출생 후 60일 이내에 신청하면 출생한 달부터 받을 수 있어요. 어린이집을 이용하면 보육료 바우처로 지원돼요.", match: (m, e) => e || (m >= 0 && m < 24) },
+    { id: "allow", ic: '<img class="sp" src="img/sp-allowance.png" alt="">', name: "아동수당", who: "해당 연령의 아동을 키우는 가정 (대상 연령은 확대 중이에요)", how: "복지로·주민센터에서 신청해요. 소득·재산과 상관없이 받는 지원이에요.", match: (m, e) => e || m >= 0 },
+    { id: "care", ic: '<img class="sp" src="img/sp-school.png" alt="">', name: "보육료 지원", who: "어린이집을 이용하는 아이", how: "국민행복카드로 보육료를 결제해요. 입소 전에 지원 신청을 해 두세요.", match: (m, e) => e || m >= 0 },
+    { id: "home", ic: '<img class="sp" src="img/sp-home.png" alt="">', name: "양육수당", who: "어린이집·유치원을 이용하지 않고 가정에서 키우는 아이", how: "어린이집이나 유치원을 이용하면 보육료·유아학비로 바꿔요. 대상 연령은 복지로에서 확인해요.", match: (m, e) => !e && m >= 12 && m < 84 },
   ];
 
   const css = () => {
@@ -128,6 +128,7 @@
     return { la: mid(hit.map((r) => r.lat)), lo: mid(hit.map((r) => r.lng)), label: q };
   }
   const geocode = async (q) => (await geocodeNaver(q)) || geocodeLocal(q);
+  window.APP_GEOCODE = geocode; // 나의 어린이집 "급할 때 맡길 곳"의 위치 검색도 같은 함수를 쓴다 → {la, lo, label} 또는 null
 
   function nearHTML(msg) {
     const tabs = `<div class="pi-chips" role="tablist" aria-label="찾을 곳">${TABS.filter(([k]) => care[k] && care[k].length).map(([k, l]) => `<button type="button" role="tab" data-ntab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}</div>`;
@@ -181,13 +182,13 @@
     const pick = keys.length ? `<label class="pi-lead" for="piNightSido">지역을 골라 공공심야약국 공식 안내를 열어요</label>
       <select id="piNightSido"><option value="">지역 선택</option>${keys.map((k) => `<option ${k === cur ? "selected" : ""}>${esc(k)}</option>`).join("")}</select>
       <div id="piNightOut">${cur ? nightLink(cur) : ""}</div>` : "";
-    return `<div class="pi-card" id="piNight"><h3>🌙 밤에 아플 때</h3>
+    return `<div class="pi-card" id="piNight"><h3><img class="sp" src="img/sp-sick.png" alt=""> 밤에 아플 때</h3>
       <p class="pi-lead">가까운 달빛어린이병원·소아과·약국은 아래에서 바로 볼 수 있어요. 가기 전에 전화로 한 번 더 확인하세요.</p>
       <div id="piNear" class="pi-near-box"></div>
       <div class="pi-btns">
         <a class="pi-link" href="${LINK.moon}" target="_blank" rel="noopener" data-moon hidden><span class="pi-ic" aria-hidden="true">🌙</span><span><b>달빛어린이병원 찾기</b><small>보건복지부 · 야간·휴일에 소아 진료를 해요. 지역별 목록과 진료 중 표시가 있어요</small></span><span aria-hidden="true">↗</span></a>
         <a class="pi-link" href="${LINK.pharm}" target="_blank" rel="noopener" data-moon hidden><span class="pi-ic" aria-hidden="true">💊</span><span><b>심야·휴일 약국 찾기</b><small>중앙응급의료센터(E-Gen) 약국 찾기</small></span><span aria-hidden="true">↗</span></a>
-        <a class="pi-link" href="${LINK.er}" target="_blank" rel="noopener"><span class="pi-ic" aria-hidden="true">🏥</span><span><b>응급실 찾기</b><small>중앙응급의료센터(E-Gen)</small></span><span aria-hidden="true">↗</span></a>
+        <a class="pi-link" href="${LINK.er}" target="_blank" rel="noopener" data-moon hidden><span class="pi-ic" aria-hidden="true">🏥</span><span><b>응급실 찾기</b><small>중앙응급의료센터(E-Gen)</small></span><span aria-hidden="true">↗</span></a>
       </div>
       ${pick ? `<div class="pi-pick" data-moon hidden>${pick}</div>` : ""}
       <p class="pi-urgent">위급하다면 망설이지 말고 119에 전화하세요.</p></div>`;
