@@ -5,6 +5,7 @@
     theme: "light",       // light(기본, 시안 기준) | dark | system
     fontSize: "normal",   // small | normal | large
     defaultSido: "",      // 비어 있으면 앱 기본값
+    defaultCity: "",      // 시·군·구 (시작 흐름에서 고름, 시·도를 바꾸면 비움)
     defaultRadius: "3000",
     route: "ask",         // ask | walk | public | car
     showLocate: true,
@@ -36,9 +37,12 @@
   window.APP_SETTINGS = {
     get: () => ({ ...s }),
     onChange: (fn) => listeners.push(fn),
+    set: (key, value) => set(key, value),
   };
   function set(key, value) {
-    s[key] = value; save();
+    s[key] = value;
+    if (key === "defaultSido") s.defaultCity = "";
+    save();
     if (key === "theme") applyTheme();
     if (key === "fontSize") applyFont();
     listeners.forEach((fn) => fn(key, value));
@@ -73,7 +77,7 @@
 
         <h3 class="set-h">검색 기본값</h3>
         <div class="set-group">
-          <label class="set-row"><b>처음 보여줄 지역</b>
+          <label class="set-row"><span><b>처음 보여줄 지역</b>${s.defaultSido && s.defaultCity ? `<small>${esc(s.defaultCity)}까지 기억해요</small>` : ""}</span>
             <select data-key="defaultSido"><option value="">앱 기본값</option>${sidoOpts.map((v) => `<option ${s.defaultSido === v ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
           <label class="set-row"><b>기본 검색 반경</b>
             <select data-key="defaultRadius">${[["0", "제한 없음"], ["500", "500m"], ["1000", "1km"], ["3000", "3km"]].map(([v, l]) => `<option value="${v}" ${s.defaultRadius === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>

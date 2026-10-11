@@ -85,8 +85,6 @@ def main():
     env = dict(os.environ, BASIS=today.isoformat())
     subprocess.run([sys.executable, "-I", os.path.join(ROOT, "build_app_json.py"), csv_path, tmp,
                     os.path.join(ROOT, "raw", "15140061_utf8.csv")], check=True, env=env)
-    # 좌표 없는 곳은 주소로 채운다 (NAVER_CLIENT_ID/SECRET이 없으면 건너뜀)
-    subprocess.run([sys.executable, "-I", os.path.join(ROOT, "geocode.py"), tmp], check=True, env=env)
     for f in glob.glob(os.path.join(tmp, "*.json")):  # 깨진 JSON이 배포되지 않게
         with open(f, encoding="utf-8") as fh:
             json.load(fh)
@@ -94,6 +92,11 @@ def main():
     if problems:
         shutil.rmtree(tmp, ignore_errors=True)
         sys.exit("데이터 이상으로 앱 데이터를 갱신하지 않았습니다:\n" + "\n".join(problems))
+    # 서울시 특화 보육 (서울 열린데이터광장). 실패해도 어린이집 데이터 갱신은 계속한다 (이 종류 표시만 빠짐)
+    r = subprocess.run([sys.executable, "-I", os.path.join(ROOT, "seoul_svc.py"), tmp])
+    if r.returncode != 0 or not os.path.exists(os.path.join(tmp, "seoul_svc.json")):
+        prev = os.path.join(app_data, "seoul_svc.json")  # 이전 파일이 있으면 그대로 유지
+        if os.path.exists(prev): shutil.copy(prev, os.path.join(tmp, "seoul_svc.json"))
     # 새 데이터가 다 만들어진 뒤에 폴더 단위로 교체한다
     if os.path.exists(app_data):
         os.replace(app_data, old)

@@ -41,13 +41,28 @@
     d.gu = /시$/.test(sg) && p[1] === sg && /구$/.test(p[2] || "") ? p[2] : "";
   }
   let selGu = ""; // 시 안의 일반구 (예: 포항시 북구)
+  // 서울시 특화 보육 (data/seoul_svc.py → seoul_svc.json): 서울 데이터를 불러올 때 d.seoulSvc(종류)·d.stcode를 붙인다. 없으면 표시 안 함
+  const SEOUL_SVC = {
+    "365": { label: "365열린", ic: "🌗", when: "365일 07:30~24:00 (1.1·설·추석 연휴·5.5 제외)", fee: "1시간 3,000원 · 1일 5만 원", how: "1일 전까지 온라인 예약 · 긴급 시 당일 방문", url: "https://iseoul.seoul.go.kr/portal/reservation/dailyOpenPreschoolMiddle.do" },
+    night: { label: "거점형 야간", ic: "🌙", when: "평일 16:00~22:00", fee: "무료 (저녁 식비 별도)", how: "이용 당일 오후 1시까지 온라인 신청", url: "https://iseoul.seoul.go.kr/portal/reservation/baseExtendInfo.do" },
+    weekend: { label: "주말", ic: "🗓️", when: "토·일 09:00~18:00 (1.1·설·추석 연휴 제외)", fee: "1시간 3,000원", how: "1일 전까지 온라인 예약 · 긴급 시 당일 방문", url: "https://iseoul.seoul.go.kr/portal/reservation/wkendInfo.do" },
+    holiday: { label: "휴일", ic: "🎌", when: "일요일·공휴일 07:30~19:30", fee: "무료", how: "다니는 어린이집 이용 아동 · 어린이집에 전화 접수", url: "https://iseoul.seoul.go.kr/portal/reservation/holi_info.do" },
+  };
+  let seoulSvc = null;
+  const loadSeoulSvc = () => seoulSvc ? Promise.resolve(seoulSvc) : fetchJson("data/seoul_svc.json").then((j) => (seoulSvc = j)).catch(() => (seoulSvc = { basis: "", items: {} }));
+  // 서울시 보육포털: 시설 코드가 있으면 그 어린이집 홈페이지, 없으면 이름 검색 결과로
+  const iseoulUrl = (d) => d.stcode ? `https://iseoul.seoul.go.kr/homepage/main.do?stCode=${encodeURIComponent(d.stcode)}` : `https://iseoul.seoul.go.kr/portal/info/preSchoolList.do?crname=${encodeURIComponent(d.name)}`;
   async function loadSido(sido) {
     if (cache[sido]) return cache[sido];
     const meta = index && index.sidos.find((s) => s.sido === sido);
     if (!meta) throw new Error(`알 수 없는 지역: ${sido}`);
-    const rows = await fetchJson(`data/${meta.file}`);
+    const [rows, svc] = await Promise.all([fetchJson(`data/${meta.file}`), sido === "서울특별시" ? loadSeoulSvc() : null]);
     if (!Array.isArray(rows)) throw new Error(`${meta.file}: 형식 오류`);
-    rows.forEach((d, i) => { d.id = `${meta.file}-${i}`; splitCityGu(d); });
+    rows.forEach((d, i) => {
+      d.id = `${meta.file}-${i}`; splitCityGu(d);
+      const s = svc && svc.items[`${d.sigungu}|${d.name}`];
+      if (s) { d.seoulSvc = s.kinds; if (s.stcode) d.stcode = s.stcode; }
+    });
     return (cache[sido] = rows);
   }
   // 일부 시도가 실패해도 받은 곳까지는 보여준다
@@ -125,7 +140,7 @@
 
   function ratePanel(d) {
     const saved = store.get("rate:" + keyOf(d)) || { scores: {}, tags: [] };
-    return `<div class="panel" data-panel="rate"><h4>⭐ 내 평가 (재원·졸업 학부모)</h4>
+    return `<div class="panel" data-panel="rate"><h4>⭐ 내 평가 (재원 학부모)</h4>
       ${RATE_ITEMS.map((it) => `<div class="stars">${it}<span data-item="${it}">${[1, 2, 3, 4, 5].map((n) => `<button data-n="${n}" class="${(saved.scores[it] || 0) >= n ? "on" : ""}" aria-label="${it} ${n}점">★</button>`).join("")}</span></div>`).join("")}
       <div class="tags" style="margin-top:8px">${RATE_TAGS.map((t) => `<label class="chip toggle"><input type="checkbox" value="${t}" ${saved.tags.includes(t) ? "checked" : ""}>${t}</label>`).join("")}</div>
       <p class="note">시제품: 이 기기에만 저장됩니다. 실제 서비스에서는 재원 인증 후 평가가 5건 이상 모이면 평균만 공개합니다.</p></div>`;
@@ -250,18 +265,32 @@
       if (w.length < 2) return [];
       return data.filter((d) => String(d.name).replace(/\s+/g, "").includes(w)).slice(0, n).map(snapOf);
     },
+    // 시작 흐름(onboarding.js)의 동네 선택: 시·도 목록, 시·군·구 목록, 바로 적용
+    sidos: () => (index ? index.sidos.map((s) => s.sido) : []),
+    async cities(sido) { const rows = await loadSido(sido); return [...new Set(rows.map((d) => d.city))].filter(Boolean).sort((a, b) => a.localeCompare(b, "ko")); },
+    setRegion: (sido, city) => applyRegion(sido, city || "", ""),
     // 알림(notify.js): 관심 어린이집의 최신 요약 (정원 여유·등록대기 변화 비교용)
     async snapByKey(sido, key) {
       const rows = sido ? await loadSido(sido) : (await loadAll()).rows;
       const d = rows.find((r) => keyOf(r) === key);
-      return d ? { ...snapOf(d), waitTotal: typeof d.waitTotal === "number" ? d.waitTotal : null } : null;
+      return d ? { ...snapOf(d), waitTotal: typeof d.waitTotal === "number" ? d.waitTotal : null, tel: d.tel, addr: d.addr, lat: d.lat, lng: d.lng, geocoded: !!d.geocoded, stcode: d.stcode || null, seoulSvc: d.seoulSvc || [], iseoul: d.sido === "서울특별시" ? iseoulUrl(d) : null } : null;
     },
+    // 나의 어린이집(mydaycare.js): 급할 때 맡길 곳 — 서울시 특화 보육 어린이집을 가까운 순으로
+    SEOUL_SVC,
+    async seoulSvcNear(lat, lng, n = 12) {
+      const rows = await loadSido("서울특별시"), svc = await loadSeoulSvc();
+      return rows.filter((d) => d.seoulSvc && d.lat && d.lng).map((d) => ({ ...snapOf(d), tel: d.tel, addr: d.addr, kinds: d.seoulSvc, iseoul: iseoulUrl(d), dist: lat != null ? distance({ lat, lng }, d) : null }))
+        .sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0)).slice(0, n).map((x) => ({ ...x, basis: svc.basis }));
+    },
+    seoulSvcBasis: () => (seoulSvc ? seoulSvc.basis : ""),
     async openByKey(sido, key) {
       const rows = sido ? await loadSido(sido) : (await loadAll()).rows;
       const d = rows.find((r) => keyOf(r) === key);
       if (!d) return;
+      const from = document.querySelector('nav.tabs [aria-selected="true"]');
       document.querySelector('nav.tabs [data-view="view-map"]')?.click();
       openDetail(d);
+      returnTab = from && from.dataset.view !== "view-map" ? from : null; // 상세에서 뒤로 가면 열었던 탭(나의 어린이집 등)으로
     },
   };
   // 교직원 평균 근속연수: 어린이집정보공개포털 OPEN API(어린이집별 기본정보 조회) 연동 후 d.tenureAvg(년)로 들어옴
@@ -282,6 +311,7 @@
   const SRC = {
     basic: () => `어린이집정보공개포털(한국사회보장정보원) · 기준일 ${esc(index ? index.basis : "")}`,
     ext: "연장보육: 공공데이터포털(2024)",
+    seoul: () => `서울시 특화 보육: 서울 열린데이터광장(공공누리 1유형) · 기준일 ${esc(seoulSvc ? seoulSvc.basis : "")}`,
   };
   window.APP_SRC = SRC;
   const tagsOf = (d) => `${d.extended ? '<span class="tag"><i aria-hidden="true">🌙</i>연장보육</span>' : ""}${d.bus ? '<span class="tag"><i aria-hidden="true">🚌</i>통학차량</span>' : ""}${d.playground > 0 ? '<span class="tag"><i aria-hidden="true">🛝</i>놀이터</span>' : ""}${yearsOf(d) != null && yearsOf(d) <= 3 ? '<span class="tag"><i aria-hidden="true">✨</i>신규</span>' : ""}${yearsOf(d) >= 10 ? `<span class="tag gray">${Math.floor(yearsOf(d))}년 운영</span>` : ""}`;
@@ -348,6 +378,7 @@
               ${row("통학차량", d.bus ? "운영" : "미운영")}
               ${row("연장보육", d.extended === true ? "운영" : d.extended === false ? "미운영" : "정보 없음")}
               ${d.night != null || d.h24 != null || d.hourly != null ? row("야간·24시간·시간제", [d.night && "야간연장", d.h24 && "24시간", d.hourly && "시간제"].filter(Boolean).join(" · ") || "운영 안 함") : ""}
+              ${d.seoulSvc && d.seoulSvc.length ? row("서울시 특화 보육", d.seoulSvc.map((k) => SEOUL_SVC[k]?.label || k).join(" · ")) : ""}
               ${row("등록대기", waitText(d))}
               ${row("인가", d.since ? `${d.since.slice(0, 4)}년 · 운영 ${Math.floor(yearsOf(d))}년째` : "정보 없음")}
             </dl>
@@ -366,11 +397,12 @@
             <button class="btn" data-open="check">📝 상담 체크리스트</button>
             <a class="btn" href="https://info.childcare.go.kr/info_html5/pnis/search/NurseryNameSlL.jsp" target="_blank" rel="noopener" data-copy="${esc(d.name)}">💰 비용·식단·일과</a>
             <a class="btn" href="https://www.childcare.go.kr/?menuno=175" target="_blank" rel="noopener">📮 등록대기 신청</a>
+            ${d.sido === "서울특별시" ? `<a class="btn" href="${esc(iseoulUrl(d))}" target="_blank" rel="noopener" title="어린이집이 서울시 보육포털에 올린 식단·공지로 연결해요">🍱 식단·공지 (서울시 보육포털)</a>` : ""}
           </div>
           <div class="slot"></div>
           <a class="info-shortcut" href="https://www.childcare.go.kr/?menuno=215" target="_blank" rel="noopener">${ic("shield")}<span>이용 중 불편이 있었나요? 아이사랑 불편신고</span>${ic("chevron")}</a>
           <button class="info-shortcut" id="toViolation">${ic("shield")}<span>위반시설·행위자 공표 확인하기</span>${ic("chevron")}</button>
-          ${srcLine(`${SRC.basic()} · ${SRC.ext}`)}
+          ${srcLine(`${SRC.basic()} · ${SRC.ext}${d.seoulSvc && d.seoulSvc.length ? ` · ${SRC.seoul()}` : ""}`)}
         </div>
       </div>
       <div class="detail-actions">
@@ -515,6 +547,7 @@
     sh.addEventListener("close", () => previews.splice(0).forEach((u) => URL.revokeObjectURL(u)), { once: true });
     if (!sh.open) sh.showModal();
   }
+  let returnTab = null; // openByKey로 다른 탭에서 열었을 때 돌아갈 탭
   function showDetail(on) {
     detailOpen = on;
     document.body.classList.toggle("detail-mode", on);
@@ -529,6 +562,7 @@
     if (!detailOpen) return;
     if ($("sheet").open) $("sheet").close();
     showDetail(false);
+    if (returnTab) { const t = returnTab; returnTab = null; t.click(); }
   });
 
   // 길찾기 방법 선택 시트
@@ -940,6 +974,7 @@
     const start = index.sidos.find((s) => s.sido === pref.defaultSido) ? pref.defaultSido : ""; // 기본은 전국
     $("sido").value = start;
     await selectSido(start);
+    if (start && pref.defaultCity && data.some((d) => d.city === pref.defaultCity)) { $("sigungu").value = pref.defaultCity; render(); }
     updateRegionLabel();
   })();
 })();

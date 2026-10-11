@@ -24,7 +24,7 @@
 #permIntro .pi-foot{position:sticky;bottom:0;padding:12px 20px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 30%)}#permIntro .pi-go{width:100%;min-height:52px;border:0;border-radius:var(--r16,16px);background:var(--accent);color:#fff;font-family:var(--font-cute,inherit);font-size:18px;cursor:pointer}`;
     document.head.appendChild(s);
   }
-  function open(first) {
+  function open(first, onDone) {
     css();
     if (!root) { root = document.createElement("div"); root.id = "permIntro"; root.className = "mypage"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "권한 안내"); document.body.appendChild(root); }
     root.innerHTML = `<div class="pi-body">
@@ -36,11 +36,16 @@
       <div class="pi-foot"><button type="button" class="pi-go">${first ? "시작하기" : "확인"}</button></div>`;
     root.hidden = false; document.body.style.overflow = "hidden";
     const go = root.querySelector(".pi-go");
-    go.addEventListener("click", () => { set(); root.hidden = true; document.body.style.overflow = ""; });
+    go.addEventListener("click", () => { set(); root.hidden = true; document.body.style.overflow = ""; if (onDone) onDone(); });
     go.focus();
   }
-  window.PERMINTRO = { open: () => open(false) };
+  // 시작 흐름(onboarding.js)이 마지막 단계로 open(true, 끝난 뒤 할 일)을 부른다
+  window.PERMINTRO = { open: (first, onDone) => open(!!first, onDone), seen: () => !!get() };
   const q = new URLSearchParams(location.search).get("perm") === "1";
-  const start = () => { if (q || (!get() && !navigator.webdriver)) open(true); };
+  const start = () => {
+    if (q) return open(true);
+    if (window.ONBOARD && ONBOARD.pending()) return; // 처음 실행이면 시작 흐름이 맡는다
+    if (!get() && !navigator.webdriver) open(true);
+  };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

@@ -93,6 +93,7 @@
   .join-btn { width:100%; min-height:52px; border-radius:var(--r16); border:0; font-size:15px; font-weight:700; cursor:pointer; }
   .join-btn.kakao { background:#FEE500; color:#191600; }
   .join-btn.naver { background:#03C75A; color:#fff; }
+  .join-btn.apple { background:#000; color:#fff; }
   .join-btn.demo { background:var(--surface); border:1.5px solid #2B7668; color:#245C52; }
   .join-picked { display:flex; align-items:center; gap:8px; padding:12px 14px; border:1.5px solid var(--accent); background:var(--accent-subtle); border-radius:var(--r12); }
   .join-picked b { font-size:14px; } .join-picked small { font-size:12px; color:var(--muted); flex:1; }
@@ -719,6 +720,110 @@
   .fav-pill { height:44px; }
   .detail-name-row .fav-pill { margin:-6px 0 -6px; }
   .my-sec-head button { min-height:44px; padding:0 8px; }
+  .cm-list ~ .src-line { margin:4px 0 0; padding:0 20px; }
+  .cm-list ~ .src { margin:6px 0 0; padding:0 20px 88px; }
+  /* 나의 어린이집 (mydaycare.js의 임시 CSS를 덮어씀) */
+  html #view-mine .mine { padding:16px 20px 28px; gap:14px; }
+  html #view-mine .mine-card { position:relative; overflow:hidden; padding:20px; gap:8px; border:0; border-radius:var(--r20); background:linear-gradient(145deg,#245C52 0%,#2B7668 100%); color:#fff; box-shadow:0 8px 20px rgba(36,92,82,.22); }
+  html #view-mine .mine-card::after { content:""; position:absolute; right:-30px; top:-30px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,.08); }
+  html #view-mine .mine-badge { background:rgba(255,255,255,.2); color:#fff; font-weight:700; padding:3px 11px; }
+  html #view-mine .mine-card h2 { color:#fff; font-size:24px; line-height:1.3; letter-spacing:-.3px; overflow-wrap:anywhere; }
+  html #view-mine .mine-card .mine-sub { color:rgba(255,255,255,.86); font-size:13px; }
+  html #view-mine .mine-actions { margin-top:10px; gap:8px; }
+  html #view-mine .mine-actions .btn { flex:1 1 0; min-width:0; min-height:44px; padding:0 8px; border:0; border-radius:var(--r12); background:rgba(255,255,255,.16); color:#fff; font-size:13px; font-weight:700; }
+  html #view-mine .mine-actions .btn:hover { background:rgba(255,255,255,.26); }
+  html #view-mine .mine-actions .btn:focus-visible { outline:3px solid #F5DEA0; outline-offset:2px; }
+  html #view-mine .mine-h { margin:10px 0 0; font-size:19px; color:var(--text); }
+  html #view-mine .mine-item { min-height:64px; gap:14px; padding:12px 14px; border-radius:var(--r16); transition:border-color .15s; }
+  html #view-mine .mine-item:hover { border-color:#8BBFB2; }
+  html #view-mine .mine-item:focus-visible, html #view-mine .mine-kind summary:focus-visible, html #view-mine .mine-pick button:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  html #view-mine .mi-ic { flex:none; width:44px; height:44px; display:grid; place-items:center; border-radius:14px; background:var(--accent-subtle); font-size:22px; }
+  html #view-mine .mine-item b { font-size:15px; line-height:1.35; }
+  html #view-mine .mine-item small { margin-top:2px; }
+  html #view-mine .mine-kinds { gap:10px; }
+  html #view-mine .mine-kind { padding:0 14px; border-radius:var(--r16); font-size:13px; }
+  html #view-mine .mine-kind summary { min-height:48px; display:flex; align-items:center; }
+  html #view-mine .mine-kind[open] { padding-bottom:12px; border-color:var(--accent); background:var(--accent-subtle); }
+  html #view-mine .mine-kind a { display:inline-flex; align-items:center; min-height:44px; color:var(--accent-strong); font-weight:700; text-underline-offset:3px; }
+  html #view-mine .mine-near { padding:12px 14px; border-radius:var(--r16); gap:12px; }
+  html #view-mine .mine-near b { font-size:15px; }
+  html #view-mine .mine-near-act .btn { border-radius:12px; }
+  html #view-mine .mine-pick button, html #view-mine .mine-cands > * { min-height:56px; }
+  /* 하단 탭 5개: 라벨은 한 줄 */
+  nav.tabs button { padding-left:2px; padding-right:2px; }
+  nav.tabs button span { white-space:nowrap; letter-spacing:-.4px; }
+  /* 간편 로그인 버튼 공통 */
+  .join-btn { display:flex; align-items:center; justify-content:center; gap:8px; transition:filter .15s, transform .05s; }
+  .join-btn:hover { filter:brightness(.96); } .join-btn:active { transform:scale(.99); }
+  .join-btn:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  .join-btn.apple { box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); }
+  /* 시작 흐름: 가입 권유 단계 */
+  html #onboard .ob-perks { gap:10px; margin-top:4px; }
+  html #onboard .ob-perks li { padding:14px 16px; border-radius:var(--r20); gap:14px; align-items:center; }
+  html #onboard .ob-perks li > span:first-child { flex:none; width:44px; height:44px; display:grid; place-items:center; border-radius:14px; background:var(--accent-subtle); font-size:22px; }
+  html #onboard .ob-perks li:nth-child(2) > span:first-child { background:#E3ECFB; }
+  html #onboard .ob-perks li:nth-child(3) > span:first-child { background:#FBF1D6; }
+  html #onboard .ob-perks b { line-height:1.35; color:var(--text); }
+  html #onboard .ob-perks small { font-size:13px; line-height:1.55; }
+  html #onboard .ob-join { gap:10px; }
+  /* 가입 안내 시트 (관심 3곳째) */
+  html #joinPrompt { padding:24px 20px calc(18px + env(safe-area-inset-bottom)); border-radius:24px 24px 0 0; gap:8px; box-shadow:0 -10px 32px rgba(36,92,82,.18); border-top:1px solid var(--line); }
+  html #joinPrompt::before { content:""; justify-self:center; width:40px; height:4px; border-radius:99px; background:var(--line); margin:-12px 0 8px; }
+  html #joinPrompt .jp-ic { display:grid; place-items:center; width:52px; height:52px; margin-bottom:4px; border-radius:16px; background:var(--accent-subtle); font-size:26px; }
+  html #joinPrompt b { font-size:20px; line-height:1.35; color:var(--text); }
+  html #joinPrompt p { font-size:14px; line-height:1.65; }
+  html #joinPrompt .jp-go { min-height:56px; margin-top:6px; box-shadow:0 6px 16px rgba(36,92,82,.22); }
+  html #joinPrompt .jp-go:hover { background:var(--accent-strong); }
+  html #joinPrompt :is(.jp-go,.jp-no):focus-visible { outline:3px solid #B69548; outline-offset:3px; }
+  /* 알림 센터 상단 가입 카드 */
+  html #alerts .al-item.al-join { background:var(--accent-subtle); border:1.5px dashed var(--accent); box-shadow:none; margin-bottom:14px; }
+  html #alerts .al-item.al-join::after { content:none; }
+  html #alerts .al-item.al-join .al-ic { background:var(--surface); }
+  html #alerts .al-item.al-join b { color:var(--accent-strong); }
+  html #alerts .al-item.al-join small { color:var(--text); }
+  /* 커뮤니티 광고 (글 5개마다 1개) */
+  .cm-ad-li { list-style:none; }
+  .cm-ad { display:grid; gap:4px; padding:14px 16px; border:1px dashed #C9D6CF; border-radius:var(--r20); background:#F4F6F2; color:var(--text); text-decoration:none; position:relative; }
+  a.cm-ad { cursor:pointer; } a.cm-ad:hover { border-color:#8BBFB2; }
+  a.cm-ad:focus-visible { outline:3px solid #B69548; outline-offset:2px; }
+  .cm-ad-tag { justify-self:start; font-size:12px; font-weight:700; padding:1px 8px; border-radius:99px; background:#E4E9E5; color:var(--muted); }
+  .cm-ad-brand { font-size:12px; color:var(--muted); }
+  .cm-ad-title { font-family:var(--font-cute); font-weight:400; font-size:16px; line-height:1.4; }
+  .cm-ad-body { font-size:13px; line-height:1.55; color:var(--muted); }
+  /* 처음 실행 시작 흐름 (onboarding.js의 임시 CSS를 덮어씀) */
+  html #onboard { background:var(--bg); }
+  html #onboard .ob-wrap { padding:16px 20px calc(24px + env(safe-area-inset-bottom)); gap:14px; }
+  html #onboard .ob-back { width:44px; height:44px; margin-left:-10px; color:var(--text); }
+  html #onboard h2 { margin:4px 0 0; font-size:28px; letter-spacing:-.4px; line-height:1.35; }
+  html #onboard .ob-lead { font-size:14px; line-height:1.7; }
+  html #onboard .ob-lead b { color:var(--accent-strong); }
+  html #onboard .ob-hero { position:relative; isolation:isolate; gap:16px; padding:32px 8px 8px; }
+  html #onboard .ob-hero::before { content:""; position:absolute; z-index:-1; top:50%; left:50%; width:300px; height:300px; transform:translate(-50%,-62%); border-radius:50%; background:radial-gradient(circle,var(--accent-soft) 0%,var(--accent-subtle) 55%,transparent 72%); }
+  html #onboard .ob-hero .brand-mark { width:104px; height:104px; border-radius:30px; filter:drop-shadow(0 10px 20px rgba(36,92,82,.28)); }
+  html #onboard .ob-hero h1 { font-size:34px; letter-spacing:-.5px; line-height:1.2; }
+  html #onboard .ob-hero .ob-lead { max-width:300px; font-size:15px; }
+  html #onboard .ob-main { min-height:56px; box-shadow:0 6px 16px rgba(36,92,82,.22); }
+  html #onboard .ob-main:hover:not(:disabled) { background:var(--accent-strong); }
+  html #onboard .ob-main:disabled { box-shadow:none; }
+  html #onboard .ob-sub { align-self:center; padding:0 16px; font-size:14px; }
+  html #onboard .ob-note { font-size:12px; line-height:1.6; }
+  html #onboard :is(.ob-main,.ob-sub,.ob-card,.ob-back):focus-visible { outline:3px solid #B69548; outline-offset:3px; }
+  html #onboard .ob-pick { gap:14px; margin-top:6px; }
+  html #onboard .ob-card { position:relative; min-height:96px; padding:18px 44px 18px 16px; gap:16px; border-width:1.5px; border-radius:var(--r20); transition:border-color .15s, background .15s; }
+  html #onboard .ob-card::after { content:""; position:absolute; right:18px; top:50%; width:9px; height:9px; border:solid var(--muted); border-width:2px 2px 0 0; transform:translateY(-50%) rotate(45deg); }
+  html #onboard .ob-card:hover { border-color:var(--accent); background:var(--accent-subtle); }
+  html #onboard .ob-card:active { background:var(--accent-soft); }
+  html #onboard .ob-card .ob-ic { flex:none; width:56px; height:56px; display:grid; place-items:center; border-radius:18px; background:var(--accent-subtle); font-size:30px; }
+  html #onboard .ob-card[data-stage="born"] .ob-ic { background:#FBF1D6; }
+  html #onboard .ob-card b { font-size:19px; line-height:1.3; }
+  html #onboard .ob-card small { display:block; margin-top:3px; font-size:13px; }
+  html #onboard label.ob-f { gap:8px; font-size:14px; font-weight:700; }
+  html #onboard .ob-f small { font-weight:400; color:var(--muted); font-size:12px; }
+  html #onboard .ob-f select, html #onboard .ob-f input { min-height:52px; border-radius:var(--r16); }
+  html #onboard .ob-f select:focus-visible, html #onboard .ob-f input:focus-visible { outline:3px solid #B69548; outline-offset:2px; border-color:var(--accent); }
+  html #onboard .ob-f select:disabled { background-color:var(--bg); color:var(--muted); opacity:.75; }
+  html #onboard .ob-f select { appearance:none; -webkit-appearance:none; padding-right:38px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2362736B' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; background-size:16px; }
+  html #onboard .ob-preview { padding:14px 16px; border-radius:var(--r16); line-height:1.65; }
   /* 처음 실행 권한 안내 (permintro.js의 임시 CSS를 덮어씀) */
   html #permIntro { background:var(--bg); }
   html #permIntro .pi-body { padding:32px 20px 12px; gap:12px; }
@@ -844,6 +949,8 @@
     <p class="src">출처: <span id="basis"></span> · 정확한 정보는 해당 어린이집과 공식 포털에서 확인하세요.</p>
   </section>
 
+  <section class="view" id="view-mine" aria-label="나의 어린이집"></section>
+
   <section class="view" id="view-community" aria-label="커뮤니티"></section>
 
   <section class="view" id="view-detail" aria-label="어린이집 상세"></section>
@@ -924,8 +1031,9 @@
     </div>
   </section>
 </main>
-<nav class="tabs" role="tablist" style="grid-template-columns:repeat(4,1fr)">
+<nav class="tabs" role="tablist" style="grid-template-columns:repeat(5,1fr)">
   <button role="tab" aria-selected="true" data-view="view-map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>어린이집 찾기</span></button>
+  <button role="tab" aria-selected="false" data-view="view-mine"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9H4Z"/><path d="M12 20v-5M9.5 15.5c0-1.5 1-2.5 2.5-2.5s2.5 1 2.5 2.5"/></svg><span>나의 어린이집</span></button>
   <button role="tab" aria-selected="false" data-view="view-community"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h13v9H8l-5 4Z"/><path d="M19 9h2v10l-3-2.5h-8V15"/></svg><span>커뮤니티</span></button>
   <button role="tab" aria-selected="false" data-view="view-guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg><span>입소 가이드</span></button>
   <button role="tab" aria-selected="false" data-view="view-violation"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="M12 8v5M12 17h.01"/></svg><span>위반시설·행위자</span></button>
@@ -943,6 +1051,9 @@
 <script src="timeline.js"></script>
 <script src="notify.js"></script>
 <script src="permintro.js"></script>
+<script src="onboarding.js"></script>
+<script src="joinprompt.js"></script>
+<script src="mydaycare.js"></script>
 <script src="applink.js"></script>
 <script src="community.js"></script>
 <script>

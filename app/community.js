@@ -87,6 +87,21 @@
     let list = db.posts.filter((p) => !db.reported.includes(p.id) && (cat === "all" || p.cat === cat) && (!sameCls || !mc || p.cls === mc));
     return sort === "hot" ? list.sort((a, b) => (b.likes + b.comments.length * 2) - (a.likes + a.comments.length * 2)) : list.sort((a, b) => b.at - a.at);
   }
+  // 광고: 맨 위에서 시작해 "광고, 글 4개" 패턴 반복 (1·5·9번째 글 앞). 광고임을 항상 표시(표시·광고법). 실제 광고는 window.COMMUNITY_ADS 또는 ADS에 {brand,title,body,url}로 채운다. url이 없으면 링크 없는 자리표시.
+  const AD_FIRST = 0; // 첫 광고는 맨 위(첫 글 앞)
+  const AD_EVERY = 4; // 광고 → 글 4개 → 광고 → 글 4개 …
+  const ADS = [
+    { brand: "광고 자리", title: "여기에 광고가 들어가요", body: "글 5개마다 하나씩 보여요. 시제품 자리표시예요.", url: "" },
+  ];
+  function adHTML(n) {
+    const list = Array.isArray(window.COMMUNITY_ADS) && window.COMMUNITY_ADS.length ? window.COMMUNITY_ADS : ADS;
+    const a = list[n % list.length];
+    const ok = /^https?:\/\//i.test(a.url || "");
+    const inner = `<span class="cm-ad-tag">광고</span><span class="cm-ad-brand">${esc(a.brand || "")}</span>
+      <b class="cm-ad-title">${esc(a.title)}</b><span class="cm-ad-body">${esc(a.body || "")}</span>`;
+    return `<li class="cm-ad-li">${ok ? `<a class="cm-ad" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer sponsored" aria-label="광고: ${esc(a.title)}">${inner}</a>` : `<div class="cm-ad" role="note" aria-label="광고: ${esc(a.title)}">${inner}</div>`}</li>`;
+  }
+  const withAds = (posts) => posts.map(cardHTML).reduce((out, h, i) => out + (i >= AD_FIRST && (i - AD_FIRST) % AD_EVERY === 0 ? adHTML((i - AD_FIRST) / AD_EVERY) : "") + h, "");
   function renderFeed() {
     const posts = visiblePosts();
     root.innerHTML = `
@@ -110,7 +125,7 @@
       </div>
       <div class="cm-sort"><span>글 ${posts.length}개</span>${myCls() ? `<button type="button" class="cm-same ${sameCls ? "on" : ""}" data-same aria-pressed="${sameCls}">👶 ${esc(clsLabel(myCls()))}만</button>` : ""}<div class="segments" role="group" aria-label="정렬">
         <button type="button" data-sort="new" aria-pressed="${sort === "new"}">최신순</button><button type="button" data-sort="hot" aria-pressed="${sort === "hot"}">인기순</button></div></div>
-      <ul class="cm-list">${posts.length ? posts.map(cardHTML).join("") : `<li class="cm-empty">아직 글이 없어요. 첫 글을 남겨 보세요.</li>`}</ul>
+      <ul class="cm-list">${posts.length ? withAds(posts) : adHTML(0) + `<li class="cm-empty">아직 글이 없어요. 첫 글을 남겨 보세요.</li>`}</ul>
       <p class="src-line">개인 의견이며 앱이 보증하지 않아요</p>
       <p class="src">시제품: 글과 댓글은 이 기기에만 저장돼요. "예시" 글은 화면 확인용으로 만든 글이에요. · <a href="#policy" data-policy>커뮤니티 운영정책</a></p>
       <button class="cm-fab" type="button" data-write>${svg(I.pen)}글쓰기</button>`;
@@ -352,7 +367,10 @@
     const f = root.querySelector("form");
     const btn = f.querySelector(".cm-submit");
     const sync = () => {
-      f.querySelector("[data-review-guide]").hidden = f.cat.value !== "review";
+      const isReview = f.cat.value === "review"; // 관련 어린이집은 "어린이집 후기"에서만
+      f.querySelector("[data-review-guide]").hidden = !isReview;
+      const dcf = f.querySelector("[data-daycare-field]");
+      if (dcf.hidden === isReview) { dcf.hidden = !isReview; if (!isReview) f.daycare.value = ""; }
       f.querySelectorAll(".cm-pick .chip").forEach((c) => c.classList.toggle("on", c.querySelector("input").checked));
       btn.disabled = !(f.title.value.trim() && f.body.value.trim().length >= 5 && f.agree.checked);
     };
@@ -366,7 +384,7 @@
       const err = f.querySelector("[data-err]");
       const text = `${f.title.value} ${f.body.value}`;
       if (flagged(text)) { err.hidden = false; err.textContent = "특정인을 지목한 의혹 제기는 올릴 수 없어요. 해당 지자체나 아이사랑 상담 창구에 알려 주세요."; return; }
-      const p = { id: "u" + Date.now(), cat: f.cat.value, title: f.title.value.trim(), body: f.body.value.trim(), daycare: f.daycare.value.trim() || undefined, author: nick(), cls: myCls() || undefined, at: Date.now(), likes: 0, views: 0, comments: [], mine: true };
+      const p = { id: "u" + Date.now(), cat: f.cat.value, title: f.title.value.trim(), body: f.body.value.trim(), daycare: (f.cat.value === "review" && f.daycare.value.trim()) || undefined, author: nick(), cls: myCls() || undefined, at: Date.now(), likes: 0, views: 0, comments: [], mine: true };
       db.posts.unshift(p); commit();
       cat = "all"; sort = "new";
       history.back();

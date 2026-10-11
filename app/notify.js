@@ -122,6 +122,7 @@
       <header class="detail-header"><button class="icon-button" data-close aria-label="알림 닫기">${svg('<path d="m15 5-7 7 7 7"/>')}</button><h2>알림</h2></header>
       <div class="my-body">
         <button type="button" class="al-set" data-set>알림 종류 설정</button>
+        ${window.ACCOUNT && !ACCOUNT.isMember() ? `<button type="button" class="al-item al-join" data-join><span class="al-ic" aria-hidden="true">📱</span><span><b>가입하면 앱 밖에서도 알려드려요</b><small>앱을 닫아 둬도 자리가 생기거나 일정이 다가오면 알림을 받아요 (출시 후). 지금 알림은 가입 없이도 받아요.</small></span></button>` : ""}
         ${items.length ? items.map((it, i) => `<button type="button" class="al-item${it.unread ? " unread" : ""}" data-i="${i}"><span class="al-ic" aria-hidden="true">${it.ic}</span><span><b>${it.title}</b><small>${it.body}</small></span></button>`).join("")
           : `<p class="al-empty">새 알림이 없어요.<br>아이를 등록하고 어린이집에 ♡를 담으면 일정과 변화를 알려드려요.</p>`}
         <p class="src-line">${SRC_LINE}</p>
@@ -129,6 +130,7 @@
       </div>`;
     root.querySelector("[data-close]").addEventListener("click", () => history.back());
     root.querySelector("[data-set]").addEventListener("click", () => leave(() => $("openSettings")?.click()));
+    root.querySelector("[data-join]")?.addEventListener("click", () => leave(() => ACCOUNT.openSignup()));
     root.querySelectorAll("[data-i]").forEach((b) => b.addEventListener("click", () => {
       const it = items[+b.dataset.i];
       if (it.fav && window.APP) leave(() => APP.openByKey(it.fav.sido, it.fav.key));

@@ -1,5 +1,5 @@
-// 회원가입 + 학부모(재원·졸업) 인증 (시제품)
-// - 가입할 때 다니는·다녔던 어린이집을 인증한다. 별점 평가는 그 어린이집을 인증한 회원만 할 수 있다.
+// 회원가입 + 학부모(재원) 인증 (시제품)
+// - 가입할 때 지금 다니는 어린이집을 인증한다 (재원 인증만, 졸업 인증 없음). 별점 평가는 그 어린이집을 인증한 회원만 할 수 있다.
 // - 서버가 없어 계정은 이 기기 localStorage(account:v1)에만 저장한다. 비밀번호는 받지 않는다.
 //   정식 서비스: 카카오·네이버 간편 로그인 + 증빙 사진 업로드 → 운영자 확인 후 인증 완료.
 (function () {
@@ -7,7 +7,8 @@
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } };
+  // 재원 인증만 인정: 졸업·퇴소 인증은 2026-10 폐지 → 예전 기록은 읽을 때 빼고, 다음 저장 때 정리된다
+  const read = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || "null"); if (a && a.verifications) a.verifications = a.verifications.filter((x) => x.status !== "졸업·퇴소"); return a; } catch { return null; } };
   const write = (v) => { try { v ? localStorage.setItem(KEY, JSON.stringify(v)) : localStorage.removeItem(KEY); } catch {} window.dispatchEvent(new Event("account:changed")); };
   const toast = (m) => { const t = $("toast"); if (!t) return; t.textContent = m; t.classList.add("visible"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("visible"), 3000); };
 
@@ -48,6 +49,7 @@
       <section class="join-hero"><b>우리동네 어린이집에 오신 걸 환영해요</b><p>가입하면 <b>인증 학부모 평가</b>를 남기고, 관심 어린이집과 아이 정보를 다른 기기에서도 이어서 볼 수 있어요.</p></section>
       <button class="join-btn kakao" data-soon>카카오로 시작하기</button>
       <button class="join-btn naver" data-soon>네이버로 시작하기</button>
+      <button class="join-btn apple" data-soon>Apple로 시작하기</button>
       <button class="join-btn demo" data-next>시제품으로 체험 가입</button>
       <p class="note">시제품 가입은 이 기기에만 저장돼요. 간편 로그인은 서버 연결 후 열려요.</p></div>`;
     bindX();
@@ -77,7 +79,7 @@
     f.addEventListener("submit", (e) => { e.preventDefault(); if (btn.disabled) return; state.nick = f.nick.value.trim(); step3(); });
   }
 
-  // 학부모 인증 (확정 방식, PLAN.md 3.5): 어린이집 선택 → 재원/졸업 → 증빙 캡처 1장
+  // 학부모 인증 (확정 방식, PLAN.md 3.5): 어린이집 선택 → 증빙 캡처 1장 (재원 중인 학부모만)
   //   인정 수단 ① 아이사랑 "보육료 결제 현황" 캡처  ② 키즈노트 알림장·공지 캡처 (어린이집 이름 + 날짜가 보이게)
   //   시제품: 사진은 저장하지 않고 고르기만 한다. 실제 판독(CLOVA OCR)은 서버 연결 후.
   //   확인용 규칙: 파일 이름에 어린이집 이름이 들어 있으면 바로 승인, 아니면 "운영자 확인 중", 너무 작은 그림은 다시 올리기.
@@ -96,13 +98,13 @@
       <fieldset><legend>1. 어린이집</legend>
         <div class="join-picked" ${picked ? "" : "hidden"}>${picked ? `<b>${esc(picked.name)}</b><small>${esc(picked.area || "")}</small><button type="button" data-repick>바꾸기</button>` : ""}</div>
         <div class="join-search" ${picked ? "hidden" : ""}>
-          <label class="search-field"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input name="q" autocomplete="off" placeholder="다니는·다녔던 어린이집 이름"></label>
+          <label class="search-field"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input name="q" autocomplete="off" placeholder="지금 다니는 어린이집 이름"></label>
           <div class="join-results"></div>
         </div>
       </fieldset>
-      <fieldset><legend>2. 재원 상태</legend><div class="cm-pick">${["재원 중", "졸업·퇴소"].map((t, i) => `<label class="chip ${i ? "" : "on"}"><input type="radio" name="status" value="${t}" ${i ? "" : "checked"}>${t}</label>`).join("")}</div>
-        <p class="note" data-status-note>최근 3개월 안의 결제 내역이나 알림장이 보이면 돼요.</p></fieldset>
-      <fieldset><legend>3. 인증 방법</legend>
+      <input type="hidden" name="status" value="재원 중">
+      <fieldset><legend>2. 인증 방법</legend>
+        <p class="note" data-status-note>지금 다니는 어린이집만 인증할 수 있어요. 최근 3개월 안의 결제 내역이나 알림장이 보이면 돼요.</p>
         <div class="proof-pick">${Object.entries(PROOFS).map(([k, p], i) => `
           <label class="proof-card ${i ? "" : "on"}"><input type="radio" name="proof" value="${k}" ${i ? "" : "checked"}>
             ${mock(k)}<b>${p.label}</b><small>${p.sub}</small></label>`).join("")}</div>
@@ -111,7 +113,7 @@
           <a class="btn proof-go" data-go-pay href="${PAY_URL}" target="_blank" rel="noopener">아이사랑 결제현황 열기 ↗</a>
         </div>
       </fieldset>
-      <fieldset><legend>4. 캡처 사진 올리기</legend>
+      <fieldset><legend>3. 캡처 사진 올리기</legend>
         <label class="pick"><input type="file" name="shot" accept="image/*"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-pick-label>캡처 사진 고르기 (1장)</span></label>
         <div class="proof-preview" hidden></div>
         <p class="note proof-privacy">🔒 올린 사진은 판독 직후 바로 삭제돼요. 아이 이름은 자동으로 가려져요. 인증은 1년에 한 번(3월 새 학년)이에요.</p>
@@ -133,7 +135,6 @@
       const kind = f.proof.value;
       f.querySelector("[data-tip]").textContent = PROOFS[kind].tip;
       f.querySelector("[data-go-pay]").hidden = kind !== "isarang_pay"; // 키즈노트는 공개 바로가기가 없어 안내만
-      f.querySelector("[data-status-note]").textContent = f.status.value === "재원 중" ? "최근 3개월 안의 결제 내역이나 알림장이 보이면 돼요." : "졸업·퇴소 전 1년 안의 마지막 결제 내역이나 알림장이 보이면 돼요.";
     };
     const pickedBox = f.querySelector(".join-picked"), searchBox = f.querySelector(".join-search"), results = f.querySelector(".join-results");
     const setPicked = (s) => {
@@ -194,7 +195,7 @@
   }
   function step3() {
     root.innerHTML = `${header("회원가입")}<form class="my-body upload-form" novalidate>${steps(3)}
-      <p class="sheet-copy">다니고 있거나 다녔던 어린이집을 인증하면 그곳에 <b>인증 학부모 평가</b>를 남길 수 있어요.</p>
+      <p class="sheet-copy">지금 다니는 어린이집을 인증하면 그곳에 <b>인증 학부모 평가</b>를 남길 수 있어요.</p>
       ${verifyForm(state.pre, { submitLabel: "인증하고 가입 완료", skippable: true })}</form>`;
     bindX();
     const f = root.querySelector("form");

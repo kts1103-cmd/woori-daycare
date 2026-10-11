@@ -1,5 +1,5 @@
 // 인증 학부모 별점 (시제품)
-// - 재원·졸업 인증을 한 학부모만 평가할 수 있다.
+// - 재원 인증을 한 학부모만 평가할 수 있다 (졸업 인증은 폐지).
 // - 평균은 인증 평가가 MIN_PUBLIC건 이상 모였을 때만 공개한다(소수 의견이 시설 평판을 좌우하지 않도록).
 // - 자유 서술 없이 항목별 별점 + 태그만 받는다(명예훼손 위험을 줄이기 위해).
 // 지금은 서버가 없어 "내 평가"만 이 기기 localStorage에 저장한다. 정식 서비스에서는 store만 서버 API로 바꾼다.
@@ -55,7 +55,7 @@
   const acct = () => window.ACCOUNT;
   function ctaHTML(key, mine) {
     const A = acct();
-    if (!A || !A.isMember()) return `<button class="btn rate-cta" type="button" data-rate>⭐ 회원가입하고 평가하기</button><p class="note rate-why">평가는 가입할 때 <b>재원·졸업 인증</b>을 한 학부모만 남길 수 있어요.</p>`;
+    if (!A || !A.isMember()) return `<button class="btn rate-cta" type="button" data-rate>⭐ 회원가입하고 평가하기</button><p class="note rate-why">평가는 가입할 때 <b>재원 인증</b>을 한 학부모만 남길 수 있어요.</p>`;
     const v = A.verifiedFor(key);
     if (!v && A.pendingFor && A.pendingFor(key)) return `<button class="btn rate-cta" type="button" disabled>⏳ 인증 확인 중이에요 (24시간 이내)</button><p class="note rate-why">운영자 확인이 끝나면 평가를 남길 수 있어요.</p>`;
     if (!v) return `<button class="btn rate-cta" type="button" data-rate>🔒 이 어린이집 학부모 인증하고 평가하기</button><p class="note rate-why">${esc(A.get().nick)}님은 아직 이 어린이집을 인증하지 않았어요.</p>`;
@@ -68,7 +68,7 @@
     const mine = s.mine;
     return `
       <section class="rating-sec" data-rating-sec>
-        <div class="rating-head"><h3>인증 학부모 평가</h3><span class="verified-badge">✔ 재원·졸업 인증</span></div>
+        <div class="rating-head"><h3>인증 학부모 평가</h3><span class="verified-badge">✔ 재원 인증</span></div>
         ${s.public ? summaryHTML(s) : `
         <p class="rating-empty">아직 공개된 평균이 없어요. <b>인증 학부모 ${MIN_PUBLIC}명 이상</b>이 평가하면 평균을 보여드려요. <small>(현재 ${s.n}명)</small></p>
         <details class="rating-demo"><summary>공개되면 이렇게 보여요</summary>${summaryHTML(DEMO, true)}</details>`}
