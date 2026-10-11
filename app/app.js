@@ -250,6 +250,12 @@
       if (w.length < 2) return [];
       return data.filter((d) => String(d.name).replace(/\s+/g, "").includes(w)).slice(0, n).map(snapOf);
     },
+    // 알림(notify.js): 관심 어린이집의 최신 요약 (정원 여유·등록대기 변화 비교용)
+    async snapByKey(sido, key) {
+      const rows = sido ? await loadSido(sido) : (await loadAll()).rows;
+      const d = rows.find((r) => keyOf(r) === key);
+      return d ? { ...snapOf(d), waitTotal: typeof d.waitTotal === "number" ? d.waitTotal : null } : null;
+    },
     async openByKey(sido, key) {
       const rows = sido ? await loadSido(sido) : (await loadAll()).rows;
       const d = rows.find((r) => keyOf(r) === key);

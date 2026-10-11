@@ -8,7 +8,9 @@
     defaultRadius: "3000",
     route: "ask",         // ask | walk | public | car
     showLocate: true,
-    notifyFavorite: false,
+    notifySchedule: true, // 입소·지원 일정 (앱 안 알림, 이 기기에서만 계산)
+    notifyCapacity: true, // 관심 어린이집 정원 여유
+    notifyWait: true,     // 관심 어린이집 등록대기 (데이터가 생기면)
     notifyAds: false,
   };
   const APP_VERSION = "0.1.0 (시제품)";
@@ -84,9 +86,12 @@
           <p class="set-note">위치 권한 자체는 휴대폰(브라우저) 설정에서 바꿀 수 있어요.</p>
         </div>
 
-        <h3 class="set-h">알림 <span class="badge">출시 후 제공</span></h3>
+        <h3 class="set-h">알림 <span class="badge">앱 안 알림</span></h3>
         <div class="set-group">
-          ${toggle("notifyFavorite", "관심 어린이집 정보 변경 알림", "정원·운영 정보가 바뀌면 알려드려요", true)}
+          ${toggle("notifySchedule", "입소·지원 일정 안내", "등록대기·학년도 시작·부모급여 신청·영유아 건강검진 시기를 알려드려요")}
+          ${toggle("notifyCapacity", "관심 어린이집 정원 여유", "정원이 차거나 자리가 생기면 알려드려요 (정원에서 현재원을 뺀 계산값)")}
+          ${toggle("notifyWait", "관심 어린이집 등록대기", "등록대기 인원이 바뀌면 알려드려요 (데이터가 연결되면 시작돼요)")}
+          ${toggle("notifyActivity", "내 활동 알림 (학부모 인증·댓글)", "서버가 생기면 제공돼요", true)}
           ${toggle("notifyAds", "이벤트·혜택 알림 (광고성)", "별도 동의 후 발송 · 밤 9시~아침 8시에는 보내지 않아요", true)}
         </div>
 
