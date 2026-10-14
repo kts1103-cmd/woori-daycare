@@ -1,0 +1,44 @@
+name: 어린이집 키 동기화 (수동)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "대상 환경 (dev 또는 prod)"
+        type: choice
+        options: [dev, prod]
+        default: dev
+      apply:
+        description: "true면 서버에 실제 반영, false면 건수만 확인(dry-run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-daycare-keys-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.target }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: 키 동기화
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ "${{ inputs.apply }}" = "true" ]; then
+            python -I data/sync_daycare_keys.py --data-dir app/data --apply
+          else
+            python -I data/sync_daycare_keys.py --data-dir app/data
+          fi
