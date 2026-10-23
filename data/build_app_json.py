@@ -12,6 +12,11 @@ matched = 0
 seen = set()
 os.makedirs(outdir, exist_ok=True)
 by = collections.defaultdict(list); st = collections.Counter(); nocoord = 0; total = 0
+_BLOCK = set()  # 접속 불가·피싱·도메인 판매로 확인된 호스트 (data/site_blocklist.txt, 2026-10-23 전수 점검)
+_bl = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'site_blocklist.txt')
+if os.path.exists(_bl):
+    with open(_bl, encoding='utf-8') as _f:
+        _BLOCK = {l.strip().lower() for l in _f if l.strip() and not l.startswith('#')}
 def site_url(x):
     """정보공개포털 '홈페이지주소' 정리 (엄격): 이메일·한글 문구·점 없는 값은 버린다. 고치는 것은 ①스킴 오타(http//, htto://, ktp://, http;//) ②스킴 누락 ③'.'·'/' 옆 공백 ④끝의 점. http(s)만 허용. 없으면 None"""
     x = (x or '').strip()
@@ -27,11 +32,19 @@ def site_url(x):
     if not re.match(r'^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+(?:[:/?#]|$)', rest): return None
     # QA 보정(2026-10): 오타 수정, 서비스 종료·플랫폼 대표주소·포털은 비운다(엉뚱한 곳 연결 방지)
     rest = re.sub(r'^wwww\.', 'www.', rest).replace('cyword.com', 'cyworld.com')
+    rest = re.sub(r'^www\.(?=https?://)', '', rest)  # www.http://... 처럼 붙은 것은 비운다(아래 주소 검사에서 걸러짐)
+    rest = re.sub(r'^www\.(?=cafe\.(?:naver|daum)\.(?:com|net)/)', '', rest)
+    rest = re.sub(r'^(?:cate|cafee)\.daum\.net/', 'cafe.daum.net/', rest)
+    rest = re.sub(r'^(m\.cafe\.daum)\.ne/', r'\1.net/', rest)
+    rest = re.sub(r'^(?:www\.)?naver\.com/cafe[./](?=[A-Za-z0-9_-])', 'cafe.naver.com/', rest)
     rest = re.sub(r'^(cafe\.naver\.com|cafe\.daum\.net|daum\.net)\.(?=[A-Za-z0-9_-])', r'\1/', rest)
     rest = re.sub(r'^(?:www\.)?daum\.net/(?!cafe\b)(?=[A-Za-z0-9_-])', 'cafe.daum.net/', rest)
     host = re.split(r'[:/?#]', rest, 1)[0].lower(); bare = not re.sub(r'^[^/?#]*[/?#]*', '', rest).strip('/')
     if host.endswith('cyworld.com') or host in ('kr.yahoo.com', 'yahoo.com', 'google.com', 'www.google.com'): return None
     if bare and host.removeprefix('www.') in ('kidsnote.com', 'naver.com', 'daum.net', 'blog.naver.com', 'cafe.naver.com', 'cafe.daum.net', 'instagram.com', 'facebook.com', 'youtube.com', 'band.us', 'kakao.com', 'tistory.com'): return None
+    if '://' in rest: return None
+    host = re.split(r'[:/?#]', rest, 1)[0].lower()
+    if host in _BLOCK or host.removeprefix('www.') in _BLOCK: return None
     if 'iseoul.seoul.go.kr' in rest: return None  # 서울시 보육포털은 앱이 따로 연결
     return f"{scheme}://{rest}"
 def num(x):
