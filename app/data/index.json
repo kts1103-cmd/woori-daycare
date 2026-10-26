@@ -1,5 +1,5 @@
 {
- "basis": "2026-10-26",
+ "basis": "2026-10-27",
  "extendedBasis": "2024",
  "source": "어린이집정보공개포털 어린이집 기본정보 (data.go.kr 15083298, 이용허락범위 제한 없음)",
  "sidos": [
@@ -11,7 +11,7 @@
   {
    "sido": "경기도",
    "file": "sido_01.json",
-   "count": 7771
+   "count": 7772
   },
   {
    "sido": "경상남도",
@@ -21,7 +21,7 @@
   {
    "sido": "경상북도",
    "file": "sido_03.json",
-   "count": 1093
+   "count": 1091
   },
   {
    "sido": "대구광역시",
@@ -36,12 +36,12 @@
   {
    "sido": "부산광역시",
    "file": "sido_06.json",
-   "count": 1216
+   "count": 1217
   },
   {
    "sido": "서울특별시",
    "file": "sido_07.json",
-   "count": 3873
+   "count": 3872
   },
   {
    "sido": "세종특별자치시",
